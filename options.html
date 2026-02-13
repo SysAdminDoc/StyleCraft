@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>StyleCraft Options</title>
+<style>
+:root{--sc-bg:#11111b;--sc-surface:#1e1e2e;--sc-overlay:#313244;--sc-text:#cdd6f4;--sc-subtext:#bac2de;--sc-muted:#585b70;--sc-faint:#45475a;--sc-accent:#cba6f7;--sc-accent-dim:rgba(203,166,247,0.08);--sc-accent-med:rgba(203,166,247,0.15);--sc-blue:#89b4fa;--sc-green:#a6e3a1;--sc-red:#f38ba8;--sc-pink:#f5c2e7;--sc-yellow:#f9e2af;--sc-peach:#fab387;--sc-border:rgba(203,166,247,0.08);--sc-border-h:rgba(203,166,247,0.15);--sc-input-bg:rgba(17,17,27,0.7);--sc-input-border:rgba(203,166,247,0.1);--sc-code-fg:#f5c2e7;--sc-toggle-bg:rgba(69,71,90,0.6);--sc-toggle-on:rgba(203,166,247,0.5);--sc-shadow:rgba(0,0,0,0.3);--sc-glass:rgba(30,30,46,0.8);--sc-grad-start:#1e1e2e;--sc-grad-end:rgba(30,30,46,0);--sc-scrollbar-thumb:rgba(203,166,247,0.2);--sc-scrollbar-thumb-h:rgba(203,166,247,0.35);}
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--sc-bg:#11111b;--sc-surface:rgba(30,30,46,0.5);--sc-overlay:#313244;--sc-text:#cdd6f4;--sc-subtext:#bac2de;--sc-muted:#585b70;--sc-faint:#45475a;--sc-accent:#cba6f7;--sc-accent-dim:rgba(203,166,247,0.08);--sc-accent-med:rgba(203,166,247,0.15);--sc-blue:#89b4fa;--sc-green:#a6e3a1;--sc-red:#f38ba8;--sc-pink:#f5c2e7;--sc-border:rgba(203,166,247,0.06);--sc-border-h:rgba(203,166,247,0.12);--sc-input-bg:rgba(17,17,27,0.6);--sc-input-border:rgba(203,166,247,0.1);--sc-code-fg:#f5c2e7;--sc-grad-start:#1e1e2e;--sc-toggle-bg:rgba(69,71,90,0.6);--sc-toggle-on:rgba(203,166,247,0.5);--sc-srow:rgba(30,30,46,0.3);}
+html.sc-dark{--sc-bg:#000000;--sc-surface:rgba(10,10,15,0.5);--sc-overlay:#16161e;--sc-text:#c0caf5;--sc-subtext:#a9b1d6;--sc-muted:#565f89;--sc-faint:#3b3f5c;--sc-accent:#7aa2f7;--sc-accent-dim:rgba(122,162,247,0.08);--sc-accent-med:rgba(122,162,247,0.15);--sc-blue:#7aa2f7;--sc-green:#9ece6a;--sc-red:#f7768e;--sc-pink:#bb9af7;--sc-border:rgba(122,162,247,0.06);--sc-border-h:rgba(122,162,247,0.12);--sc-input-bg:rgba(0,0,0,0.6);--sc-input-border:rgba(122,162,247,0.1);--sc-code-fg:#bb9af7;--sc-grad-start:#0a0a0f;--sc-toggle-bg:rgba(86,95,137,0.4);--sc-toggle-on:rgba(122,162,247,0.5);--sc-srow:rgba(10,10,15,0.3);}
+html.sc-light{--sc-bg:#eff1f5;--sc-surface:rgba(255,255,255,0.7);--sc-overlay:#dce0e8;--sc-text:#4c4f69;--sc-subtext:#5c5f77;--sc-muted:#8c8fa1;--sc-faint:#bcc0cc;--sc-accent:#8839ef;--sc-accent-dim:rgba(136,57,239,0.06);--sc-accent-med:rgba(136,57,239,0.12);--sc-blue:#1e66f5;--sc-green:#40a02b;--sc-red:#d20f39;--sc-pink:#ea76cb;--sc-border:rgba(136,57,239,0.1);--sc-border-h:rgba(136,57,239,0.2);--sc-input-bg:rgba(239,241,245,0.9);--sc-input-border:rgba(136,57,239,0.15);--sc-code-fg:#8839ef;--sc-grad-start:#ffffff;--sc-toggle-bg:rgba(140,143,161,0.3);--sc-toggle-on:rgba(136,57,239,0.4);--sc-srow:rgba(239,241,245,0.5);}
+::-webkit-scrollbar{width:8px;}::-webkit-scrollbar-track{background:rgba(17,17,27,0.3);}::-webkit-scrollbar-thumb{background:rgba(203,166,247,0.2);border-radius:4px;}::-webkit-scrollbar-thumb:hover{background:rgba(203,166,247,0.35);}
+body{background:var(--sc-bg);color:var(--sc-text);font-family:system-ui,-apple-system,sans-serif;font-size:14px;min-height:100vh;}
+a{color:var(--sc-blue);text-decoration:none;}a:hover{text-decoration:underline;}
+
+.header{padding:24px 40px;background:linear-gradient(180deg,var(--sc-grad-start) 0%,rgba(0,0,0,0) 100%);border-bottom:1px solid var(--sc-border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;backdrop-filter:blur(20px);}
+.header-left{display:flex;align-items:center;gap:14px;}
+.header-logo{font-size:22px;font-weight:700;background:linear-gradient(135deg,var(--sc-accent),var(--sc-blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.header-sub{font-size:12px;color:var(--sc-muted);font-family:'JetBrains Mono',monospace;}
+.header-actions{display:flex;gap:8px;}
+.h-btn{height:36px;padding:0 16px;background:var(--sc-accent-dim);border:1px solid var(--sc-border-h);border-radius:8px;color:var(--sc-subtext);cursor:pointer;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;transition:all 0.15s;}
+.h-btn:hover{background:var(--sc-accent-med);color:var(--sc-accent);}
+.h-btn.danger{background:rgba(243,139,168,0.06);border-color:rgba(243,139,168,0.12);color:var(--sc-red);}
+.h-btn.danger:hover{background:rgba(243,139,168,0.14);}
+
+.container{max-width:960px;margin:0 auto;padding:24px 40px;}
+.tabs{display:flex;gap:4px;margin-bottom:24px;border-bottom:1px solid var(--sc-border);padding-bottom:2px;flex-wrap:wrap;}
+.tab-btn{padding:10px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--sc-muted);font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;}
+.tab-btn:hover{color:var(--sc-subtext);}
+.tab-btn.active{color:var(--sc-accent);border-bottom-color:var(--sc-accent);}
+.tab-content{display:none;}.tab-content.active{display:block;}
+
+/* Stats */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;}
+.stat-card{padding:18px;background:var(--sc-surface);border:1px solid var(--sc-border);border-radius:10px;text-align:center;}
+.stat-val{font-size:28px;font-weight:700;color:var(--sc-accent);margin-bottom:4px;}
+.stat-label{font-size:11px;color:var(--sc-muted);text-transform:uppercase;letter-spacing:0.5px;}
+
+/* Cards */
+.card{background:var(--sc-surface);border:1px solid var(--sc-border);border-radius:10px;margin-bottom:12px;overflow:hidden;transition:border-color 0.15s;}
+.card:hover{border-color:var(--sc-border-h);}
+.card-header{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;}
+.card-domain{font-size:14px;font-weight:600;color:var(--sc-blue);font-family:'JetBrains Mono',monospace;}
+.card-meta{font-size:11px;color:var(--sc-muted);margin-top:2px;}
+.card-actions{display:flex;align-items:center;gap:8px;}
+.card-btn{width:30px;height:30px;border-radius:6px;background:rgba(203,166,247,0.06);border:1px solid var(--sc-border);color:var(--sc-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;}
+.card-btn:hover{background:rgba(203,166,247,0.14);color:var(--sc-accent);}
+.card-btn.danger:hover{background:rgba(243,139,168,0.14);color:var(--sc-red);}
+.toggle{position:relative;width:40px;height:20px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-sl{position:absolute;inset:0;cursor:pointer;background:var(--sc-toggle-bg);border-radius:10px;transition:all 0.2s;}
+.toggle-sl::before{content:'';position:absolute;left:2px;top:2px;width:16px;height:16px;background:var(--sc-text);border-radius:50%;transition:transform 0.2s;}
+.toggle input:checked+.toggle-sl{background:var(--sc-toggle-on);}
+.toggle input:checked+.toggle-sl::before{transform:translateX(20px);background:var(--sc-accent);}
+.card-body{display:none;padding:0 18px 18px;}
+.card.expanded .card-body{display:block;}
+
+.editor-area{width:100%;min-height:200px;padding:12px 14px;background:var(--sc-input-bg);border:1px solid var(--sc-input-border);border-radius:8px;color:var(--sc-code-fg);font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;resize:vertical;outline:none;tab-size:2;white-space:pre;}
+.editor-area:focus{border-color:rgba(203,166,247,0.3);}
+.editor-row{display:flex;justify-content:flex-end;gap:8px;margin-top:10px;}
+.save-btn{height:32px;padding:0 18px;border-radius:6px;background:rgba(166,227,161,0.08);border:1px solid rgba(166,227,161,0.15);color:var(--sc-green);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s;}
+.save-btn:hover{background:rgba(166,227,161,0.18);}
+
+.empty-state{text-align:center;padding:60px 20px;color:var(--sc-faint);}
+.empty-icon{font-size:48px;margin-bottom:12px;opacity:0.4;}
+.empty-text{font-size:14px;}
+
+.search-row{margin-bottom:18px;}
+.search-input{width:100%;height:40px;padding:0 14px;background:var(--sc-input-bg);border:1px solid var(--sc-input-border);border-radius:8px;color:var(--sc-text);font-size:13px;outline:none;transition:border-color 0.15s;}
+.search-input:focus{border-color:rgba(203,166,247,0.3);}
+.search-input::placeholder{color:rgba(127,132,156,0.4);}
+
+.theme-domain{font-size:11px;color:var(--sc-muted);margin-bottom:2px;text-transform:uppercase;letter-spacing:0.5px;font-weight:700;}
+.theme-name{font-size:14px;font-weight:600;color:var(--sc-text);}
+
+/* Settings */
+.setting-group{margin-bottom:28px;}
+.setting-group-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--sc-muted);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--sc-border);}
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;margin-bottom:6px;background:var(--sc-surface);border-radius:8px;}
+.setting-label{font-size:13px;color:var(--sc-text);}
+.setting-desc{font-size:11px;color:var(--sc-muted);margin-top:2px;}
+.setting-input{width:200px;height:32px;padding:0 10px;background:var(--sc-input-bg);border:1px solid var(--sc-input-border);border-radius:6px;color:var(--sc-text);font-size:12px;font-family:'JetBrains Mono',monospace;outline:none;}
+.setting-input:focus{border-color:rgba(203,166,247,0.3);}
+.setting-select{width:200px;height:32px;padding:0 10px;background:var(--sc-input-bg);border:1px solid var(--sc-input-border);border-radius:6px;color:var(--sc-text);font-size:12px;outline:none;appearance:none;cursor:pointer;}
+.setting-select option{background:#1e1e2e;color:var(--sc-text);}
+
+.shortcut-row{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;margin-bottom:6px;background:var(--sc-surface);border-radius:8px;}
+.shortcut-label{font-size:13px;color:var(--sc-text);flex:1;}
+.shortcut-key{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:var(--sc-input-bg);border:1px solid rgba(203,166,247,0.15);border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--sc-subtext);}
+.shortcut-note{font-size:10px;color:var(--sc-faint);margin-top:12px;line-height:1.5;}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--sc-surface);backdrop-filter:blur(12px);border:1px solid rgba(203,166,247,0.2);color:var(--sc-accent);padding:10px 20px;border-radius:8px;font-size:12px;font-weight:600;pointer-events:none;opacity:0;transition:all 0.25s;z-index:100;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* Browse results */
+.browse-card{display:flex;gap:14px;padding:14px 18px;background:var(--sc-surface);border:1px solid var(--sc-border);border-radius:10px;margin-bottom:10px;transition:border-color 0.15s;align-items:flex-start;}
+.browse-card:hover{border-color:var(--sc-border-h);}
+.browse-card.installed{border-color:rgba(166,227,161,0.2);}
+.browse-thumb{width:120px;height:75px;border-radius:6px;object-fit:cover;flex-shrink:0;background:rgba(17,17,27,0.5);}
+.browse-info{flex:1;min-width:0;}
+.browse-name{font-size:14px;font-weight:600;color:var(--sc-text);margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.browse-author{font-size:11px;color:var(--sc-muted);margin-bottom:6px;}
+.browse-actions{display:flex;gap:6px;align-items:center;}
+.browse-btn{height:28px;padding:0 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid;transition:all 0.15s;}
+.browse-btn.install{background:rgba(166,227,161,0.06);border-color:rgba(166,227,161,0.15);color:var(--sc-green);}
+.browse-btn.install:hover{background:rgba(166,227,161,0.15);}
+.browse-btn.install.done{background:var(--sc-accent-dim);border-color:rgba(203,166,247,0.15);color:var(--sc-accent);cursor:default;}
+.browse-btn.preview{background:rgba(137,180,250,0.06);border-color:rgba(137,180,250,0.12);color:var(--sc-blue);}
+.browse-btn.preview:hover{background:rgba(137,180,250,0.15);}
+.browse-btn.uninstall{background:rgba(243,139,168,0.06);border-color:rgba(243,139,168,0.12);color:var(--sc-red);}
+.browse-btn.uninstall:hover{background:rgba(243,139,168,0.15);}
+.browse-installs{font-size:10px;color:var(--sc-faint);margin-left:auto;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="header-logo">StyleCraft</div>
+    <div class="header-sub">v1.0.0 &middot; Options</div>
+  </div>
+  <div class="header-actions">
+    <button class="h-btn" id="btn-import"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Import</button>
+    <button class="h-btn" id="btn-export"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export</button>
+    <button class="h-btn danger" id="btn-reset"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>Reset All</button>
+    <input type="file" id="import-file" accept=".json" style="display:none"/>
+  </div>
+</div>
+
+<div class="container">
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-val" id="stat-sites">0</div><div class="stat-label">Sites Styled</div></div>
+    <div class="stat-card"><div class="stat-val" id="stat-themes">0</div><div class="stat-label">Themes Installed</div></div>
+    <div class="stat-card"><div class="stat-val" id="stat-css">0</div><div class="stat-label">Lines of Custom CSS</div></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="styles">Custom CSS</button>
+    <button class="tab-btn" data-tab="themes">Installed Themes</button>
+    <button class="tab-btn" data-tab="browse">Browse Themes</button>
+    <button class="tab-btn" data-tab="global">Global CSS</button>
+    <button class="tab-btn" data-tab="shortcuts">Shortcuts</button>
+    <button class="tab-btn" data-tab="settings">Settings</button>
+  </div>
+
+  <!-- CUSTOM CSS -->
+  <div class="tab-content active" id="tab-styles">
+    <div class="search-row"><input class="search-input" id="search-styles" type="text" placeholder="Search domains..." spellcheck="false"/></div>
+    <div id="styles-list"></div>
+  </div>
+
+  <!-- THEMES -->
+  <div class="tab-content" id="tab-themes">
+    <div class="search-row"><input class="search-input" id="search-themes" type="text" placeholder="Search installed themes..." spellcheck="false"/></div>
+    <div id="themes-list"></div>
+  </div>
+
+  <!-- BROWSE THEMES -->
+  <div class="tab-content" id="tab-browse">
+    <p style="font-size:12px;color:var(--sc-muted);margin-bottom:12px">Search UserStyles.world for themes to install. Enter a domain name or keyword.</p>
+    <div class="search-row" style="display:flex;gap:8px">
+      <input class="search-input" id="browse-query" type="text" placeholder="Search UserStyles.world... (e.g. github, youtube dark)" spellcheck="false" style="flex:1"/>
+      <button class="save-btn" id="browse-go" style="height:40px;padding:0 20px">Search</button>
+    </div>
+    <div id="browse-status" style="text-align:center;padding:12px;color:var(--sc-muted);font-size:12px;display:none"></div>
+    <div id="browse-results"></div>
+  </div>
+
+  <!-- GLOBAL CSS -->
+  <div class="tab-content" id="tab-global">
+    <p style="font-size:12px;color:var(--sc-muted);margin-bottom:12px">CSS applied to every page you visit. Useful for scrollbar styling, font overrides, etc.</p>
+    <textarea class="editor-area" id="global-css" placeholder="/* CSS applied to ALL websites */&#10;&#10;/* Example: dark scrollbars everywhere */&#10;::-webkit-scrollbar { width: 8px; }&#10;::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }" spellcheck="false" style="min-height:300px"></textarea>
+    <div class="editor-row"><button class="save-btn" id="save-global">Save Global CSS</button></div>
+  </div>
+
+  <!-- SHORTCUTS -->
+  <div class="tab-content" id="tab-shortcuts">
+    <div class="setting-group">
+      <div class="setting-group-title">Keyboard Shortcuts</div>
+      <div class="shortcut-row"><span class="shortcut-label">Open Popup</span><span class="shortcut-key">Alt + S</span></div>
+      <div class="shortcut-row"><span class="shortcut-label">Toggle Editor Panel</span><span class="shortcut-key">Alt + Shift + S</span></div>
+      <div class="shortcut-note">To change keyboard shortcuts, go to <a href="#" id="shortcuts-link">chrome://extensions/shortcuts</a> and find StyleCraft in the list. Chrome doesn't allow extensions to open this page directly &mdash; click to copy the URL, then paste in your address bar.</div>
+    </div>
+    <div class="setting-group">
+      <div class="setting-group-title">Context Menu</div>
+      <div class="shortcut-row"><span class="shortcut-label">Right-click any element</span><span class="shortcut-key">Style this element</span></div>
+      <div class="shortcut-row"><span class="shortcut-label">Right-click any element</span><span class="shortcut-key">Hide this element</span></div>
+    </div>
+    <div class="setting-group">
+      <div class="setting-group-title">Editor Actions</div>
+      <div class="shortcut-row"><span class="shortcut-label">Tab key in code editor</span><span class="shortcut-key">Insert 2 spaces</span></div>
+      <div class="shortcut-row"><span class="shortcut-label">Auto-close brackets/quotes</span><span class="shortcut-key">{ } [ ] ( ) " "</span></div>
+      <div class="shortcut-row"><span class="shortcut-label">Enter between { }</span><span class="shortcut-key">Auto-indent</span></div>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="tab-content" id="tab-settings">
+    <div class="setting-group">
+      <div class="setting-group-title">Editor</div>
+      <div class="setting-row">
+        <div><div class="setting-label">Editor Width</div><div class="setting-desc">Side panel width in pixels (default: 420)</div></div>
+        <input class="setting-input" id="set-panel-width" type="number" min="300" max="800" value="420"/>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">Code Font Size</div><div class="setting-desc">Font size for CSS code editors (px)</div></div>
+        <input class="setting-input" id="set-font-size" type="number" min="10" max="24" value="12"/>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">Auto-open Picker</div><div class="setting-desc">Automatically start element picker when editor opens</div></div>
+        <label class="toggle"><input type="checkbox" id="set-auto-picker" checked/><span class="toggle-sl"></span></label>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">Default Tab</div><div class="setting-desc">Tab shown when editor opens</div></div>
+        <select class="setting-select" id="set-default-tab"><option value="selector">Selector</option><option value="visual">Visual</option><option value="code">Code</option><option value="themes">Themes</option></select>
+      </div>
+    </div>
+    <div class="setting-group">
+      <div class="setting-group-title">Injection</div>
+      <div class="setting-row">
+        <div><div class="setting-label">Custom CSS on Top</div><div class="setting-desc">Custom CSS always layers above installed themes (recommended)</div></div>
+        <label class="toggle"><input type="checkbox" id="set-custom-on-top" checked/><span class="toggle-sl"></span></label>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">Add !important</div><div class="setting-desc">Append !important to all custom CSS declarations for higher specificity</div></div>
+        <label class="toggle"><input type="checkbox" id="set-important"/><span class="toggle-sl"></span></label>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">Live Preview</div><div class="setting-desc">Apply CSS changes in real-time as you type</div></div>
+        <label class="toggle"><input type="checkbox" id="set-live-preview" checked/><span class="toggle-sl"></span></label>
+      </div>
+    </div>
+    <div class="setting-group">
+      <div class="setting-group-title">Appearance</div>
+      <div class="setting-row">
+        <div><div class="setting-label">UI Theme</div><div class="setting-desc">Visual theme for all StyleCraft interfaces</div></div>
+        <select class="setting-select sc-theme-select" id="set-theme"><option value="catppuccin">Catppuccin (Default)</option><option value="dark">Dark (OLED)</option><option value="light">Light</option></select>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">Accent Color</div><div class="setting-desc">Primary accent color for the editor UI</div></div>
+        <input class="setting-input" id="set-accent" type="color" value="#cba6f7" style="width:48px;height:32px;padding:2px;cursor:pointer;"/>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">Highlight Color</div><div class="setting-desc">Color used for element highlighting in picker mode</div></div>
+        <input class="setting-input" id="set-highlight" type="color" value="#89b4fa" style="width:48px;height:32px;padding:2px;cursor:pointer;"/>
+      </div>
+    </div>
+    <div class="setting-group">
+      <div class="setting-group-title">Data &amp; Storage</div>
+      <div class="setting-row">
+        <div><div class="setting-label">Storage Used</div><div class="setting-desc" id="storage-desc">Calculating...</div></div>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--sc-blue);font-weight:600" id="storage-size">-</span>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">Sync Storage</div><div class="setting-desc">Use Chrome sync storage (limited to 100KB, syncs across devices)</div></div>
+        <label class="toggle"><input type="checkbox" id="set-sync" disabled/><span class="toggle-sl"></span></label>
+      </div>
+    </div>
+    <div class="editor-row" style="margin-top:16px"><button class="save-btn" id="save-settings">Save All Settings</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="theme.js"></script>
+<script src="options.js"></script>
+</body>
+</html>
