@@ -7,8 +7,6 @@
 
 > A visual CSS editor for Chrome that lets you pick elements, tweak styles, and install community themes — all from a premium dark-themed interface.
 
-![Screenshot](screenshot.png)
-
 ## Installation
 
 1. Download or clone this repository
