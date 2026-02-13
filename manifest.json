@@ -1,0 +1,70 @@
+{
+  "manifest_version": 3,
+  "name": "StyleCraft",
+  "version": "1.0.0",
+  "description": "Change the appearance of the web instantly \u2014 pick elements, edit CSS, and style any site with a premium dark editor.",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "contextMenus",
+    "tabs"
+  ],
+  "host_permissions": [
+    "<all_urls>",
+    "https://userstyles.world/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "inject-styles.js"
+      ],
+      "run_at": "document_start",
+      "all_frames": true
+    }
+  ],
+  "options_page": "options.html",
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "inject-styles.js",
+        "theme.js"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ],
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Alt+S"
+      }
+    },
+    "toggle_editor": {
+      "suggested_key": {
+        "default": "Alt+Shift+S"
+      },
+      "description": "Toggle StyleCraft Editor"
+    }
+  }
+}

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+:root {
+  --sc-bg:#11111b;--sc-surface:#1e1e2e;--sc-overlay:#313244;
+  --sc-text:#cdd6f4;--sc-subtext:#bac2de;--sc-muted:#585b70;--sc-faint:#45475a;
+  --sc-accent:#cba6f7;--sc-accent-dim:rgba(203,166,247,0.08);--sc-accent-med:rgba(203,166,247,0.15);
+  --sc-blue:#89b4fa;--sc-green:#a6e3a1;--sc-red:#f38ba8;--sc-pink:#f5c2e7;
+  --sc-yellow:#f9e2af;--sc-peach:#fab387;
+  --sc-border:rgba(203,166,247,0.08);--sc-border-h:rgba(203,166,247,0.15);
+  --sc-input-bg:rgba(17,17,27,0.7);--sc-input-border:rgba(203,166,247,0.1);
+  --sc-code-fg:#f5c2e7;--sc-toggle-bg:rgba(69,71,90,0.6);--sc-toggle-on:rgba(203,166,247,0.5);
+  --sc-shadow:rgba(0,0,0,0.3);--sc-glass:rgba(30,30,46,0.8);
+  --sc-grad-start:#1e1e2e;--sc-grad-end:rgba(30,30,46,0);
+  --sc-scrollbar-thumb:rgba(203,166,247,0.2);--sc-scrollbar-thumb-h:rgba(203,166,247,0.35);
+}
+html.sc-dark {
+  --sc-bg:#000000;--sc-surface:#0a0a0f;--sc-overlay:#16161e;
+  --sc-text:#c0caf5;--sc-subtext:#a9b1d6;--sc-muted:#565f89;--sc-faint:#3b3f5c;
+  --sc-accent:#7aa2f7;--sc-accent-dim:rgba(122,162,247,0.08);--sc-accent-med:rgba(122,162,247,0.15);
+  --sc-blue:#7aa2f7;--sc-green:#9ece6a;--sc-red:#f7768e;--sc-pink:#bb9af7;
+  --sc-yellow:#e0af68;--sc-peach:#ff9e64;
+  --sc-border:rgba(122,162,247,0.06);--sc-border-h:rgba(122,162,247,0.12);
+  --sc-input-bg:rgba(0,0,0,0.7);--sc-input-border:rgba(122,162,247,0.1);
+  --sc-code-fg:#bb9af7;--sc-toggle-bg:rgba(86,95,137,0.4);--sc-toggle-on:rgba(122,162,247,0.5);
+  --sc-shadow:rgba(0,0,0,0.6);--sc-glass:rgba(10,10,15,0.9);
+  --sc-grad-start:#0a0a0f;--sc-grad-end:rgba(10,10,15,0);
+  --sc-scrollbar-thumb:rgba(122,162,247,0.2);--sc-scrollbar-thumb-h:rgba(122,162,247,0.35);
+}
+html.sc-light {
+  --sc-bg:#eff1f5;--sc-surface:#ffffff;--sc-overlay:#dce0e8;
+  --sc-text:#4c4f69;--sc-subtext:#5c5f77;--sc-muted:#8c8fa1;--sc-faint:#bcc0cc;
+  --sc-accent:#8839ef;--sc-accent-dim:rgba(136,57,239,0.06);--sc-accent-med:rgba(136,57,239,0.12);
+  --sc-blue:#1e66f5;--sc-green:#40a02b;--sc-red:#d20f39;--sc-pink:#ea76cb;
+  --sc-yellow:#df8e1d;--sc-peach:#fe640b;
+  --sc-border:rgba(136,57,239,0.1);--sc-border-h:rgba(136,57,239,0.2);
+  --sc-input-bg:rgba(239,241,245,0.9);--sc-input-border:rgba(136,57,239,0.15);
+  --sc-code-fg:#8839ef;--sc-toggle-bg:rgba(140,143,161,0.3);--sc-toggle-on:rgba(136,57,239,0.4);
+  --sc-shadow:rgba(0,0,0,0.08);--sc-glass:rgba(255,255,255,0.9);
+  --sc-grad-start:#ffffff;--sc-grad-end:rgba(255,255,255,0);
+  --sc-scrollbar-thumb:rgba(136,57,239,0.15);--sc-scrollbar-thumb-h:rgba(136,57,239,0.25);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  width: 420px; min-height: 200px; max-height: 600px;
+  background: linear-gradient(180deg, var(--sc-surface), var(--sc-bg));
+  color: var(--sc-text); font-family: system-ui, -apple-system, sans-serif;
+  font-size: 13px; overflow-y: auto;
+}
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--sc-scrollbar-thumb); border-radius: 3px; }
+
+.header {
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--sc-border);
+}
+.header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.logo {
+  font-size: 15px; font-weight: 700;
+  background: linear-gradient(135deg, var(--sc-accent), var(--sc-blue));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.version { font-size: 9px; color: var(--sc-muted); font-weight: 600; }
+.domain-row { display: flex; align-items: center; gap: 8px; }
+.domain-text {
+  flex: 1; font-size: 12px; color: var(--sc-blue);
+  font-family: 'JetBrains Mono', monospace;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.toggle { position: relative; width: 36px; height: 18px; flex-shrink: 0; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-sl {
+  position: absolute; inset: 0; cursor: pointer;
+  background: rgba(69,71,90,0.6); border-radius: 9px; transition: all 0.2s;
+}
+.toggle-sl::before {
+  content: ''; position: absolute; left: 2px; top: 2px;
+  width: 14px; height: 14px; background: var(--sc-text);
+  border-radius: 50%; transition: transform 0.2s;
+}
+.toggle input:checked + .toggle-sl { background: rgba(203,166,247,0.5); }
+.toggle input:checked + .toggle-sl::before { transform: translateX(18px); background: var(--sc-accent); }
+.no-styles { font-size: 10px; color: var(--sc-muted); margin-top: 4px; display: none; }
+.style-count { font-size: 10px; color: var(--sc-muted); margin-top: 4px; }
+
+.actions {
+  padding: 8px 16px; display: flex; flex-wrap: wrap; gap: 6px;
+  border-bottom: 1px solid rgba(203,166,247,0.06);
+}
+.btn {
+  flex: 1; min-width: calc(50% - 3px); height: 32px; border-radius: 6px;
+  background: var(--sc-accent-dim); border: 1px solid var(--sc-input-border);
+  color: var(--sc-subtext); cursor: pointer; font-size: 11px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  transition: all 0.15s;
+}
+.btn:hover { background: rgba(203,166,247,0.14); color: var(--sc-accent); }
+.btn.active { background: rgba(203,166,247,0.18); border-color: rgba(203,166,247,0.3); color: var(--sc-accent); box-shadow: inset 0 0 0 1px rgba(203,166,247,0.15); }
+.btn.primary { background: rgba(166,227,161,0.08); border-color: rgba(166,227,161,0.15); color: var(--sc-green); }
+.btn.primary:hover { background: rgba(166,227,161,0.18); }
+
+.search-section { padding: 10px 16px 6px; }
+.search-label {
+  font-size: 9px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1px; color: var(--sc-muted); margin-bottom: 6px;
+}
+.search-bar { display: flex; gap: 6px; }
+.search-input {
+  flex: 1; height: 30px; padding: 0 10px;
+  background: var(--sc-input-bg); border: 1px solid var(--sc-input-border);
+  border-radius: 6px; color: var(--sc-text); font-size: 12px; outline: none;
+}
+.search-input:focus { border-color: rgba(203,166,247,0.35); }
+.search-input::placeholder { color: rgba(127,132,156,0.4); }
+.search-go {
+  height: 30px; padding: 0 12px; border-radius: 6px;
+  background: rgba(203,166,247,0.1); border: 1px solid rgba(203,166,247,0.15);
+  color: var(--sc-accent); font-size: 11px; font-weight: 700; cursor: pointer;
+}
+.search-go:hover { background: rgba(203,166,247,0.2); }
+
+.result-count { padding: 4px 16px 2px; font-size: 9px; color: var(--sc-muted); display: none; }
+.results { padding: 0 16px 10px; max-height: 380px; overflow-y: auto; }
+
+/* Style cards */
+.s-card {
+  margin-bottom: 8px; border-radius: 8px;
+  background: rgba(17,17,27,0.5); border: 1px solid rgba(203,166,247,0.06);
+  overflow: hidden; transition: border-color 0.15s;
+}
+.s-card:hover { border-color: rgba(203,166,247,0.14); }
+.s-card.installed { border-color: rgba(166,227,161,0.2); }
+.s-thumb {
+  width: 100%; height: 120px; object-fit: cover; display: block;
+  background: rgba(30,30,46,0.8); cursor: pointer;
+}
+.s-body { padding: 8px 10px; }
+.s-name {
+  font-size: 12px; font-weight: 700; color: var(--sc-text);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  margin-bottom: 3px;
+}
+.s-meta { font-size: 9px; color: var(--sc-muted); display: flex; gap: 8px; margin-bottom: 6px; }
+.s-meta span { display: flex; align-items: center; gap: 3px; }
+.s-actions { display: flex; gap: 5px; }
+.s-btn {
+  flex: 1; height: 26px; border-radius: 5px; border: 1px solid;
+  font-size: 10px; font-weight: 700; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 3px;
+  transition: all 0.15s;
+}
+.s-btn.preview {
+  background: rgba(137,180,250,0.06); border-color: rgba(137,180,250,0.15); color: var(--sc-blue);
+}
+.s-btn.preview:hover { background: rgba(137,180,250,0.15); }
+.s-btn.preview.active { background: rgba(137,180,250,0.2); border-color: rgba(137,180,250,0.35); color: var(--sc-blue); }
+.s-btn.install {
+  background: rgba(166,227,161,0.06); border-color: rgba(166,227,161,0.15); color: var(--sc-green);
+}
+.s-btn.install:hover { background: rgba(166,227,161,0.15); }
+.s-btn.install.done {
+  background: rgba(166,227,161,0.12); border-color: rgba(166,227,161,0.25); color: var(--sc-green);
+  cursor: default;
+}
+.s-btn.uninstall {
+  background: rgba(243,139,168,0.06); border-color: rgba(243,139,168,0.15); color: var(--sc-red);
+}
+.s-btn.uninstall:hover { background: rgba(243,139,168,0.15); }
+.s-btn:disabled { opacity: 0.4; cursor: wait; }
+
+.empty-msg { text-align: center; padding: 20px; color: var(--sc-faint); font-size: 11px; }
+.loading { text-align: center; padding: 14px; color: var(--sc-accent); font-size: 11px; display: none; }
+.loading .spinner {
+  display: inline-block; width: 12px; height: 12px;
+  border: 2px solid rgba(203,166,247,0.2); border-top-color: var(--sc-accent);
+  border-radius: 50%; animation: spin 0.6s linear infinite;
+  vertical-align: middle; margin-right: 6px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.powered { text-align: center; padding: 4px 16px 10px; font-size: 8px; color: var(--sc-faint); }
+.powered a { color: var(--sc-faint); text-decoration: none; }
+.sc-theme-select{height:22px;padding:0 6px;background:var(--sc-input-bg);border:1px solid var(--sc-border);border-radius:4px;color:var(--sc-muted);font-size:9px;font-weight:600;outline:none;cursor:pointer;appearance:auto;}
+.sc-theme-select option{background:var(--sc-surface);color:var(--sc-text);}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-row">
+    <div class="logo">StyleCraft</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <select class="sc-theme-select" id="popup-theme">
+        <option value="catppuccin">Catppuccin</option>
+        <option value="dark">Dark</option>
+        <option value="light">Light</option>
+      </select>
+      <span class="version">v1.0.0</span>
+    </div>
+  </div>
+  <div class="domain-row">
+    <span id="domain-text" class="domain-text"></span>
+    <label class="toggle"><input id="domain-toggle" type="checkbox"/><span class="toggle-sl"></span></label>
+  </div>
+  <div id="no-styles" class="no-styles">No styles for this site</div>
+  <div id="style-count" class="style-count"></div>
+</div>
+<div class="actions">
+  <button id="btn-open" class="btn primary">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+    Open Editor
+  </button>
+  <button id="btn-readability" class="btn">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+    Read
+  </button>
+  <button id="btn-grayscale" class="btn">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10"/></svg>
+    Gray
+  </button>
+  <button id="btn-options" class="btn">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    Options
+  </button>
+  <button id="btn-export" class="btn">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Export
+  </button>
+</div>
+<div class="search-section">
+  <div class="search-label">Community Styles</div>
+  <div class="search-bar">
+    <input id="search-input" class="search-input" type="text" placeholder="Search UserStyles.world..." spellcheck="false"/>
+    <button id="search-btn" class="search-go">Search</button>
+  </div>
+</div>
+<div id="result-count" class="result-count"></div>
+<div id="search-loading" class="loading"><span class="spinner"></span>Searching UserStyles.world...</div>
+<div id="search-results" class="results"></div>
+<div class="powered">Powered by <a href="https://userstyles.world" target="_blank">UserStyles.world</a></div>
+
+<script src="theme.js"></script>
+<script src="popup.js"></script>
+</body>
+</html>
