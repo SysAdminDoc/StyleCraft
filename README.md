@@ -67,8 +67,8 @@ Click any value in the box model diagram to edit it inline. While focused:
 
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│  inject-styles  │────>│  chrome.storage  │<────│   background    │
-│  (document_start)│     │     .local       │     │ (service worker)│
+│  inject-styles  │────>│  chrome.storage │<────│   background    │
+│ (document_start)│     │     .local      │     │ (service worker)│
 │                 │     │                 │     │                 │
 │ Reads storage   │     │ stylecraft_data │     │ Handles messages│
 │ directly, no SW │     │ per-domain CSS  │     │ USw API proxy   │
@@ -78,13 +78,13 @@ Click any value in the box model diagram to edit it inline. While focused:
                     ┌────────────┴────────────┐
                     │                         │
               ┌─────┴─────┐           ┌───────┴───────┐
-              │  content   │           │    popup /    │
-              │  (editor)  │           │   options     │
-              │            │           │               │
-              │ Shadow DOM │           │ Theme mgmt    │
-              │ Visual CSS │           │ USw browser   │
-              │ Box model  │           │ Import/Export │
-              └────────────┘           └───────────────┘
+              │  content  │           │    popup /    │
+              │  (editor) │           │   options     │
+              │           │           │               │
+              │ Shadow DOM│           │ Theme mgmt    │
+              │ Visual CSS│           │ USw browser   │
+              │ Box model │           │ Import/Export │
+              └───────────┘           └───────────────┘
 ```
 
 **Style persistence** — `inject-styles.js` runs at `document_start` and reads directly from `chrome.storage.local`, bypassing the service worker entirely. This guarantees styles load even when the MV3 service worker is asleep. A DOMContentLoaded re-apply ensures styles survive late `<head>` creation.
