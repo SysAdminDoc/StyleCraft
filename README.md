@@ -8,8 +8,6 @@
 
 > A full-featured CSS style manager for Chromium browsers. Create, edit, import, and manage custom styles for any website with a professional dark-themed interface, visual element picker, full CSS editor, and UserStyles.world integration.
 
-![Screenshot](screenshot.png)
-
 ## Installation
 
 ### From Source (Developer Mode)
