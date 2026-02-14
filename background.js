@@ -378,40 +378,6 @@ chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({ id: 'stylecraft-hide', title: 'Hide this element', contexts: ['all'] });
 });
 
-/* ─── Open popup as tall panel window (bypasses 600px popup cap) ─── */
-let popupWindowId = null;
-
-chrome.action.onClicked.addListener(async (tab) => {
-  // If popup window already exists, focus it
-  if (popupWindowId !== null) {
-    try {
-      const w = await chrome.windows.get(popupWindowId);
-      if (w) { chrome.windows.update(popupWindowId, { focused: true }); return; }
-    } catch { popupWindowId = null; }
-  }
-
-  const display = await chrome.system.display.getInfo();
-  const screen = display[0] || { workArea: { width: 1920, height: 1080, left: 0, top: 0 } };
-  const wa = screen.workArea;
-  const panelW = 440;
-  const panelH = Math.min(wa.height - 40, 1200);
-  const left = wa.left + wa.width - panelW - 8;
-  const top = wa.top + 8;
-
-  const w = await chrome.windows.create({
-    url: chrome.runtime.getURL('popup.html'),
-    type: 'popup',
-    width: panelW,
-    height: panelH,
-    left,
-    top
-  });
-  popupWindowId = w.id;
-});
-
-chrome.windows.onRemoved.addListener((id) => {
-  if (id === popupWindowId) popupWindowId = null;
-});
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (!tab?.id) return;
   if (info.menuItemId === 'stylecraft-open') injectAndSend(tab.id, { action: 'sc-open-editor-pick' });
