@@ -1,4 +1,4 @@
-/* StyleCraft v1.0.0 — Style Injector (document_start) */
+/* StyleCraft v1.5.0 — Style Injector (document_start) */
 (function() {
   if (window.__stylecraft_injected) return;
   window.__stylecraft_injected = true;
@@ -31,6 +31,40 @@
     return pageDomain === storedKey || pageDomain.endsWith('.' + storedKey);
   }
 
+  /* Advanced URL pattern matching via appliesTo array */
+  function entryMatchesPage(storedKey, data, pageDomain, pageUrl) {
+    const patterns = data.appliesTo;
+    if (!patterns || !patterns.length) return domainMatches(pageDomain, storedKey);
+    for (const p of patterns) {
+      if (patternMatchesUrl(p, pageDomain, pageUrl)) return true;
+    }
+    return false;
+  }
+
+  function patternMatchesUrl(p, pageDomain, pageUrl) {
+    if (!p || !p.value) return false;
+    const v = p.value;
+    switch (p.type) {
+      case 'domain':
+        return pageDomain === v || pageDomain.endsWith('.' + v);
+      case 'url':
+        return pageUrl === v;
+      case 'url-prefix':
+        return pageUrl.startsWith(v);
+      case 'regexp':
+        try { return new RegExp(v).test(pageUrl); } catch { return false; }
+      case 'wildcard': {
+        if (v.includes('://') || v.includes('/')) {
+          const re = new RegExp('^' + v.replace(/[.+?{}|()[\]\\]/g, '\\$&').replace(/\*/g, '.*') + '$');
+          return re.test(pageUrl);
+        }
+        return domainMatches(pageDomain, v);
+      }
+      default:
+        return domainMatches(pageDomain, v);
+    }
+  }
+
   /* Read directly from storage — no service worker needed */
   function applyFromStorage() {
     chrome.storage.local.get(['stylecraft_data', 'stylecraft_settings'], (result) => {
@@ -49,9 +83,11 @@
     const pageUrl = location.href;
 
     let themeCSS = '', customCSS = '', customEnabled = true;
+    let foundCustom = false;
 
+    // Find matching domain entry
     for (const [pattern, data] of Object.entries(allData)) {
-      if (domainMatches(pageDomain, pattern)) {
+      if (entryMatchesPage(pattern, data, pageDomain, pageUrl)) {
         for (const [id, theme] of Object.entries(data.themes || {})) {
           if (theme.enabled !== false) {
             const raw = theme.rawCSS || theme.css || '';
@@ -59,9 +95,11 @@
             if (resolved.trim()) themeCSS += (themeCSS ? '\n' : '') + resolved;
           }
         }
-        customCSS = data.customCSS || '';
-        customEnabled = data.customEnabled !== false;
-        break;
+        if (!foundCustom && data.customCSS) {
+          customCSS = data.customCSS;
+          customEnabled = data.customEnabled !== false;
+          foundCustom = true;
+        }
       }
     }
 

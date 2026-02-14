@@ -1,13 +1,15 @@
 {
   "manifest_version": 3,
   "name": "StyleCraft",
-  "version": "1.0.0",
+  "version": "1.5.0",
   "description": "Change the appearance of the web instantly \u2014 pick elements, edit CSS, and style any site with a premium dark editor.",
   "permissions": [
     "storage",
     "activeTab",
     "scripting",
     "contextMenus",
+    "alarms",
+    "system.display",
     "tabs"
   ],
   "host_permissions": [
@@ -18,7 +20,6 @@
     "service_worker": "background.js"
   },
   "action": {
-    "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon16.png",
       "48": "icons/icon48.png",
@@ -47,7 +48,8 @@
     {
       "resources": [
         "inject-styles.js",
-        "theme.js"
+        "theme.js",
+        "editor.html"
       ],
       "matches": [
         "<all_urls>"

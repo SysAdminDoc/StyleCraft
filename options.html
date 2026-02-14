@@ -94,6 +94,26 @@ a{color:var(--sc-blue);text-decoration:none;}a:hover{text-decoration:underline;}
 
 /* Browse results */
 .browse-card{display:flex;gap:14px;padding:14px 18px;background:var(--sc-surface);border:1px solid var(--sc-border);border-radius:10px;margin-bottom:10px;transition:border-color 0.15s;align-items:flex-start;}
+
+/* Management toolbar */
+.mgmt-bar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+.mgmt-bar select{height:30px;padding:0 8px;background:var(--sc-input-bg);border:1px solid var(--sc-input-border);border-radius:6px;color:var(--sc-text);font-size:11px;font-weight:600;outline:none;cursor:pointer;appearance:none;padding-right:20px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23585b70' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center;}
+.mgmt-bar select:focus{border-color:rgba(203,166,247,0.3);}
+.mgmt-bar select option{background:#1e1e2e;color:var(--sc-text);}
+.mgmt-sep{width:1px;height:20px;background:var(--sc-border-h);flex-shrink:0;}
+.bulk-bar{display:flex;align-items:center;gap:6px;}
+.bulk-check{width:14px;height:14px;accent-color:var(--sc-accent);cursor:pointer;}
+.bulk-label{font-size:11px;color:var(--sc-muted);font-weight:600;white-space:nowrap;}
+.bulk-btn{height:26px;padding:0 10px;border-radius:5px;background:var(--sc-accent-dim);border:1px solid var(--sc-border);color:var(--sc-subtext);font-size:10px;font-weight:700;cursor:pointer;transition:all .12s;white-space:nowrap;}
+.bulk-btn:hover{background:var(--sc-accent-med);color:var(--sc-accent);}
+.bulk-btn.danger{background:rgba(243,139,168,0.06);border-color:rgba(243,139,168,0.1);}
+.bulk-btn.danger:hover{background:rgba(243,139,168,0.14);color:var(--sc-red);}
+.bulk-count{font-size:10px;color:var(--sc-accent);font-weight:700;min-width:14px;}
+.card-check{width:14px;height:14px;accent-color:var(--sc-accent);cursor:pointer;flex-shrink:0;margin-right:4px;}
+.card-header-left{display:flex;align-items:center;gap:6px;min-width:0;flex:1;}
+.update-badge{display:inline-flex;align-items:center;gap:3px;padding:1px 6px;border-radius:3px;background:rgba(249,226,175,0.12);color:var(--sc-yellow);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;}
+.update-badge.uptodate{background:rgba(166,227,161,0.08);color:var(--sc-green);}
+.card-btn.clone-btn:hover{background:rgba(137,180,250,0.14);color:var(--sc-blue);}
 .browse-card:hover{border-color:var(--sc-border-h);}
 .browse-card.installed{border-color:rgba(166,227,161,0.2);}
 .browse-thumb{width:120px;height:75px;border-radius:6px;object-fit:cover;flex-shrink:0;background:rgba(17,17,27,0.5);}
@@ -117,13 +137,13 @@ a{color:var(--sc-blue);text-decoration:none;}a:hover{text-decoration:underline;}
 <div class="header">
   <div class="header-left">
     <div class="header-logo">StyleCraft</div>
-    <div class="header-sub">v1.0.0 &middot; Options</div>
+    <div class="header-sub">v1.5.0 &middot; Options</div>
   </div>
   <div class="header-actions">
-    <button class="h-btn" id="btn-import"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Import</button>
+    <button class="h-btn" id="btn-import" title="Import from StyleCraft, Stylus, or Stylebot"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Import</button>
     <button class="h-btn" id="btn-export"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export</button>
     <button class="h-btn danger" id="btn-reset"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>Reset All</button>
-    <input type="file" id="import-file" accept=".json" style="display:none"/>
+    <input type="file" id="import-file" accept=".json,application/json,*/*" style="display:none"/>
   </div>
 </div>
 
@@ -146,12 +166,63 @@ a{color:var(--sc-blue);text-decoration:none;}a:hover{text-decoration:underline;}
   <!-- CUSTOM CSS -->
   <div class="tab-content active" id="tab-styles">
     <div class="search-row"><input class="search-input" id="search-styles" type="text" placeholder="Search domains..." spellcheck="false"/></div>
+    <div class="mgmt-bar" id="styles-mgmt">
+      <div class="bulk-bar">
+        <input type="checkbox" class="bulk-check" id="styles-select-all" title="Select all"/>
+        <span class="bulk-label">Select</span>
+        <span class="bulk-count" id="styles-sel-count">0</span>
+      </div>
+      <div class="mgmt-sep"></div>
+      <button class="bulk-btn" id="styles-bulk-enable">Enable</button>
+      <button class="bulk-btn" id="styles-bulk-disable">Disable</button>
+      <button class="bulk-btn danger" id="styles-bulk-delete">Delete</button>
+      <div class="mgmt-sep"></div>
+      <select id="styles-sort">
+        <option value="domain-asc">Domain A-Z</option>
+        <option value="domain-desc">Domain Z-A</option>
+        <option value="lines-desc">Most Lines</option>
+        <option value="lines-asc">Fewest Lines</option>
+        <option value="modified-desc">Recently Modified</option>
+      </select>
+      <select id="styles-filter">
+        <option value="all">All</option>
+        <option value="enabled">Enabled</option>
+        <option value="disabled">Disabled</option>
+      </select>
+    </div>
     <div id="styles-list"></div>
   </div>
 
   <!-- THEMES -->
   <div class="tab-content" id="tab-themes">
     <div class="search-row"><input class="search-input" id="search-themes" type="text" placeholder="Search installed themes..." spellcheck="false"/></div>
+    <div class="mgmt-bar" id="themes-mgmt">
+      <div class="bulk-bar">
+        <input type="checkbox" class="bulk-check" id="themes-select-all" title="Select all"/>
+        <span class="bulk-label">Select</span>
+        <span class="bulk-count" id="themes-sel-count">0</span>
+      </div>
+      <div class="mgmt-sep"></div>
+      <button class="bulk-btn" id="themes-bulk-enable">Enable</button>
+      <button class="bulk-btn" id="themes-bulk-disable">Disable</button>
+      <button class="bulk-btn danger" id="themes-bulk-delete">Delete</button>
+      <div class="mgmt-sep"></div>
+      <select id="themes-sort">
+        <option value="name-asc">Name A-Z</option>
+        <option value="name-desc">Name Z-A</option>
+        <option value="domain-asc">Domain A-Z</option>
+        <option value="lines-desc">Most Lines</option>
+        <option value="installed-desc">Recently Installed</option>
+      </select>
+      <select id="themes-filter">
+        <option value="all">All</option>
+        <option value="enabled">Enabled</option>
+        <option value="disabled">Disabled</option>
+        <option value="has-update">Has Update</option>
+      </select>
+      <div class="mgmt-sep"></div>
+      <button class="bulk-btn" id="themes-check-updates" style="color:var(--sc-yellow)">Check Updates</button>
+    </div>
     <div id="themes-list"></div>
   </div>
 
@@ -254,6 +325,10 @@ a{color:var(--sc-blue);text-decoration:none;}a:hover{text-decoration:underline;}
       <div class="setting-row">
         <div><div class="setting-label">Sync Storage</div><div class="setting-desc">Use Chrome sync storage (limited to 100KB, syncs across devices)</div></div>
         <label class="toggle"><input type="checkbox" id="set-sync" disabled/><span class="toggle-sl"></span></label>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">Auto-Backup</div><div class="setting-desc">Daily automatic backup (keeps last 3). <span id="backup-status" style="color:var(--sc-muted)">Checking...</span></div></div>
+        <button class="h-btn" id="btn-restore-backup" style="font-size:11px">Restore Backup</button>
       </div>
     </div>
     <div class="editor-row" style="margin-top:16px"><button class="save-btn" id="save-settings">Save All Settings</button></div>

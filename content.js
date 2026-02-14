@@ -1,4 +1,4 @@
-/* StyleCraft v1.0.0 — Content Script / Editor */
+/* StyleCraft v1.0.9 — Content Script / Editor */
 (function () {
   if (window.__stylecraft_editor_loaded) return;
   window.__stylecraft_editor_loaded = true;
@@ -601,7 +601,54 @@
   function resetStyles() { pushUndo(); state.customCSS=''; refs.codeEditor.value=''; applyLiveCSS(); saveCustomCSS(); parseCSStoBasic(''); updateLineNumbers(); toast('Custom CSS reset'); }
 
   /* ═══════ READABILITY / GRAYSCALE ═══════ */
-  function toggleReadability(){state.readability=!state.readability;refs.readBtn.classList.toggle('active',state.readability);let el=document.getElementById('sc-readability-style');if(state.readability){if(!el){el=document.createElement('style');el.id='sc-readability-style';document.head.appendChild(el);}el.textContent='aside,nav,footer,.sidebar,.ad,.ads,.advertisement,[role="complementary"],[role="banner"],[role="navigation"],.social-share,.comments,.related-posts,iframe:not([src*="youtube"]):not([src*="vimeo"]){display:none!important}article,main,[role="main"],.post-content,.article-content,.entry-content{max-width:720px!important;margin:0 auto!important;font-size:18px!important;line-height:1.7!important;color:#e0e0e0!important}body{background:#1a1a2e!important}';}else if(el)el.remove();toast(state.readability?'Readability ON':'Readability OFF');}
+  /* Enhanced Readability Mode */
+  const readThemes = {
+    dark: { bg: '#1a1a2e', text: '#e0e0e0', link: '#89b4fa' },
+    sepia: { bg: '#f4ecd8', text: '#5b4636', link: '#8b4513' },
+    light: { bg: '#ffffff', text: '#333333', link: '#1a73e8' },
+    oled: { bg: '#000000', text: '#cccccc', link: '#7aa2f7' }
+  };
+  let readSettings = { theme: 'dark', fontSize: 18, lineHeight: 1.7, fontFamily: 'Georgia, serif', maxWidth: 720 };
+
+  function buildReadabilityCSS() {
+    const t = readThemes[readSettings.theme] || readThemes.dark;
+    const s = readSettings;
+    const googleFonts = { 'Merriweather': 1, 'Inter': 1, 'Literata': 1 };
+    const fontName = s.fontFamily.split(',')[0].replace(/'/g, '').trim();
+    let importRule = '';
+    if (googleFonts[fontName]) {
+      importRule = '@import url("https://fonts.googleapis.com/css2?family=' + encodeURIComponent(fontName) + ':wght@400;700&display=swap");';
+    }
+    return importRule +
+      'aside,nav,footer,.sidebar,.ad,.ads,.advertisement,[role="complementary"],[role="banner"],[role="navigation"],.social-share,.comments,.related-posts,iframe:not([src*="youtube"]):not([src*="vimeo"]){display:none!important}' +
+      'article,main,[role="main"],.post-content,.article-content,.entry-content,body>div>div{max-width:' + s.maxWidth + 'px!important;margin:0 auto!important;font-size:' + s.fontSize + 'px!important;line-height:' + s.lineHeight + '!important;color:' + t.text + '!important;font-family:' + s.fontFamily + '!important}' +
+      'a{color:' + t.link + '!important}' +
+      'body{background:' + t.bg + '!important}' +
+      'img,video,figure{max-width:100%!important;height:auto!important}' +
+      'h1,h2,h3,h4,h5,h6{color:' + t.text + '!important;font-family:' + s.fontFamily + '!important}';
+  }
+
+  function applyReadability() {
+    let el = document.getElementById('sc-readability-style');
+    if (state.readability) {
+      if (!el) { el = document.createElement('style'); el.id = 'sc-readability-style'; document.head.appendChild(el); }
+      el.textContent = buildReadabilityCSS();
+    } else if (el) el.remove();
+  }
+
+  function toggleReadability(newSettings) {
+    if (newSettings) Object.assign(readSettings, newSettings);
+    state.readability = !state.readability;
+    refs.readBtn.classList.toggle('active', state.readability);
+    applyReadability();
+    toast(state.readability ? 'Readability ON' : 'Readability OFF');
+  }
+
+  function updateReadSettings(newSettings) {
+    Object.assign(readSettings, newSettings);
+    if (state.readability) applyReadability();
+  }
+
   function toggleGrayscale(){state.grayscale=!state.grayscale;refs.grayBtn.classList.toggle('active',state.grayscale);let el=document.getElementById('sc-grayscale-style');if(state.grayscale){if(!el){el=document.createElement('style');el.id='sc-grayscale-style';document.head.appendChild(el);}el.textContent='html{filter:grayscale(100%)!important}';}else if(el)el.remove();toast(state.grayscale?'Grayscale ON':'Grayscale OFF');}
 
   /* ═══════ CODE EDITOR ═══════ */
@@ -796,11 +843,12 @@
       case 'sc-open-editor-pick':openEditor();setTimeout(()=>startPicker(),350);break;
       case 'sc-toggle-editor':toggleEditor();break;
       case 'sc-hide-element':openEditor();startPicker();break;
-      case 'sc-toggle-readability':toggleReadability();break;
+      case 'sc-toggle-readability':toggleReadability(msg.readSettings);break;
       case 'sc-toggle-grayscale':toggleGrayscale();break;
-      case 'sc-toggle-readability-get':toggleReadability();sendResponse({readability:state.readability});return true;
+      case 'sc-toggle-readability-get':toggleReadability(msg.readSettings);sendResponse({readability:state.readability,readSettings});return true;
       case 'sc-toggle-grayscale-get':toggleGrayscale();sendResponse({grayscale:state.grayscale});return true;
-      case 'sc-get-toggle-state':sendResponse({readability:state.readability,grayscale:state.grayscale});return true;
+      case 'sc-get-toggle-state':sendResponse({readability:state.readability,grayscale:state.grayscale,readSettings});return true;
+      case 'sc-update-read-settings':updateReadSettings(msg.readSettings);sendResponse({ok:true});return true;
       case 'sc-styles-updated':loadStyles().then(()=>applyLiveCSS());break;
       case 'sc-apply-preview': {
         let el = document.getElementById(PREVIEW_ID);
