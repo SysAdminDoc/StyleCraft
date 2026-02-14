@@ -1,25 +1,24 @@
 {
   "manifest_version": 3,
   "name": "StyleCraft",
-  "version": "1.5.0",
-  "description": "Change the appearance of the web instantly \u2014 pick elements, edit CSS, and style any site with a premium dark editor.",
+  "version": "1.6.0",
+  "description": "Customize any website's appearance with custom CSS. Pick elements visually, write CSS directly, or install community styles from UserStyles.world.",
+  "homepage_url": "https://github.com/SysAdminDoc/StyleCraft",
   "permissions": [
     "storage",
-    "activeTab",
     "scripting",
     "contextMenus",
     "alarms",
-    "system.display",
     "tabs"
   ],
   "host_permissions": [
-    "<all_urls>",
-    "https://userstyles.world/*"
+    "<all_urls>"
   ],
   "background": {
     "service_worker": "background.js"
   },
   "action": {
+    "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon16.png",
       "48": "icons/icon48.png",
@@ -47,8 +46,6 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "inject-styles.js",
-        "theme.js",
         "editor.html"
       ],
       "matches": [

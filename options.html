@@ -16,7 +16,7 @@ a{color:var(--sc-blue);text-decoration:none;}a:hover{text-decoration:underline;}
 .header{padding:24px 40px;background:linear-gradient(180deg,var(--sc-grad-start) 0%,rgba(0,0,0,0) 100%);border-bottom:1px solid var(--sc-border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;backdrop-filter:blur(20px);}
 .header-left{display:flex;align-items:center;gap:14px;}
 .header-logo{font-size:22px;font-weight:700;background:linear-gradient(135deg,var(--sc-accent),var(--sc-blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.header-sub{font-size:12px;color:var(--sc-muted);font-family:'JetBrains Mono',monospace;}
+.header-sub{font-size:12px;color:var(--sc-muted);font-family:'SFMono-Regular','Cascadia Code','Consolas','Liberation Mono','Menlo',monospace;}
 .header-actions{display:flex;gap:8px;}
 .h-btn{height:36px;padding:0 16px;background:var(--sc-accent-dim);border:1px solid var(--sc-border-h);border-radius:8px;color:var(--sc-subtext);cursor:pointer;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;transition:all 0.15s;}
 .h-btn:hover{background:var(--sc-accent-med);color:var(--sc-accent);}
@@ -40,7 +40,7 @@ a{color:var(--sc-blue);text-decoration:none;}a:hover{text-decoration:underline;}
 .card{background:var(--sc-surface);border:1px solid var(--sc-border);border-radius:10px;margin-bottom:12px;overflow:hidden;transition:border-color 0.15s;}
 .card:hover{border-color:var(--sc-border-h);}
 .card-header{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;}
-.card-domain{font-size:14px;font-weight:600;color:var(--sc-blue);font-family:'JetBrains Mono',monospace;}
+.card-domain{font-size:14px;font-weight:600;color:var(--sc-blue);font-family:'SFMono-Regular','Cascadia Code','Consolas','Liberation Mono','Menlo',monospace;}
 .card-meta{font-size:11px;color:var(--sc-muted);margin-top:2px;}
 .card-actions{display:flex;align-items:center;gap:8px;}
 .card-btn{width:30px;height:30px;border-radius:6px;background:rgba(203,166,247,0.06);border:1px solid var(--sc-border);color:var(--sc-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;}
@@ -55,7 +55,7 @@ a{color:var(--sc-blue);text-decoration:none;}a:hover{text-decoration:underline;}
 .card-body{display:none;padding:0 18px 18px;}
 .card.expanded .card-body{display:block;}
 
-.editor-area{width:100%;min-height:200px;padding:12px 14px;background:var(--sc-input-bg);border:1px solid var(--sc-input-border);border-radius:8px;color:var(--sc-code-fg);font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;resize:vertical;outline:none;tab-size:2;white-space:pre;}
+.editor-area{width:100%;min-height:200px;padding:12px 14px;background:var(--sc-input-bg);border:1px solid var(--sc-input-border);border-radius:8px;color:var(--sc-code-fg);font-family:'SFMono-Regular','Cascadia Code','Consolas','Liberation Mono','Menlo',monospace;font-size:12px;line-height:1.6;resize:vertical;outline:none;tab-size:2;white-space:pre;}
 .editor-area:focus{border-color:rgba(203,166,247,0.3);}
 .editor-row{display:flex;justify-content:flex-end;gap:8px;margin-top:10px;}
 .save-btn{height:32px;padding:0 18px;border-radius:6px;background:rgba(166,227,161,0.08);border:1px solid rgba(166,227,161,0.15);color:var(--sc-green);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s;}
@@ -79,14 +79,14 @@ a{color:var(--sc-blue);text-decoration:none;}a:hover{text-decoration:underline;}
 .setting-row{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;margin-bottom:6px;background:var(--sc-surface);border-radius:8px;}
 .setting-label{font-size:13px;color:var(--sc-text);}
 .setting-desc{font-size:11px;color:var(--sc-muted);margin-top:2px;}
-.setting-input{width:200px;height:32px;padding:0 10px;background:var(--sc-input-bg);border:1px solid var(--sc-input-border);border-radius:6px;color:var(--sc-text);font-size:12px;font-family:'JetBrains Mono',monospace;outline:none;}
+.setting-input{width:200px;height:32px;padding:0 10px;background:var(--sc-input-bg);border:1px solid var(--sc-input-border);border-radius:6px;color:var(--sc-text);font-size:12px;font-family:'SFMono-Regular','Cascadia Code','Consolas','Liberation Mono','Menlo',monospace;outline:none;}
 .setting-input:focus{border-color:rgba(203,166,247,0.3);}
 .setting-select{width:200px;height:32px;padding:0 10px;background:var(--sc-input-bg);border:1px solid var(--sc-input-border);border-radius:6px;color:var(--sc-text);font-size:12px;outline:none;appearance:none;cursor:pointer;}
 .setting-select option{background:#1e1e2e;color:var(--sc-text);}
 
 .shortcut-row{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;margin-bottom:6px;background:var(--sc-surface);border-radius:8px;}
 .shortcut-label{font-size:13px;color:var(--sc-text);flex:1;}
-.shortcut-key{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:var(--sc-input-bg);border:1px solid rgba(203,166,247,0.15);border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--sc-subtext);}
+.shortcut-key{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:var(--sc-input-bg);border:1px solid rgba(203,166,247,0.15);border-radius:5px;font-family:'SFMono-Regular','Cascadia Code','Consolas','Liberation Mono','Menlo',monospace;font-size:11px;color:var(--sc-subtext);}
 .shortcut-note{font-size:10px;color:var(--sc-faint);margin-top:12px;line-height:1.5;}
 
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--sc-surface);backdrop-filter:blur(12px);border:1px solid rgba(203,166,247,0.2);color:var(--sc-accent);padding:10px 20px;border-radius:8px;font-size:12px;font-weight:600;pointer-events:none;opacity:0;transition:all 0.25s;z-index:100;}
@@ -320,7 +320,7 @@ a{color:var(--sc-blue);text-decoration:none;}a:hover{text-decoration:underline;}
       <div class="setting-group-title">Data &amp; Storage</div>
       <div class="setting-row">
         <div><div class="setting-label">Storage Used</div><div class="setting-desc" id="storage-desc">Calculating...</div></div>
-        <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--sc-blue);font-weight:600" id="storage-size">-</span>
+        <span style="font-family:'SFMono-Regular','Cascadia Code','Consolas','Liberation Mono','Menlo',monospace;font-size:13px;color:var(--sc-blue);font-weight:600" id="storage-size">-</span>
       </div>
       <div class="setting-row">
         <div><div class="setting-label">Sync Storage</div><div class="setting-desc">Use Chrome sync storage (limited to 100KB, syncs across devices)</div></div>

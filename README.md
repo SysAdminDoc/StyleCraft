@@ -6,9 +6,9 @@
 ![Manifest](https://img.shields.io/badge/manifest-v3-orange)
 ![Status](https://img.shields.io/badge/status-active-success)
 
-<img width="96" height="96" alt="icon96" src="https://github.com/user-attachments/assets/88958220-5867-47af-9363-c66377b91588" />
+> A full-featured CSS style manager for Chromium browsers. Create, edit, import, and manage custom styles for any website with a professional dark-themed interface, visual element picker, full CSS editor, and UserStyles.world integration.
 
-> A full-featured CSS style editor and manager for Chromium browsers. Create, edit, import, and manage custom styles for any website with a professional dark-themed interface, visual element picker, full CSS editor, and UserStyles.world integration.
+![Screenshot](screenshot.png)
 
 ## Installation
 

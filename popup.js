@@ -1,23 +1,12 @@
 /* StyleCraft v1.5.0 — Popup */
 (async function() {
-  // When opened as a panel window, we need the active tab from the main browser window, not this popup window
-  let tab = null;
-  const allWindows = await chrome.windows.getAll({ windowTypes: ['normal'] });
-  for (const w of allWindows) {
-    const [t] = await chrome.tabs.query({ active: true, windowId: w.id });
-    if (t && t.url && !t.url.startsWith('chrome-extension://')) { tab = t; break; }
-  }
-  if (!tab) { const [t] = await chrome.tabs.query({ active: true, lastFocusedWindow: true }); tab = t; }
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const url = tab?.url || '';
   let domain = '';
   try { domain = new URL(url).hostname; } catch {}
 
   const $ = id => document.getElementById(id);
   const targetTabId = tab?.id || null;
-  function sendToTab(msg, cb) {
-    if (!targetTabId) return;
-    chrome.tabs.sendMessage(targetTabId, msg).then(r => cb && cb(r)).catch(() => {});
-  }
   const domainToggle = $('domain-toggle');
   const readBtn = $('btn-readability');
   const grayBtn = $('btn-grayscale');
@@ -386,18 +375,14 @@
       const card = document.createElement('div');
       card.className = 's-card' + (isInstalled ? ' installed' : '');
 
-      // Thumbnail — only render if exists
-      let thumbHTML = '';
-      if (s.thumb) {
-        thumbHTML = '<img class="s-thumb" src="' + esc(s.thumb) + '" alt="' + esc(s.name) + '" loading="lazy"/>';
-      }
-
-      card.innerHTML = thumbHTML +
+      card.innerHTML =
         '<div class="s-body">' +
-          '<div class="s-name">' + esc(s.name) + '</div>' +
-          '<div class="s-meta">' +
-            (s.author ? '<span>by ' + esc(s.author) + '</span>' : '') +
-            '<span>' + esc(s.installs) + ' installs</span>' +
+          '<div class="s-info">' +
+            '<div class="s-name">' + esc(s.name) + '</div>' +
+            '<div class="s-meta">' +
+              (s.author ? '<span>by ' + esc(s.author) + '</span>' : '') +
+              '<span>' + esc(s.installs) + ' installs</span>' +
+            '</div>' +
           '</div>' +
           '<div class="s-actions">' +
             '<button class="s-btn preview" data-action="preview">Preview</button>' +
@@ -407,13 +392,6 @@
             '<button class="s-btn uninstall" data-action="uninstall" style="' + (isInstalled ? '' : 'display:none') + '">Uninstall</button>' +
           '</div>' +
         '</div>';
-
-      // Click on thumb = open USw page
-      const thumbEl = card.querySelector('.s-thumb');
-      if (thumbEl) {
-        thumbEl.style.cursor = 'pointer';
-        thumbEl.addEventListener('click', () => window.open(s.url, '_blank'));
-      }
 
       // Preview button: toggle live CSS on the page
       const pvBtn = card.querySelector('[data-action="preview"]');
