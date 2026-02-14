@@ -1,4 +1,4 @@
-/* StyleCraft v1.0.0 — Background Service Worker */
+/* StyleCraft v1.0.9 — Background Service Worker */
 
 async function injectAndSend(tabId, message) {
   try { await chrome.scripting.executeScript({ target: { tabId }, files: ['content.js'] }); } catch {}
@@ -41,20 +41,23 @@ async function buildCSSForUrl(url) {
   const domain = extractDomain(url);
   const all = await getAllData();
   let themeCSS = '', customCSS = '', customEnabled = true;
+  let foundCustom = false;
 
   for (const [pattern, data] of Object.entries(all)) {
     if (matchDomain(url, domain, pattern)) {
-      // Themes layer
+      // Themes layer — aggregate from all matching patterns
       for (const [id, theme] of Object.entries(data.themes || {})) {
         if (theme.enabled !== false) {
           const resolved = resolveUserCSS(theme.rawCSS || theme.css || '', url);
           if (resolved.trim()) themeCSS += (themeCSS ? '\n\n' : '') + '/* USw:' + id + ' ' + (theme.name||'').replace(/\*\//g,'') + ' */\n' + resolved;
         }
       }
-      // Custom layer
-      customCSS = data.customCSS || '';
-      customEnabled = data.customEnabled !== false;
-      break;
+      // Custom layer — use the most specific (non-wildcard) match
+      if (!foundCustom && data.customCSS) {
+        customCSS = data.customCSS;
+        customEnabled = data.customEnabled !== false;
+        foundCustom = true;
+      }
     }
   }
   return { themeCSS, customCSS, customEnabled, domain };
@@ -151,8 +154,8 @@ function matchesDocumentConditions(conditions, pageUrl) {
    USw Search & Install
    ═══════════════════════════════════════════════════════════ */
 
-async function searchUSw(query) {
-  const url = `https://userstyles.world/search?q=${encodeURIComponent(query)}&sort=installs_weekly`;
+async function searchUSw(query, page = 1) {
+  const url = `https://userstyles.world/search?q=${encodeURIComponent(query)}&sort=installs_weekly&page=${page}`;
   const resp = await fetch(url);
   if (!resp.ok) throw new Error('USw HTTP ' + resp.status);
   const html = await resp.text();
@@ -173,7 +176,9 @@ async function searchUSw(query) {
     styles.push({ id, name: nameM[1].trim(), url: 'https://userstyles.world/style/' + id + '/',
       thumb: thumbUrl, preview: fullUrl, author: authorM ? authorM[1].trim() : '', installs: installsM ? installsM[1] : '0' });
   }
-  return styles;
+  // Check if there's a next page
+  const hasMore = html.includes('rel="next"') || html.includes('page=' + (page + 1));
+  return { styles, hasMore, page };
 }
 
 async function fetchUSwCSS(id) {
@@ -188,7 +193,7 @@ async function installTheme(id, name, domain) {
   const fetched = await fetchUSwCSS(id);
   if (!fetched.rawCSS.trim()) throw new Error('Empty CSS');
   const dd = await getDomainData(domain);
-  dd.themes[id] = { rawCSS: fetched.rawCSS, name: fetched.name, enabled: true };
+  dd.themes[id] = { rawCSS: fetched.rawCSS, name: fetched.name, enabled: true, installedAt: new Date().toISOString() };
   await setDomainData(domain, dd);
   broadcastUpdate(domain);
   return { ok: true, name: fetched.name };
@@ -210,15 +215,15 @@ async function getInstalledIds(domain) {
 function broadcastUpdate(domain) {
   chrome.tabs.query({}, tabs => {
     for (const tab of tabs) {
-      if (tab.url) {
-        try {
-          const d = new URL(tab.url).hostname;
-          if (matchDomain(tab.url, d, domain))
-            chrome.tabs.sendMessage(tab.id, { action: 'sc-styles-updated' }).catch(() => {});
-        } catch {}
-      }
+      if (!tab.url || tab.url.startsWith('chrome') || tab.url.startsWith('about:') || tab.url.startsWith('edge:')) continue;
+      try {
+        const d = new URL(tab.url).hostname;
+        if (domain === '*' || matchDomain(tab.url, d, domain))
+          chrome.tabs.sendMessage(tab.id, { action: 'sc-styles-updated' }).catch(() => {});
+      } catch {}
     }
   });
+  refreshActiveBadge();
 }
 
 /* ─── Preview: fetch CSS and send to active tab ─── */
@@ -282,7 +287,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       case 'sc-save-domain-data': { await setDomainData(msg.domain, msg.data); broadcastUpdate(msg.domain); return { ok: true }; }
       case 'sc-get-all-data': return await getAllData();
       case 'sc-export-all': return await getAllData();
-      case 'sc-import-all': { await setStorage({ stylecraft_data: msg.data || msg.styles }); return { ok: true }; }
+      case 'sc-import-all': { await setStorage({ stylecraft_data: msg.data || msg.styles }); refreshActiveBadge(); return { ok: true }; }
       case 'sc-get-settings': { const d = await getStorage('stylecraft_settings'); return d.stylecraft_settings || {}; }
       case 'sc-save-settings': { await setStorage({ stylecraft_settings: msg.settings }); return { ok: true }; }
 
@@ -295,7 +300,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         if (tab) {
           try { await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['content.js'] }); } catch {}
-          return new Promise(r => setTimeout(() => chrome.tabs.sendMessage(tab.id, { action: 'sc-toggle-readability-get' }, res => r(res || {})), 100));
+          return new Promise(r => setTimeout(() => chrome.tabs.sendMessage(tab.id, { action: 'sc-toggle-readability-get', readSettings: msg.readSettings }, res => { void chrome.runtime.lastError; r(res || {}); }), 100));
         }
         return {};
       }
@@ -303,7 +308,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         if (tab) {
           try { await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['content.js'] }); } catch {}
-          return new Promise(r => setTimeout(() => chrome.tabs.sendMessage(tab.id, { action: 'sc-toggle-grayscale-get' }, res => r(res || {})), 100));
+          return new Promise(r => setTimeout(() => chrome.tabs.sendMessage(tab.id, { action: 'sc-toggle-grayscale-get' }, res => { void chrome.runtime.lastError; r(res || {}); }), 100));
         }
         return {};
       }
@@ -311,19 +316,23 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         if (tab) {
           try { await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['content.js'] }); } catch {}
-          return new Promise(r => setTimeout(() => chrome.tabs.sendMessage(tab.id, { action: 'sc-get-toggle-state' }, res => r(res || {})), 100));
+          return new Promise(r => setTimeout(() => chrome.tabs.sendMessage(tab.id, { action: 'sc-get-toggle-state' }, res => { void chrome.runtime.lastError; r(res || {}); }), 100));
         }
         return {};
       }
 
       case 'sc-search-styles': {
-        const styles = await searchUSw(msg.query);
+        const result = await searchUSw(msg.query, msg.page || 1);
         const installed = await getInstalledIds(msg.domain || '');
-        return { styles, installed };
+        return { styles: result.styles, installed, hasMore: result.hasMore, page: result.page };
       }
       case 'sc-install-style': return await installTheme(msg.id, msg.name, msg.domain);
       case 'sc-uninstall-style': return await uninstallTheme(msg.id, msg.domain);
       case 'sc-get-installed': return { installed: await getInstalledIds(msg.domain) };
+      case 'sc-check-theme-update': {
+        const fetched = await fetchUSwCSS(msg.id);
+        return { css: fetched.rawCSS || '' };
+      }
 
       case 'sc-preview-style': {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -336,9 +345,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         return { ok: true };
       }
       case 'sc-theme-changed': {
-        // Broadcast to all tabs for content script editors
         chrome.tabs.query({}, (tabs) => {
           tabs.forEach(t => {
+            if (!t.url || t.url.startsWith('chrome') || t.url.startsWith('about:')) return;
             chrome.tabs.sendMessage(t.id, msg).catch(() => {});
           });
         });
@@ -368,6 +377,41 @@ chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({ id: 'stylecraft-open', title: 'Style this element', contexts: ['all'] });
   chrome.contextMenus.create({ id: 'stylecraft-hide', title: 'Hide this element', contexts: ['all'] });
 });
+
+/* ─── Open popup as tall panel window (bypasses 600px popup cap) ─── */
+let popupWindowId = null;
+
+chrome.action.onClicked.addListener(async (tab) => {
+  // If popup window already exists, focus it
+  if (popupWindowId !== null) {
+    try {
+      const w = await chrome.windows.get(popupWindowId);
+      if (w) { chrome.windows.update(popupWindowId, { focused: true }); return; }
+    } catch { popupWindowId = null; }
+  }
+
+  const display = await chrome.system.display.getInfo();
+  const screen = display[0] || { workArea: { width: 1920, height: 1080, left: 0, top: 0 } };
+  const wa = screen.workArea;
+  const panelW = 440;
+  const panelH = Math.min(wa.height - 40, 1200);
+  const left = wa.left + wa.width - panelW - 8;
+  const top = wa.top + 8;
+
+  const w = await chrome.windows.create({
+    url: chrome.runtime.getURL('popup.html'),
+    type: 'popup',
+    width: panelW,
+    height: panelH,
+    left,
+    top
+  });
+  popupWindowId = w.id;
+});
+
+chrome.windows.onRemoved.addListener((id) => {
+  if (id === popupWindowId) popupWindowId = null;
+});
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (!tab?.id) return;
   if (info.menuItemId === 'stylecraft-open') injectAndSend(tab.id, { action: 'sc-open-editor-pick' });
@@ -377,4 +421,74 @@ chrome.commands.onCommand.addListener(cmd => {
   chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
     if (tab?.id && cmd === 'toggle_editor') injectAndSend(tab.id, { action: 'sc-toggle-editor' });
   });
+});
+
+/* ═══════════════════════════════════════════════════════════
+   Badge — shows count of active styles for current tab
+   ═══════════════════════════════════════════════════════════ */
+async function updateBadge(tabId, url) {
+  if (!tabId || !url || url.startsWith('chrome://') || url.startsWith('chrome-extension://') || url.startsWith('about:')) {
+    chrome.action.setBadgeText({ text: '', tabId }).catch(() => {});
+    return;
+  }
+  try {
+    const result = await buildCSSForUrl(url);
+    let count = 0;
+    // Count custom CSS
+    if (result.customCSS && result.customCSS.trim() && result.customEnabled) count++;
+    // Count enabled themes
+    const domain = extractDomain(url);
+    const all = await getAllData();
+    for (const [pattern, data] of Object.entries(all)) {
+      if (matchDomain(url, domain, pattern)) {
+        for (const [, theme] of Object.entries(data.themes || {})) {
+          if (theme.enabled !== false) count++;
+        }
+      }
+    }
+    chrome.action.setBadgeText({ text: count > 0 ? String(count) : '', tabId });
+    chrome.action.setBadgeBackgroundColor({ color: '#cba6f7', tabId });
+    chrome.action.setBadgeTextColor({ color: '#11111b', tabId }).catch(() => {});
+  } catch { chrome.action.setBadgeText({ text: '', tabId }).catch(() => {}); }
+}
+
+chrome.tabs.onActivated.addListener(({ tabId }) => {
+  chrome.tabs.get(tabId, tab => {
+    if (chrome.runtime.lastError || !tab?.url) return;
+    updateBadge(tabId, tab.url);
+  });
+});
+
+chrome.tabs.onUpdated.addListener((tabId, info, tab) => {
+  if (info.status === 'complete' && tab?.url) updateBadge(tabId, tab.url);
+});
+
+/* Refresh badge when storage changes (covers direct writes from options page) */
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === 'local' && changes.stylecraft_data) refreshActiveBadge();
+});
+
+function refreshActiveBadge() {
+  chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
+    if (tab?.id && tab.url) updateBadge(tab.id, tab.url);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Auto-Backup — daily, keeps last 3 snapshots
+   ═══════════════════════════════════════════════════════════ */
+chrome.alarms.create('sc-auto-backup', { periodInMinutes: 1440 }); // every 24h
+
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+  if (alarm.name !== 'sc-auto-backup') return;
+  try {
+    const result = await chrome.storage.local.get(['stylecraft_data', 'stylecraft_settings', 'sc_backups']);
+    const data = result.stylecraft_data;
+    if (!data || !Object.keys(data).length) return;
+    const backups = result.sc_backups || [];
+    backups.unshift({ data, settings: result.stylecraft_settings || {}, timestamp: new Date().toISOString() });
+    // Keep only last 3
+    while (backups.length > 3) backups.pop();
+    await chrome.storage.local.set({ sc_backups: backups });
+  } catch {}
 });

@@ -44,20 +44,23 @@ html.sc-light {
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
-  width: 420px; min-height: 200px; max-height: 600px;
+  width: 100%; height: 100vh; margin: 0;
   background: linear-gradient(180deg, var(--sc-surface), var(--sc-bg));
   color: var(--sc-text); font-family: system-ui, -apple-system, sans-serif;
-  font-size: 13px; overflow-y: auto;
+  font-size: 13px; overflow: hidden;
+  display: flex; flex-direction: column;
 }
-::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
 ::-webkit-scrollbar-thumb { background: var(--sc-scrollbar-thumb); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--sc-scrollbar-thumb-h); }
+.header, .actions, .installed-section, .quick-edit-section, .search-section, .result-count, .read-panel, .no-styles, .powered, #search-loading { flex-shrink: 0; }
 
 .header {
-  padding: 14px 16px 10px;
+  padding: 8px 16px 6px;
   border-bottom: 1px solid var(--sc-border);
 }
-.header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
 .logo {
   font-size: 15px; font-weight: 700;
   background: linear-gradient(135deg, var(--sc-accent), var(--sc-blue));
@@ -83,18 +86,18 @@ body {
 }
 .toggle input:checked + .toggle-sl { background: rgba(203,166,247,0.5); }
 .toggle input:checked + .toggle-sl::before { transform: translateX(18px); background: var(--sc-accent); }
-.no-styles { font-size: 10px; color: var(--sc-muted); margin-top: 4px; display: none; }
-.style-count { font-size: 10px; color: var(--sc-muted); margin-top: 4px; }
+.no-styles { font-size: 10px; color: var(--sc-muted); margin-top: 2px; padding: 4px 14px; display: none; }
+.style-count { font-size: 10px; color: var(--sc-muted); margin-top: 2px; }
 
 .actions {
-  padding: 8px 16px; display: flex; flex-wrap: wrap; gap: 6px;
+  padding: 6px 16px; display: flex; flex-wrap: wrap; gap: 4px;
   border-bottom: 1px solid rgba(203,166,247,0.06);
 }
 .btn {
-  flex: 1; min-width: calc(50% - 3px); height: 32px; border-radius: 6px;
+  flex: 1; min-width: calc(50% - 2px); height: 28px; border-radius: 6px;
   background: var(--sc-accent-dim); border: 1px solid var(--sc-input-border);
-  color: var(--sc-subtext); cursor: pointer; font-size: 11px; font-weight: 600;
-  display: flex; align-items: center; justify-content: center; gap: 5px;
+  color: var(--sc-subtext); cursor: pointer; font-size: 10px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center; gap: 4px;
   transition: all 0.15s;
 }
 .btn:hover { background: rgba(203,166,247,0.14); color: var(--sc-accent); }
@@ -102,53 +105,70 @@ body {
 .btn.primary { background: rgba(166,227,161,0.08); border-color: rgba(166,227,161,0.15); color: var(--sc-green); }
 .btn.primary:hover { background: rgba(166,227,161,0.18); }
 
-.search-section { padding: 10px 16px 6px; }
+/* Readability settings panel */
+.read-panel{padding:4px 14px 6px;border-bottom:1px solid var(--sc-border);background:var(--sc-bg);}
+.read-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:3px;}
+.read-row:last-of-type{margin-bottom:0;}
+.read-label{font-size:10px;color:var(--sc-muted);font-weight:600;min-width:60px;white-space:nowrap;}
+.read-label span{color:var(--sc-accent);font-family:'JetBrains Mono',monospace;}
+.read-themes{display:flex;gap:3px;}
+.read-theme-btn{width:24px;height:20px;border:1px solid var(--sc-border);border-radius:3px;font-size:8px;font-weight:800;cursor:pointer;transition:all .12s;padding:0;}
+.read-theme-btn.active{border-color:var(--sc-accent);box-shadow:0 0 0 1px var(--sc-accent);}
+.read-theme-btn:hover{border-color:var(--sc-accent);}
+.read-select{flex:1;height:22px;padding:0 4px;background:var(--sc-input-bg);border:1px solid var(--sc-input-border);border-radius:4px;color:var(--sc-text);font-size:10px;outline:none;cursor:pointer;}
+.read-select option{background:#1e1e2e;color:#cdd6f4;}
+.read-slider{flex:1;height:4px;accent-color:var(--sc-accent);cursor:pointer;}
+.read-note{font-size:8px;color:var(--sc-faint);margin-top:3px;font-style:italic;}
+
+.search-section { padding: 6px 16px 4px; }
 .search-label {
-  font-size: 9px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 1px; color: var(--sc-muted); margin-bottom: 6px;
+  font-size: 8px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1px; color: var(--sc-muted); margin-bottom: 3px;
 }
-.search-bar { display: flex; gap: 6px; }
+.search-bar { display: flex; gap: 4px; }
 .search-input {
-  flex: 1; height: 30px; padding: 0 10px;
+  flex: 1; height: 26px; padding: 0 8px;
   background: var(--sc-input-bg); border: 1px solid var(--sc-input-border);
-  border-radius: 6px; color: var(--sc-text); font-size: 12px; outline: none;
+  border-radius: 5px; color: var(--sc-text); font-size: 11px; outline: none;
 }
 .search-input:focus { border-color: rgba(203,166,247,0.35); }
 .search-input::placeholder { color: rgba(127,132,156,0.4); }
 .search-go {
-  height: 30px; padding: 0 12px; border-radius: 6px;
+  height: 26px; padding: 0 10px; border-radius: 5px;
   background: rgba(203,166,247,0.1); border: 1px solid rgba(203,166,247,0.15);
-  color: var(--sc-accent); font-size: 11px; font-weight: 700; cursor: pointer;
+  color: var(--sc-accent); font-size: 10px; font-weight: 700; cursor: pointer;
 }
 .search-go:hover { background: rgba(203,166,247,0.2); }
 
-.result-count { padding: 4px 16px 2px; font-size: 9px; color: var(--sc-muted); display: none; }
-.results { padding: 0 16px 10px; max-height: 380px; overflow-y: auto; }
+.result-count { padding: 2px 16px 1px; font-size: 8px; color: var(--sc-muted); display: none; }
+.results { padding: 0 12px 6px; flex: 1; overflow-y: auto; min-height: 0; }
+.load-more-btn{display:block;width:100%;padding:8px;margin:4px 0 2px;border-radius:6px;background:var(--sc-accent-dim);border:1px solid var(--sc-border);color:var(--sc-accent);font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;text-align:center;}
+.load-more-btn:hover{background:var(--sc-accent-med);border-color:var(--sc-accent);}
 
 /* Style cards */
 .s-card {
-  margin-bottom: 8px; border-radius: 8px;
+  margin-bottom: 6px; border-radius: 6px;
   background: rgba(17,17,27,0.5); border: 1px solid rgba(203,166,247,0.06);
   overflow: hidden; transition: border-color 0.15s;
 }
 .s-card:hover { border-color: rgba(203,166,247,0.14); }
 .s-card.installed { border-color: rgba(166,227,161,0.2); }
 .s-thumb {
-  width: 100%; height: 120px; object-fit: cover; display: block;
+  width: 100%; height: 90px; object-fit: cover; display: block;
   background: rgba(30,30,46,0.8); cursor: pointer;
 }
-.s-body { padding: 8px 10px; }
+.s-body { padding: 5px 8px; }
 .s-name {
-  font-size: 12px; font-weight: 700; color: var(--sc-text);
+  font-size: 11px; font-weight: 700; color: var(--sc-text);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  margin-bottom: 3px;
+  margin-bottom: 2px;
 }
-.s-meta { font-size: 9px; color: var(--sc-muted); display: flex; gap: 8px; margin-bottom: 6px; }
+.s-meta { font-size: 9px; color: var(--sc-muted); display: flex; gap: 8px; margin-bottom: 4px; }
 .s-meta span { display: flex; align-items: center; gap: 3px; }
-.s-actions { display: flex; gap: 5px; }
+.s-actions { display: flex; gap: 4px; }
 .s-btn {
-  flex: 1; height: 26px; border-radius: 5px; border: 1px solid;
-  font-size: 10px; font-weight: 700; cursor: pointer;
+  flex: 1; height: 22px; border-radius: 4px; border: 1px solid;
+  font-size: 9px; font-weight: 700; cursor: pointer;
   display: flex; align-items: center; justify-content: center; gap: 3px;
   transition: all 0.15s;
 }
@@ -172,7 +192,7 @@ body {
 .s-btn:disabled { opacity: 0.4; cursor: wait; }
 
 .empty-msg { text-align: center; padding: 20px; color: var(--sc-faint); font-size: 11px; }
-.loading { text-align: center; padding: 14px; color: var(--sc-accent); font-size: 11px; display: none; }
+.loading { text-align: center; padding: 8px; color: var(--sc-accent); font-size: 10px; display: none; }
 .loading .spinner {
   display: inline-block; width: 12px; height: 12px;
   border: 2px solid rgba(203,166,247,0.2); border-top-color: var(--sc-accent);
@@ -180,9 +200,55 @@ body {
   vertical-align: middle; margin-right: 6px;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
-.powered { text-align: center; padding: 4px 16px 10px; font-size: 8px; color: var(--sc-faint); }
+.powered { text-align: center; padding: 2px 16px 4px; font-size: 8px; color: var(--sc-faint); flex-shrink: 0; }
 .powered a { color: var(--sc-faint); text-decoration: none; }
+
+/* Installed styles for current site */
+.installed-section { padding: 4px 16px 2px; border-bottom: 1px solid var(--sc-border); }
+.installed-label {
+  font-size: 8px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1px; color: var(--sc-muted); margin-bottom: 3px;
+}
+.installed-list { display: flex; flex-direction: column; gap: 2px; padding-bottom: 4px; }
+.i-row {
+  display: flex; align-items: center; gap: 6px; padding: 3px 8px;
+  border-radius: 5px; background: var(--sc-accent-dim);
+  border: 1px solid var(--sc-border); transition: border-color 0.15s;
+}
+.i-row:hover { border-color: var(--sc-border-h); }
+.i-row .toggle { flex-shrink: 0; }
+.i-icon { flex-shrink: 0; width: 16px; text-align: center; font-size: 10px; color: var(--sc-muted); }
+.i-name {
+  flex: 1; font-size: 11px; font-weight: 600; color: var(--sc-text);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.i-name.disabled { opacity: 0.5; }
+.i-source { font-size: 8px; color: var(--sc-muted); flex-shrink: 0; }
+.i-edit { flex-shrink: 0; width: 20px; height: 20px; border: 1px solid var(--sc-border); border-radius: 4px; background: var(--sc-accent-dim); color: var(--sc-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; padding: 0; }
+.i-edit:hover { background: var(--sc-accent-med); color: var(--sc-accent); border-color: var(--sc-border-h); }
+
 .sc-theme-select{height:22px;padding:0 6px;background:var(--sc-input-bg);border:1px solid var(--sc-border);border-radius:4px;color:var(--sc-muted);font-size:9px;font-weight:600;outline:none;cursor:pointer;appearance:auto;}
+
+/* Quick CSS editor */
+.quick-edit-section { border-bottom: 1px solid var(--sc-border); }
+.quick-edit-header {
+  display: flex; align-items: center; gap: 6px; padding: 5px 16px;
+  cursor: pointer; transition: background 0.12s; font-size: 8px;
+  font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--sc-muted);
+}
+.quick-edit-header:hover { background: var(--sc-accent-dim); }
+.quick-chevron { flex-shrink: 0; transition: transform 0.15s; color: var(--sc-muted); }
+.quick-edit-header.open .quick-chevron { transform: rotate(90deg); }
+.quick-edit-domain { font-size: 9px; color: var(--sc-accent); margin-left: auto; text-transform: none; letter-spacing: 0; font-weight: 600; }
+.quick-edit-body { padding: 0 16px 6px; }
+.quick-edit-code {
+  width: 100%; height: 80px; padding: 6px; resize: vertical;
+  background: var(--sc-input-bg); border: 1px solid var(--sc-input-border);
+  border-radius: 6px; color: var(--sc-text); font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; line-height: 1.5; tab-size: 2; outline: none;
+}
+.quick-edit-code:focus { border-color: var(--sc-accent); }
+.quick-edit-actions { display: flex; gap: 6px; margin-top: 6px; }
 .sc-theme-select option{background:var(--sc-surface);color:var(--sc-text);}
 </style>
 </head>
@@ -196,25 +262,73 @@ body {
         <option value="dark">Dark</option>
         <option value="light">Light</option>
       </select>
-      <span class="version">v1.0.0</span>
+      <span class="version">v1.5.0</span>
     </div>
   </div>
   <div class="domain-row">
     <span id="domain-text" class="domain-text"></span>
     <label class="toggle"><input id="domain-toggle" type="checkbox"/><span class="toggle-sl"></span></label>
   </div>
-  <div id="no-styles" class="no-styles">No styles for this site</div>
+  <div id="no-styles" class="no-styles">
+    <div style="font-size:11px;font-weight:600;color:var(--sc-subtext);margin-bottom:4px">No styles for this site</div>
+    <div style="font-size:10px;color:var(--sc-faint);line-height:1.5">
+      Click <strong style="color:var(--sc-accent)">Visual Editor</strong> to pick elements and style them, <strong style="color:var(--sc-accent)">CSS Editor</strong> to write CSS directly, or expand <strong style="color:var(--sc-accent)">Quick CSS</strong> below for a quick edit.
+    </div>
+  </div>
   <div id="style-count" class="style-count"></div>
 </div>
 <div class="actions">
   <button id="btn-open" class="btn primary">
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-    Open Editor
+    Visual Editor
+  </button>
+  <button id="btn-css-editor" class="btn">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+    CSS Editor
   </button>
   <button id="btn-readability" class="btn">
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
     Read
   </button>
+  <!-- Readability Settings Panel -->
+  <div id="read-panel" class="read-panel" style="display:none">
+    <div class="read-row">
+      <span class="read-label">Theme</span>
+      <div class="read-themes">
+        <button class="read-theme-btn active" data-rtheme="dark" style="background:#1a1a2e;color:#e0e0e0" title="Dark">Dk</button>
+        <button class="read-theme-btn" data-rtheme="sepia" style="background:#f4ecd8;color:#5b4636" title="Sepia">Se</button>
+        <button class="read-theme-btn" data-rtheme="light" style="background:#ffffff;color:#333" title="Light">Lt</button>
+        <button class="read-theme-btn" data-rtheme="oled" style="background:#000;color:#ccc" title="OLED">OL</button>
+      </div>
+    </div>
+    <div class="read-row">
+      <span class="read-label">Font</span>
+      <select id="read-font" class="read-select">
+        <option value="Georgia, serif">Georgia</option>
+        <option value="'Times New Roman', serif">Times New Roman</option>
+        <option value="system-ui, sans-serif">System Sans</option>
+        <option value="'Helvetica Neue', Helvetica, sans-serif">Helvetica</option>
+        <option value="Verdana, sans-serif">Verdana</option>
+        <option value="'Courier New', monospace">Courier New</option>
+        <option value="'Merriweather', Georgia, serif">Merriweather*</option>
+        <option value="'Inter', system-ui, sans-serif">Inter*</option>
+        <option value="'Literata', Georgia, serif">Literata*</option>
+      </select>
+    </div>
+    <div class="read-row">
+      <span class="read-label">Size <span id="read-size-val">18</span>px</span>
+      <input type="range" id="read-size" class="read-slider" min="12" max="28" value="18"/>
+    </div>
+    <div class="read-row">
+      <span class="read-label">Spacing <span id="read-lh-val">1.7</span></span>
+      <input type="range" id="read-lh" class="read-slider" min="12" max="24" value="17" step="1"/>
+    </div>
+    <div class="read-row">
+      <span class="read-label">Width <span id="read-w-val">720</span>px</span>
+      <input type="range" id="read-w" class="read-slider" min="400" max="1000" value="720" step="20"/>
+    </div>
+    <div class="read-note">* = Google Fonts (loaded on demand)</div>
+  </div>
   <button id="btn-grayscale" class="btn">
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10"/></svg>
     Gray
@@ -227,6 +341,26 @@ body {
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
     Export
   </button>
+</div>
+<div id="installed-section" class="installed-section" style="display:none">
+  <div class="installed-label">Installed for this site</div>
+  <div id="installed-list" class="installed-list"></div>
+</div>
+<div id="quick-edit-section" class="quick-edit-section">
+  <div class="quick-edit-header" id="quick-edit-toggle">
+    <svg class="quick-chevron" id="quick-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+    <span>Quick CSS</span>
+    <span class="quick-edit-domain" id="quick-edit-domain"></span>
+  </div>
+  <div class="quick-edit-body" id="quick-edit-body" style="display:none">
+    <textarea id="quick-edit-code" class="quick-edit-code" spellcheck="false" placeholder="/* Type CSS here... */"></textarea>
+    <div class="quick-edit-actions">
+      <button id="quick-edit-save" class="btn primary" style="flex:1;justify-content:center;">Save &amp; Apply</button>
+      <button id="quick-edit-expand" class="btn" title="Open in CSS Editor">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+      </button>
+    </div>
+  </div>
 </div>
 <div class="search-section">
   <div class="search-label">Community Styles</div>
