@@ -190,6 +190,15 @@ All data is in `chrome.storage.local` (up to 10MB). Use Export to create backups
 **Q: How do I import from Stylus?**
 Export your Stylus data as JSON, then use the Import button in StyleCraft's Options page or popup. StyleCraft automatically detects the Stylus format.
 
+## Related Tools
+
+| Tool | Type | Best For |
+|------|------|----------|
+| **StyleCraft** (this repo) | Ground-up MV3 extension | Power users who want a full CSS editor with syntax highlighting, linting, autocomplete, Stylus import, and UserStyles.world integration |
+| [StyleKit](https://github.com/SysAdminDoc/StyleKit) | Stylebot fork | Casual users who want plain-English labels, guided onboarding, and one-click site recipes — no manual CSS required |
+
+If you want a simpler point-and-click interface with plain-English labels and pre-built site recipes, see [StyleKit](https://github.com/SysAdminDoc/StyleKit) (a modernized Stylebot fork).
+
 ## Contributing
 
 Issues and PRs welcome. The codebase is vanilla JS with no build step — load the folder directly as an unpacked extension for development.
