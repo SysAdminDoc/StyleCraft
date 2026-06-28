@@ -81,13 +81,6 @@ Roadmap for StyleCraft, the Chrome MV3 CSS style manager with visual element pic
 
 ## Research-Driven Additions
 
-- [ ] P0 - Add dangerous-CSS trust checks for imported and community styles
-  Why: User CSS is intentionally powerful, but community/imported styles can still trigger remote `@import`/`url()` requests, deceptive overlays, and CSS exfiltration patterns.
-  Evidence: OWASP CSS Injection guidance; MDN `@import`; `background.js` `installTheme()`; `inject-styles.js` style injection.
-  Touches: `background.js`, `options.js`, `editor.js`, `inject-styles.js`, `tests/`
-  Acceptance: Import/install/update/save flows flag remote fetches, blocked schemes, and high-risk selectors with per-style trust status and tests for warning/block behavior.
-  Complexity: M
-
 - [ ] P0 - Make backups and restore recovery explicit
   Why: Backups are three daily snapshots with swallowed failures, and restore uses `prompt()` plus an undo-toast label bug after `undoSnapshot` is cleared.
   Evidence: `background.js` alarm backup block; `options.js` restore and `showUndoToast()`; Stylebot import/export simplicity.

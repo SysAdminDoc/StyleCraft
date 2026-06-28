@@ -51,11 +51,17 @@ if (!read('background.js').includes("importScripts('style-match.js', 'style-data
 if (!popupHtml.includes('style-match.js')) {
   fail('popup.html does not load the shared matcher');
 }
+if (!popupHtml.includes('style-data.js')) {
+  fail('popup.html does not load the shared import/trust guard');
+}
 if (!editorHtml.includes('vendor/codemirror/stylecraft-codemirror.js')) {
   fail('editor.html does not load the bundled CodeMirror adapter');
 }
 if (!editorHtml.includes('style-match.js')) {
   fail('editor.html does not load the shared matcher');
+}
+if (!editorHtml.includes('style-data.js')) {
+  fail('editor.html does not load the shared import/trust guard');
 }
 if (!read('options.html').includes('style-data.js')) {
   fail('options.html does not load the shared import guard');

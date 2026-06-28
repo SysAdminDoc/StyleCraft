@@ -626,6 +626,13 @@
       toast(label + ' failed: ' + error.message);
       return;
     }
+    let trust;
+    try {
+      trust = window.StyleCraftData ? window.StyleCraftData.assertCssAllowed(css) : null;
+    } catch (error) {
+      toast(error.message || 'Blocked CSS trust issue');
+      return;
+    }
     allData = await loadAllData();
     if (!allData[activeDomain]) allData[activeDomain] = { themes: {}, customCSS: '', customEnabled: true };
 
@@ -635,12 +642,14 @@
         const theme = allData[activeDomain].themes[activeThemeId];
         theme.rawCSS = css;
         theme.css = css;
+        if (trust) theme.trust = trust;
         if (sourceMode === 'css') delete theme.preprocessor;
         else theme.preprocessor = { syntax: sourceMode, source };
       }
     } else {
       // Save custom CSS
       allData[activeDomain].customCSS = css;
+      if (trust) allData[activeDomain].trust = trust;
       if (sourceMode === 'css') delete allData[activeDomain].preprocessor;
       else allData[activeDomain].preprocessor = { syntax: sourceMode, source };
     }

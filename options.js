@@ -1,4 +1,4 @@
-/* StyleCraft v1.15.0 - Options Page */
+/* StyleCraft v1.16.0 - Options Page */
 (async function(){
   const $=id=>document.getElementById(id);
   const send=msg=>new Promise(r=>chrome.runtime.sendMessage(msg,r));
@@ -61,7 +61,7 @@
   function exportSingleDomain(domain) {
     const data = allData[domain];
     if (!data) { toast('No data for ' + domain); return; }
-    const exp = { domain, data, version: '1.15.0', exported: new Date().toISOString() };
+    const exp = { domain, data, version: '1.16.0', exported: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(exp, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -215,7 +215,11 @@
       const sb = card.querySelector('.save-css');
       if (sb) sb.addEventListener('click', async () => {
         const css = card.querySelector('.css-ed').value;
+        let trust;
+        try { trust = StyleCraftData.assertCssAllowed(css); }
+        catch (error) { toast(error.message); return; }
         allData[domain].customCSS = css;
+        allData[domain].trust = trust;
         await saveDomainData(domain, allData[domain]);
         notifyTabs(domain);
         toast('Saved CSS for ' + domain); updateStats();
@@ -359,8 +363,12 @@
         updBtn.addEventListener('click', async () => {
           const upd = themeUpdates[key];
           if (!upd || !upd.newCSS) return;
+          let trust;
+          try { trust = StyleCraftData.assertCssAllowed(upd.newCSS); }
+          catch (error) { toast(error.message); return; }
           allData[domain].themes[id].rawCSS = upd.newCSS;
           allData[domain].themes[id].css = upd.newCSS;
+          allData[domain].themes[id].trust = trust;
           allData[domain].themes[id].updatedAt = new Date().toISOString();
           await saveAllData(allData); notifyTabs(domain);
           delete themeUpdates[key];
@@ -370,8 +378,12 @@
       const sb = card.querySelector('.save-theme');
       if (sb) sb.addEventListener('click', async () => {
         const css = card.querySelector('.theme-ed').value;
+        let trust;
+        try { trust = StyleCraftData.assertCssAllowed(css); }
+        catch (error) { toast(error.message); return; }
         allData[domain].themes[id].rawCSS = css;
         allData[domain].themes[id].css = css;
+        allData[domain].themes[id].trust = trust;
         await saveDomainData(domain, allData[domain]);
         notifyTabs(domain);
         toast('Theme CSS saved');
@@ -609,7 +621,7 @@
 
   /* ─── IMPORT/EXPORT ─── */
   $('btn-export').addEventListener('click',()=>{
-  const exp={data:allData,settings,version:'1.15.0',exported:new Date().toISOString()};
+  const exp={data:allData,settings,version:'1.16.0',exported:new Date().toISOString()};
     const blob=new Blob([JSON.stringify(exp,null,2)],{type:'application/json'});
     const url=URL.createObjectURL(blob);const a=document.createElement('a');
     a.href=url;a.download='stylecraft-export-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(url);

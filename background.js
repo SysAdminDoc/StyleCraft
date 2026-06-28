@@ -1,4 +1,4 @@
-/* StyleCraft v1.15.0 - Background Service Worker */
+/* StyleCraft v1.16.0 - Background Service Worker */
 importScripts('style-match.js', 'style-data.js');
 
 const SC_MATCH = globalThis.StyleCraftMatcher;
@@ -167,8 +167,9 @@ async function fetchUSwCSS(id) {
 async function installTheme(id, name, domain) {
   const fetched = await fetchUSwCSS(id);
   if (!fetched.rawCSS.trim()) throw new Error('Empty CSS');
+  const trust = SC_DATA.assertCssAllowed(fetched.rawCSS);
   const dd = await getDomainData(domain);
-  dd.themes[id] = { rawCSS: fetched.rawCSS, name: fetched.name, enabled: true, installedAt: new Date().toISOString() };
+  dd.themes[id] = { rawCSS: fetched.rawCSS, name: fetched.name, enabled: true, installedAt: new Date().toISOString(), trust };
   await setDomainData(domain, dd);
   broadcastUpdate(domain);
   return { ok: true, name: fetched.name };
@@ -207,6 +208,7 @@ async function broadcastUpdate(domain) {
 async function previewTheme(id, tabId) {
   const fetched = await fetchUSwCSS(id);
   const tab = await chrome.tabs.get(tabId);
+  SC_DATA.assertCssAllowed(fetched.rawCSS);
   const css = resolveUserCSS(fetched.rawCSS, tab.url);
   try { await chrome.scripting.executeScript({ target: { tabId }, files: ['style-match.js', 'inject-styles.js'] }); } catch {}
   setTimeout(() => {
@@ -246,8 +248,10 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       case 'sc-get-styles': return await buildCSSForUrl(msg.url || sender.tab?.url || '');
 
       case 'sc-save-custom': {
+        const trust = SC_DATA.assertCssAllowed(msg.css || '');
         const dd = await getDomainData(msg.domain);
         dd.customCSS = msg.css;
+        dd.trust = trust;
         if (msg.enabled !== undefined) dd.customEnabled = msg.enabled;
         await setDomainData(msg.domain, dd);
         broadcastUpdate(msg.domain);
@@ -261,7 +265,12 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         return { ok: true };
       }
       case 'sc-get-domain-data': return await getDomainData(msg.domain);
-      case 'sc-save-domain-data': { await setDomainData(msg.domain, msg.data); broadcastUpdate(msg.domain); return { ok: true }; }
+      case 'sc-save-domain-data': {
+        const checked = guardDomainData(msg.domain, msg.data);
+        await setDomainData(msg.domain, checked);
+        broadcastUpdate(msg.domain);
+        return { ok: true };
+      }
       case 'sc-get-all-data': return await getAllData();
       case 'sc-export-all': return await getAllData();
       case 'sc-import-all': {
@@ -321,7 +330,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       case 'sc-get-installed': return { installed: await getInstalledIds(msg.domain) };
       case 'sc-check-theme-update': {
         const fetched = await fetchUSwCSS(msg.id);
-        return { css: fetched.rawCSS || '' };
+        const trust = SC_DATA.analyzeCssTrust(fetched.rawCSS || '');
+        return { css: fetched.rawCSS || '', trust };
       }
 
       case 'sc-preview-style': {
@@ -361,6 +371,12 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   });
   return true;
 });
+
+function guardDomainData(domain, data) {
+  const normalized = SC_DATA.normalizeStyleData({ [domain]: data || {} });
+  if (!normalized.data[domain]) throw new Error('No valid style data for ' + domain);
+  return normalized.data[domain];
+}
 
 chrome.runtime.onInstalled.addListener(() => {
   migrateIfNeeded();

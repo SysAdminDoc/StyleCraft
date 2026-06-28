@@ -1,4 +1,4 @@
-/* StyleCraft v1.15.0 - shared import and storage data guard */
+/* StyleCraft v1.16.0 - shared import and storage data guard */
 (function(global) {
   if (global.StyleCraftData) return;
 
@@ -27,6 +27,46 @@
 
   function addRejected(rejected, path, reason) {
     rejected.push({ path, reason });
+  }
+
+  function addTrustWarning(warnings, code, message, severity) {
+    warnings.push({ code, message, severity: severity || 'warning' });
+  }
+
+  function analyzeCssTrust(css) {
+    const text = String(css || '');
+    const warnings = [];
+    if (/url\(\s*(['"]?)\s*(?:javascript|vbscript):/i.test(text) || /@import\s+(?:url\()?\s*(['"]?)\s*(?:javascript|vbscript):/i.test(text)) {
+      addTrustWarning(warnings, 'blocked-scheme', 'Blocked javascript/vbscript URL in CSS.', 'block');
+    }
+    if (/url\(\s*(['"]?)\s*(?:https?:)?\/\//i.test(text)) {
+      addTrustWarning(warnings, 'remote-url', 'Remote url() fetch can disclose visited pages to a third party.');
+    }
+    if (/@import\s+(?:url\()?\s*(['"]?)\s*(?:https?:)?\/\//i.test(text)) {
+      addTrustWarning(warnings, 'remote-import', 'Remote @import fetch can load third-party CSS.');
+    }
+    if (/(?:input\s*\[[^\]]*type\s*=\s*['"]?password|textarea|select)\b/i.test(text)) {
+      addTrustWarning(warnings, 'sensitive-selector', 'Selector targets sensitive form controls.');
+    }
+    if (/position\s*:\s*fixed/i.test(text) && (/(?:z-index\s*:\s*(?:999|[1-9]\d{3,})|inset\s*:\s*0\b)/i.test(text) || /(?:top|left|right|bottom)\s*:\s*0\b/i.test(text))) {
+      addTrustWarning(warnings, 'overlay-risk', 'Fixed full-page overlay pattern can be deceptive.');
+    }
+    const blocked = warnings.some(item => item.severity === 'block');
+    return {
+      status: blocked ? 'blocked' : (warnings.length ? 'review' : 'trusted'),
+      warnings,
+      checkedAt: new Date().toISOString()
+    };
+  }
+
+  function trustSummary(trust) {
+    return (trust && trust.warnings && trust.warnings[0] && trust.warnings[0].message) || 'CSS trust check failed.';
+  }
+
+  function assertCssAllowed(css) {
+    const trust = analyzeCssTrust(css);
+    if (trust.status === 'blocked') throw new Error('Blocked CSS: ' + trustSummary(trust));
+    return trust;
   }
 
   function sanitizeMeta(value) {
@@ -94,11 +134,17 @@
       addRejected(rejected, path, 'Theme needs rawCSS or css text.');
       return null;
     }
+    const trust = analyzeCssTrust(rawCSS || css);
+    if (trust.status === 'blocked') {
+      addRejected(rejected, path, 'Blocked CSS: ' + trustSummary(trust));
+      return null;
+    }
     const out = {
       name: typeof theme.name === 'string' && theme.name.trim() ? theme.name : id,
       css,
       rawCSS,
-      enabled: theme.enabled !== false
+      enabled: theme.enabled !== false,
+      trust
     };
     for (const key of ['source', 'installedAt', 'updatedAt', 'sourceUrl']) {
       if (typeof theme[key] === 'string') out[key] = theme[key];
@@ -118,6 +164,15 @@
     if (entry.customCSS !== undefined) {
       if (typeof entry.customCSS === 'string') out.customCSS = entry.customCSS;
       else addRejected(rejected, domain + '.customCSS', 'Custom CSS must be a string.');
+    }
+    if (out.customCSS.trim()) {
+      const trust = analyzeCssTrust(out.customCSS);
+      if (trust.status === 'blocked') {
+        addRejected(rejected, domain + '.customCSS', 'Blocked CSS: ' + trustSummary(trust));
+        out.customCSS = '';
+      } else {
+        out.trust = trust;
+      }
     }
 
     if (entry.themes !== undefined) {
@@ -281,6 +336,8 @@
     planNativeImport,
     createPreImportBackup,
     addBackup,
-    sanitizeSettings
+    sanitizeSettings,
+    analyzeCssTrust,
+    assertCssAllowed
   };
 })(typeof globalThis !== 'undefined' ? globalThis : window);

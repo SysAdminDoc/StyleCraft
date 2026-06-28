@@ -2,6 +2,12 @@
 
 All notable changes to StyleCraft are documented here.
 
+## [1.16.0] - 2026-06-28
+
+### Added
+- CSS trust checks for imports, community installs/updates, editor saves, options saves, popup quick saves, and background save messages.
+- Trust smoke coverage for remote fetch warnings, high-risk selector warnings, blocked CSS schemes, and editor save blocking.
+
 ## [1.15.0] - 2026-06-28
 
 ### Added

@@ -203,6 +203,15 @@ test('full editor uses CodeMirror with legacy data APIs intact', async ({ page }
   expect(aiRequests[0].model).toBe('stylecraft-test-model');
   expect(aiRequests[0].messages.at(-1).content).toContain('Add a muted blue card outline.');
 
+  const beforeBlockedSave = await page.evaluate(() => window.__stylecraftStore.stylecraft_data['example.com'].customCSS);
+  await page.locator('#source-mode').selectOption('css');
+  await page.locator('.cm-content').click();
+  await page.keyboard.press('Control+A');
+  await page.keyboard.insertText('body {\n  background-image: url(javascript:alert(1));\n}\n');
+  await page.locator('#btn-save').click();
+  await expect(page.locator('#toast')).toContainText('Blocked CSS');
+  await expect.poll(async () => page.evaluate(() => window.__stylecraftStore.stylecraft_data['example.com'].customCSS)).toBe(beforeBlockedSave);
+
   if (process.env.STYLECRAFT_SCREENSHOT_PATH) {
     await page.screenshot({ path: process.env.STYLECRAFT_SCREENSHOT_PATH, fullPage: false });
   }
