@@ -1,4 +1,4 @@
-/* StyleCraft v1.14.0 - Options Page */
+/* StyleCraft v1.15.0 - Options Page */
 (async function(){
   const $=id=>document.getElementById(id);
   const send=msg=>new Promise(r=>chrome.runtime.sendMessage(msg,r));
@@ -61,7 +61,7 @@
   function exportSingleDomain(domain) {
     const data = allData[domain];
     if (!data) { toast('No data for ' + domain); return; }
-    const exp = { domain, data, version: '1.14.0', exported: new Date().toISOString() };
+    const exp = { domain, data, version: '1.15.0', exported: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(exp, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -609,7 +609,7 @@
 
   /* ─── IMPORT/EXPORT ─── */
   $('btn-export').addEventListener('click',()=>{
-  const exp={data:allData,settings,version:'1.14.0',exported:new Date().toISOString()};
+  const exp={data:allData,settings,version:'1.15.0',exported:new Date().toISOString()};
     const blob=new Blob([JSON.stringify(exp,null,2)],{type:'application/json'});
     const url=URL.createObjectURL(blob);const a=document.createElement('a');
     a.href=url;a.download='stylecraft-export-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(url);
@@ -624,33 +624,55 @@
       try{
         const raw=JSON.parse(reader.result);
 
-        if (isStylusExport(raw)) {
-          const result = convertStylusImport(raw, allData);
-          await saveAllData(result.data);
-          allData = result.data;
-          renderStyles(); renderThemes(); updateStats(); updateBrowseInstalled();
-          notifyTabs('*');
-          toast('Imported ' + result.count + ' Stylus style' + (result.count!==1?'s':'') + ' across ' + result.domains + ' domain' + (result.domains!==1?'s':''));
-        } else if (isStylebotExport(raw)) {
-          const result = convertStylebotImport(raw, allData);
-          await saveAllData(result.data);
-          allData = result.data;
-          renderStyles(); renderThemes(); updateStats(); updateBrowseInstalled();
-          notifyTabs('*');
-          toast('Imported ' + result.count + ' Stylebot style' + (result.count!==1?'s':''));
-        } else {
-          const imported = raw.data || raw;
-          await saveAllData(imported);
-          allData = imported;
-          if(raw.settings){settings=Object.assign(settings,raw.settings);await saveSettings(settings);}
-          renderStyles(); renderThemes(); updateStats(); updateBrowseInstalled();
-          notifyTabs('*');
-          toast('Imported ' + Object.keys(imported).length + ' domains');
+        if (StyleCraftData.MAX_IMPORT_BYTES && reader.result.length > StyleCraftData.MAX_IMPORT_BYTES) {
+          throw new Error('Import file is too large for local storage safety limit');
         }
+        let plan;
+        let settingsPatch = null;
+        if (isStylusExport(raw)) {
+          const result = convertStylusImport(raw, {});
+          plan = StyleCraftData.planStyleDataImport(result.data, allData, { mode: 'merge', source: 'Stylus JSON' });
+          plan.converted = result;
+        } else if (isStylebotExport(raw)) {
+          const result = convertStylebotImport(raw, {});
+          plan = StyleCraftData.planStyleDataImport(result.data, allData, { mode: 'merge', source: 'Stylebot JSON' });
+          plan.converted = result;
+        } else {
+          const mode = raw && raw.merge === true ? 'merge' : 'replace';
+          plan = StyleCraftData.planNativeImport(raw, allData, { mode, source: 'StyleCraft JSON' });
+          settingsPatch = StyleCraftData.sanitizeSettings(raw && raw.settings);
+        }
+        await commitImportPlan(plan, settingsPatch);
       }catch(err){toast('Import failed: ' + (err.message||'Invalid file'));}
     };
     reader.readAsText(file);importFile.value='';
   });
+
+  async function commitImportPlan(plan, settingsPatch) {
+    const stored = await chrome.storage.local.get('sc_backups');
+    const backup = StyleCraftData.createPreImportBackup(allData, settings, plan.summary.source);
+    await chrome.storage.local.set({
+      sc_backups: StyleCraftData.addBackup(stored.sc_backups, backup),
+      stylecraft_import_quarantine: plan.quarantine
+    });
+    await saveAllData(plan.data);
+    allData = plan.data;
+    if (settingsPatch) {
+      settings = Object.assign(settings, settingsPatch);
+      await saveSettings(settings);
+    }
+    renderStyles(); renderThemes(); updateStats(); updateBrowseInstalled(); refreshBackupStatus();
+    notifyTabs('*');
+    toast(formatImportSummary(plan.summary));
+  }
+
+  function formatImportSummary(summary) {
+    const action = summary.mode === 'merge' ? 'Merged' : 'Replaced with';
+    const domains = summary.accepted + ' domain' + (summary.accepted !== 1 ? 's' : '');
+    const counts = summary.added + ' added, ' + summary.replaced + ' replaced';
+    const quarantine = summary.rejected ? ', ' + summary.rejected + ' quarantined' : '';
+    return action + ' ' + domains + ' (' + counts + quarantine + '); pre-import backup created';
+  }
 
   /* ─── Stylus Import Detection & Conversion ─── */
   function isStylusExport(raw) {
@@ -769,14 +791,22 @@
   }
 
   /* ─── Auto-backup status & restore ─── */
-  chrome.storage.local.get('sc_backups', (result) => {
-    const backups = result.sc_backups || [];
+  function renderBackupStatus(backups) {
+    backups = Array.isArray(backups) ? backups : [];
     const statusEl = $('backup-status');
     if (backups.length === 0) {
       statusEl.textContent = 'No backups yet';
     } else {
       statusEl.textContent = backups.length + ' backup' + (backups.length > 1 ? 's' : '') + ' (latest: ' + new Date(backups[0].timestamp).toLocaleString() + ')';
     }
+  }
+  function refreshBackupStatus() {
+    chrome.storage.local.get('sc_backups', (result) => {
+      renderBackupStatus(result.sc_backups || []);
+    });
+  }
+  chrome.storage.local.get('sc_backups', (result) => {
+    renderBackupStatus(result.sc_backups || []);
   });
 
   $('btn-restore-backup').addEventListener('click', async () => {

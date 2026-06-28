@@ -81,13 +81,6 @@ Roadmap for StyleCraft, the Chrome MV3 CSS style manager with visual element pic
 
 ## Research-Driven Additions
 
-- [ ] P0 - Validate and quarantine imports before storage writes
-  Why: Native JSON import currently replaces `stylecraft_data` with `raw.data || raw` without schema validation, merge preview, size checks, or a guaranteed pre-import restore point.
-  Evidence: `options.js` import handler; Stylebot import/migration model; existing "Safer import" roadmap note.
-  Touches: `options.js`, `background.js`, `tools/validate-extension.mjs`, `tests/`
-  Acceptance: Invalid entries are listed and skipped/quarantined, a pre-import backup is created, merge/replace counts are shown, and corrupt input cannot overwrite existing valid data.
-  Complexity: M
-
 - [ ] P0 - Add dangerous-CSS trust checks for imported and community styles
   Why: User CSS is intentionally powerful, but community/imported styles can still trigger remote `@import`/`url()` requests, deceptive overlays, and CSS exfiltration patterns.
   Evidence: OWASP CSS Injection guidance; MDN `@import`; `background.js` `installTheme()`; `inject-styles.js` style injection.

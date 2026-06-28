@@ -1,7 +1,8 @@
-/* StyleCraft v1.14.0 - Background Service Worker */
-importScripts('style-match.js');
+/* StyleCraft v1.15.0 - Background Service Worker */
+importScripts('style-match.js', 'style-data.js');
 
 const SC_MATCH = globalThis.StyleCraftMatcher;
+const SC_DATA = globalThis.StyleCraftData;
 
 async function injectAndSend(tabId, message) {
   try { await chrome.scripting.executeScript({ target: { tabId }, files: ['content.js'] }); } catch {}
@@ -263,7 +264,20 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       case 'sc-save-domain-data': { await setDomainData(msg.domain, msg.data); broadcastUpdate(msg.domain); return { ok: true }; }
       case 'sc-get-all-data': return await getAllData();
       case 'sc-export-all': return await getAllData();
-      case 'sc-import-all': { await setStorage({ stylecraft_data: msg.data || msg.styles }); refreshActiveBadge(); return { ok: true }; }
+      case 'sc-import-all': {
+        const existing = await getAllData();
+        const stored = await getStorage(['stylecraft_settings', 'sc_backups']);
+        const raw = msg.data || msg.styles || {};
+        const plan = SC_DATA.planNativeImport(raw, existing, { mode: msg.mode || 'replace', source: 'runtime import' });
+        const backup = SC_DATA.createPreImportBackup(existing, stored.stylecraft_settings || {}, 'runtime import');
+        await setStorage({
+          stylecraft_data: plan.data,
+          stylecraft_import_quarantine: plan.quarantine,
+          sc_backups: SC_DATA.addBackup(stored.sc_backups, backup)
+        });
+        refreshActiveBadge();
+        return { ok: true, summary: plan.summary, quarantine: plan.quarantine };
+      }
       case 'sc-get-settings': { const d = await getStorage('stylecraft_settings'); return d.stylecraft_settings || {}; }
       case 'sc-save-settings': { await setStorage({ stylecraft_settings: msg.settings }); return { ok: true }; }
 

@@ -2,6 +2,12 @@
 
 All notable changes to StyleCraft are documented here.
 
+## [1.15.0] - 2026-06-28
+
+### Added
+- Import validation guard with schema normalization, invalid-entry quarantine, size checks, merge/replace counts, and guaranteed pre-import backups before storage writes.
+- Options import smoke coverage for valid native imports, quarantined corrupt entries, and corrupt-file overwrite prevention.
+
 ## [1.14.0] - 2026-06-28
 
 ### Added
