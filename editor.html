@@ -87,6 +87,7 @@ body{background:var(--sc-bg);color:var(--sc-text);font-family:'SFMono-Regular','
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
 .sc-theme-select{height:28px;padding:0 8px;background:var(--sc-input-bg);border:1px solid var(--sc-border);border-radius:5px;color:var(--sc-muted);font-size:11px;font-weight:600;font-family:inherit;outline:none;cursor:pointer;}
 .sc-source-select{height:28px;padding:0 8px;background:var(--sc-input-bg);border:1px solid var(--sc-border);border-radius:5px;color:var(--sc-accent);font-size:11px;font-weight:700;font-family:inherit;outline:none;cursor:pointer;}
+.sc-template-select{height:28px;max-width:160px;padding:0 8px;background:var(--sc-input-bg);border:1px solid var(--sc-border);border-radius:5px;color:var(--sc-muted);font-size:11px;font-weight:600;font-family:inherit;outline:none;cursor:pointer;}
 
 /* Sidebar */
 .sb-header{padding:10px 12px 8px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--sc-muted);border-bottom:1px solid var(--sc-border);display:flex;align-items:center;justify-content:space-between;}
@@ -304,6 +305,15 @@ body{background:var(--sc-bg);color:var(--sc-text);font-family:'SFMono-Regular','
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></svg>
       Format
     </button>
+    <select class="sc-template-select" id="template-select" title="Style template">
+      <option value="">Template...</option>
+      <option value="tokens:surface">Tokens: Surface</option>
+      <option value="button:primary">Button: Primary</option>
+      <option value="button:compact">Button: Compact</option>
+      <option value="card:elevated">Card: Elevated</option>
+      <option value="form:focus">Form: Focus</option>
+    </select>
+    <button class="tb-btn" id="btn-insert-template" title="Insert selected style template">Insert</button>
     <div class="tb-spacer"></div>
     <select class="sc-theme-select" id="editor-theme">
       <option value="catppuccin">Catppuccin</option>

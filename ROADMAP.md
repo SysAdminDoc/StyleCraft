@@ -5,7 +5,6 @@ Roadmap for StyleCraft, the Chrome MV3 CSS style manager with visual element pic
 ## Planned Features
 
 ### Editor depth
-- CSS-in-JS style templates (var-driven, with variant support)
 - Snippet library with hotkey expansion (type `;dark` -> inserts a dark-mode media block)
 - AI-assist toggle: describe change in plain English, CSS is drafted inline (opt-in, local or user-provided key)
 

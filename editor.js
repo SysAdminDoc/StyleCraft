@@ -18,6 +18,8 @@
   const newDomainInput = document.getElementById('new-domain-input');
   const liveBtn = document.getElementById('btn-live');
   const sourceModeSelect = document.getElementById('source-mode');
+  const templateSelect = document.getElementById('template-select');
+  const insertTemplateBtn = document.getElementById('btn-insert-template');
 
   /* ─── State ─── */
   let allData = {};
@@ -702,6 +704,155 @@
     setModified(css !== lastSaved); pushUndo();
     toast('Formatted');
   });
+
+  const styleTemplates = {
+    'tokens:surface': `/* StyleCraft template: surface tokens */
+:root {
+  --sc-surface-bg: #ffffff;
+  --sc-surface-text: #1f2937;
+  --sc-surface-muted: #6b7280;
+  --sc-surface-border: rgba(31, 41, 55, 0.14);
+  --sc-surface-radius: 10px;
+  --sc-surface-gap: 16px;
+}
+
+[data-theme="dark"],
+.theme-dark {
+  --sc-surface-bg: #111827;
+  --sc-surface-text: #f9fafb;
+  --sc-surface-muted: #9ca3af;
+  --sc-surface-border: rgba(249, 250, 251, 0.16);
+}
+
+.surface,
+[data-stylecraft-surface] {
+  color: var(--sc-surface-text);
+  background: var(--sc-surface-bg);
+  border: 1px solid var(--sc-surface-border);
+  border-radius: var(--sc-surface-radius);
+  padding: var(--sc-surface-gap);
+}
+`,
+    'button:primary': `/* StyleCraft template: button variants */
+:root {
+  --sc-button-bg: #2563eb;
+  --sc-button-fg: #ffffff;
+  --sc-button-border: transparent;
+  --sc-button-radius: 8px;
+  --sc-button-padding-y: 0.55rem;
+  --sc-button-padding-x: 0.9rem;
+}
+
+:where(button, [role="button"], .button, .btn)[data-variant="primary"],
+.button-primary,
+.btn-primary {
+  color: var(--sc-button-fg);
+  background: var(--sc-button-bg);
+  border: 1px solid var(--sc-button-border);
+  border-radius: var(--sc-button-radius);
+  padding: var(--sc-button-padding-y) var(--sc-button-padding-x);
+}
+
+:where(button, [role="button"], .button, .btn)[data-variant="danger"] {
+  --sc-button-bg: #dc2626;
+}
+
+:where(button, [role="button"], .button, .btn)[data-variant="ghost"] {
+  --sc-button-bg: transparent;
+  --sc-button-fg: currentColor;
+  --sc-button-border: currentColor;
+}
+`,
+    'button:compact': `/* StyleCraft template: compact button variants */
+:root {
+  --sc-button-bg: #334155;
+  --sc-button-fg: #ffffff;
+  --sc-button-radius: 6px;
+  --sc-button-padding-y: 0.35rem;
+  --sc-button-padding-x: 0.65rem;
+}
+
+:where(button, [role="button"], .button, .btn)[data-size="compact"] {
+  color: var(--sc-button-fg);
+  background: var(--sc-button-bg);
+  border: 0;
+  border-radius: var(--sc-button-radius);
+  padding: var(--sc-button-padding-y) var(--sc-button-padding-x);
+  min-height: 30px;
+}
+
+:where(button, [role="button"], .button, .btn)[data-size="compact"][data-variant="quiet"] {
+  --sc-button-bg: rgba(148, 163, 184, 0.18);
+  --sc-button-fg: currentColor;
+}
+`,
+    'card:elevated': `/* StyleCraft template: elevated card variants */
+:root {
+  --sc-card-bg: #ffffff;
+  --sc-card-fg: #111827;
+  --sc-card-border: rgba(15, 23, 42, 0.12);
+  --sc-card-shadow: 0 12px 30px rgba(15, 23, 42, 0.14);
+  --sc-card-radius: 12px;
+}
+
+.card,
+[data-card] {
+  color: var(--sc-card-fg);
+  background: var(--sc-card-bg);
+  border: 1px solid var(--sc-card-border);
+  border-radius: var(--sc-card-radius);
+  box-shadow: var(--sc-card-shadow);
+  padding: 1rem;
+}
+
+.card[data-density="compact"],
+[data-card][data-density="compact"] {
+  --sc-card-radius: 8px;
+  padding: 0.75rem;
+}
+`,
+    'form:focus': `/* StyleCraft template: form focus states */
+:root {
+  --sc-field-bg: #ffffff;
+  --sc-field-fg: #111827;
+  --sc-field-border: #94a3b8;
+  --sc-field-focus: #2563eb;
+  --sc-field-invalid: #dc2626;
+}
+
+:where(input, textarea, select) {
+  color: var(--sc-field-fg);
+  background: var(--sc-field-bg);
+  border: 1px solid var(--sc-field-border);
+  border-radius: 6px;
+  padding: 0.5rem 0.65rem;
+}
+
+:where(input, textarea, select):focus {
+  border-color: var(--sc-field-focus);
+  outline: 2px solid color-mix(in srgb, var(--sc-field-focus), transparent 72%);
+  outline-offset: 2px;
+}
+
+:where(input, textarea, select)[aria-invalid="true"],
+:where(input, textarea, select).is-invalid {
+  border-color: var(--sc-field-invalid);
+}
+`
+  };
+
+  function insertTemplate() {
+    const template = styleTemplates[templateSelect.value];
+    if (!template) { toast('Choose a template first'); return; }
+    const prefix = code.value && !code.value.endsWith('\n') ? '\n\n' : '';
+    const insertion = prefix + template.trim() + '\n';
+    code.setRangeText(insertion, code.selectionStart, code.selectionEnd, 'end');
+    updateHighlight(); updateGutter(); updateStatus();
+    setModified(true); pushUndo();
+    if (livePreview && activeDomain) doLivePreview();
+    toast('Inserted template');
+  }
+  insertTemplateBtn.addEventListener('click', insertTemplate);
 
   /* ─── Autocomplete ─── */
   const cssProps = [

@@ -2,6 +2,12 @@
 
 All notable changes to StyleCraft are documented here.
 
+## [1.9.0] - 2026-06-27
+
+### Added
+- **CSS-in-JS style templates** — editor toolbar can insert var-driven surface, button, card, and form templates with variant selectors.
+- Smoke coverage for template insertion in the CodeMirror editor.
+
 ## [1.8.0] - 2026-06-27
 
 ### Added

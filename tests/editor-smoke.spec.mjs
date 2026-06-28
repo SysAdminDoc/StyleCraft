@@ -146,6 +146,11 @@ test('full editor uses CodeMirror with legacy data APIs intact', async ({ page }
   expect(postCssSaved.customCSS).toContain('-webkit-user-select: none');
   expect(postCssSaved.customCSS).toContain('user-select: none');
 
+  await page.locator('#template-select').selectOption('button:primary');
+  await page.locator('#btn-insert-template').click();
+  await expect(page.locator('.cm-content')).toContainText('--sc-button-bg');
+  await expect(page.locator('.cm-content')).toContainText('[data-variant="danger"]');
+
   if (process.env.STYLECRAFT_SCREENSHOT_PATH) {
     await page.screenshot({ path: process.env.STYLECRAFT_SCREENSHOT_PATH, fullPage: false });
   }
