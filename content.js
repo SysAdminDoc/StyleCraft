@@ -1,4 +1,4 @@
-/* StyleCraft v1.12.0 — Content Script / Editor */
+/* StyleCraft v1.13.0 — Content Script / Editor */
 (function () {
   if (window.__stylecraft_editor_loaded) return;
   window.__stylecraft_editor_loaded = true;
@@ -688,16 +688,49 @@
 
   function generateBestSelector(el) {
     if(el.id) return '#'+CSS.escape(el.id);
-    const classes=[...el.classList].filter(c=>!c.startsWith('sc-')&&c.length<40);
+    const attrSelector=stableAttributeSelectors(el)[0];
+    if(attrSelector) return attrSelector;
+    const classes=stableClassList(el);
     if(classes.length) return el.tagName.toLowerCase()+'.'+classes.map(CSS.escape).join('.');
     return el.tagName.toLowerCase();
+  }
+
+  const STABLE_SELECTOR_ATTRS = ['data-testid','data-test','data-qa','data-cy','data-id','data-role','aria-label','role','name','type'];
+
+  function cssAttrValue(value) {
+    return String(value).replace(/\\/g,'\\\\').replace(/"/g,'\\"').replace(/\n/g,'\\a ');
+  }
+
+  function stableAttributeSelectors(el) {
+    const tag=el.tagName.toLowerCase();
+    const selectors=[];
+    for(const attr of STABLE_SELECTOR_ATTRS){
+      const value=el.getAttribute(attr);
+      if(value&&value.trim()&&value.length<80) selectors.push(tag+'['+attr+'="'+cssAttrValue(value.trim())+'"]');
+    }
+    return selectors;
+  }
+
+  function isGeneratedClassName(cls) {
+    if(!cls||cls.startsWith('sc-')||cls.length>48) return true;
+    if(/^jss\d+$/i.test(cls)) return true;
+    if(/^css-[a-z0-9_-]*\d[a-z0-9_-]*$/i.test(cls)) return true;
+    if(/__[a-z0-9_-]*[a-f0-9]{5,}$/i.test(cls)) return true;
+    if(/^[a-f0-9]{8,}$/i.test(cls)) return true;
+    const digitCount=(cls.match(/\d/g)||[]).length;
+    return cls.length>=10&&digitCount>=4;
+  }
+
+  function stableClassList(el) {
+    return [...el.classList].filter(cl=>!isGeneratedClassName(cl));
   }
 
   function generateAllCandidates(el) {
     const c = new Set();
     if(el.id) c.add('#'+CSS.escape(el.id));
     const tag=el.tagName.toLowerCase();
-    const classes=[...el.classList].filter(cl=>!cl.startsWith('sc-')&&cl.length<40);
+    stableAttributeSelectors(el).forEach(sel=>c.add(sel));
+    const classes=stableClassList(el);
     c.add(tag);
     classes.forEach(cl=>c.add('.'+CSS.escape(cl)));
     classes.forEach(cl=>c.add(tag+'.'+CSS.escape(cl)));
@@ -710,8 +743,6 @@
       const idx=[...parent.children].filter(ch=>ch.tagName===el.tagName).indexOf(el);
       if(idx>=0) c.add(psel+' > '+tag+':nth-of-type('+(idx+1)+')');
     }
-    const attrs=['role','type','name','data-testid','aria-label'];
-    attrs.forEach(a=>{const v=el.getAttribute(a);if(v&&v.length<50)c.add(tag+'['+a+'="'+CSS.escape(v)+'"]');});
     return [...c];
   }
 

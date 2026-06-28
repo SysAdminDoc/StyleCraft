@@ -1,6 +1,6 @@
 # StyleCraft
 
-![Version](https://img.shields.io/badge/version-1.12.0-blue)
+![Version](https://img.shields.io/badge/version-1.13.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Chrome%20%7C%20Edge%20%7C%20Brave-4285F4?logo=googlechrome&logoColor=white)
 ![Manifest](https://img.shields.io/badge/manifest-v3-orange)
@@ -27,6 +27,7 @@ Chrome, Edge, Brave, Vivaldi, Opera, Arc — any Chromium-based browser supporti
 |---------|-------------|
 | Element Picker | uBlock-style point-and-click selector with live highlighting |
 | Multi-Select Picker | Shift-click multiple elements to build combined selectors like `h1, h2, h3` |
+| Stable Selectors | Prefers stable data/ARIA attributes and filters generated-looking classes |
 | Visual Properties | Edit colors, fonts, spacing, display, borders via dropdowns and inputs |
 | Box Model Visualizer | Interactive box model diagram with arrow-key editing |
 | 4-Tab Layout | Selector, Visual, Code, and Themes tabs in the side panel |

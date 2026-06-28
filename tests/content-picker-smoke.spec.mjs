@@ -87,3 +87,20 @@ test('element picker shift-click builds combined selectors', async ({ page }) =>
     await page.screenshot({ path: process.env.STYLECRAFT_PICKER_SCREENSHOT_PATH, fullPage: false });
   }
 });
+
+test('element picker prefers stable data attributes over generated classes', async ({ page }) => {
+  await page.setContent(`
+    <main style="padding: 32px; max-width: 360px">
+      <button class="css-a1b2c3 jss42 save-action" data-testid="save-button">Save</button>
+    </main>
+  `);
+  await page.evaluate(contentScriptChromeMock);
+  await page.addScriptTag({ path: path.join(repoRoot, 'content.js') });
+
+  await page.evaluate(() => window.__stylecraftSendMessage({ action: 'sc-open-editor-pick' }));
+  await page.waitForTimeout(450);
+  await page.locator('[data-testid="save-button"]').click();
+
+  await expect.poll(() => shadowValue(page, 'sc-selector-input')).toBe('button[data-testid="save-button"]');
+  await expect.poll(() => shadowValue(page, 'sc-match-count')).toBe('1 match');
+});

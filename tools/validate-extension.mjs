@@ -76,6 +76,9 @@ if (roadmap.includes('AI-assist toggle')) {
 if (roadmap.includes('Multi-select with shift-click')) {
   fail('Completed picker multi-select roadmap item is still present in ROADMAP.md');
 }
+if (roadmap.includes('Selector simplification')) {
+  fail('Completed selector simplification roadmap item is still present in ROADMAP.md');
+}
 
 const allowedMd = new Set([
   'README.md',

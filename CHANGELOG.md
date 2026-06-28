@@ -2,6 +2,12 @@
 
 All notable changes to StyleCraft are documented here.
 
+## [1.13.0] - 2026-06-27
+
+### Added
+- **Stable selector preference** - element picker now prefers data/ARIA attributes before classes and filters generated-looking class names.
+- Content-script smoke coverage for data attribute selection over generated classes.
+
 ## [1.12.0] - 2026-06-27
 
 ### Added
