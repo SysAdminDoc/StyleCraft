@@ -81,13 +81,6 @@ Roadmap for StyleCraft, the Chrome MV3 CSS style manager with visual element pic
 
 ## Research-Driven Additions
 
-- [ ] P0 - Make backups and restore recovery explicit
-  Why: Backups are three daily snapshots with swallowed failures, and restore uses `prompt()` plus an undo-toast label bug after `undoSnapshot` is cleared.
-  Evidence: `background.js` alarm backup block; `options.js` restore and `showUndoToast()`; Stylebot import/export simplicity.
-  Touches: `background.js`, `options.js`, `options.html`, `tests/`
-  Acceptance: Backup failures surface in options, restore uses an in-page picker with preview counts, undo text is accurate, and tests cover restore/undo/corrupt-backup paths.
-  Complexity: M
-
 - [ ] P1 - Replace UserStyles.world HTML scraping with a resilient catalog adapter
   Why: Search currently parses UserStyles.world card HTML by regex, so markup changes can break discovery while install/update already use API-style JSON.
   Evidence: `background.js` `searchUSw()` and `fetchUSwCSS()`; UserStyles.world; Stylus UserCSS install flow.

@@ -130,6 +130,10 @@ a{color:var(--sc-blue);text-decoration:none;}a:hover{text-decoration:underline;}
 .browse-btn.uninstall{background:rgba(243,139,168,0.06);border-color:rgba(243,139,168,0.12);color:var(--sc-red);}
 .browse-btn.uninstall:hover{background:rgba(243,139,168,0.15);}
 .browse-installs{font-size:10px;color:var(--sc-faint);margin-left:auto;}
+.restore-panel{display:none;margin:-18px 0 28px;padding:14px 16px;background:var(--sc-surface);border:1px solid var(--sc-border);border-radius:8px;}
+.restore-panel.show{display:block;}
+.restore-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.restore-preview{margin-top:10px;font-size:12px;color:var(--sc-muted);line-height:1.5;}
 </style>
 </head>
 <body>
@@ -137,7 +141,7 @@ a{color:var(--sc-blue);text-decoration:none;}a:hover{text-decoration:underline;}
 <div class="header">
   <div class="header-left">
     <div class="header-logo">StyleCraft</div>
-    <div class="header-sub">v1.16.0 &middot; Options</div>
+    <div class="header-sub">v1.17.0 &middot; Options</div>
   </div>
   <div class="header-actions">
     <button class="h-btn" id="btn-import" title="Import from StyleCraft, Stylus, or Stylebot"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Import</button>
@@ -329,6 +333,14 @@ a{color:var(--sc-blue);text-decoration:none;}a:hover{text-decoration:underline;}
       <div class="setting-row">
         <div><div class="setting-label">Auto-Backup</div><div class="setting-desc">Daily automatic backup (keeps last 3). <span id="backup-status" style="color:var(--sc-muted)">Checking...</span></div></div>
         <button class="h-btn" id="btn-restore-backup" style="font-size:11px">Restore Backup</button>
+      </div>
+      <div class="restore-panel" id="backup-restore-panel">
+        <div class="restore-row">
+          <select class="setting-select" id="backup-select" style="flex:1;width:auto"></select>
+          <button class="h-btn" id="backup-restore-apply" style="font-size:11px">Restore Selected</button>
+          <button class="h-btn" id="backup-restore-cancel" style="font-size:11px">Cancel</button>
+        </div>
+        <div class="restore-preview" id="backup-preview"></div>
       </div>
     </div>
     <div class="editor-row" style="margin-top:16px"><button class="save-btn" id="save-settings">Save All Settings</button></div>

@@ -1,4 +1,4 @@
-/* StyleCraft v1.16.0 - Background Service Worker */
+/* StyleCraft v1.17.0 - Background Service Worker */
 importScripts('style-match.js', 'style-data.js');
 
 const SC_MATCH = globalThis.StyleCraftMatcher;
@@ -451,16 +451,28 @@ function refreshActiveBadge() {
    ═══════════════════════════════════════════════════════════ */
 chrome.alarms.create('sc-auto-backup', { periodInMinutes: 1440 }); // every 24h
 
+async function setBackupStatus(status) {
+  try {
+    await chrome.storage.local.set({ sc_backup_status: Object.assign({ timestamp: new Date().toISOString() }, status) });
+  } catch {}
+}
+
 chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name !== 'sc-auto-backup') return;
   try {
     const result = await chrome.storage.local.get(['stylecraft_data', 'stylecraft_settings', 'sc_backups']);
     const data = result.stylecraft_data;
-    if (!data || !Object.keys(data).length) return;
+    if (!data || !Object.keys(data).length) {
+      await setBackupStatus({ ok: true, skipped: true, message: 'No styles to back up', domains: 0 });
+      return;
+    }
     const backups = result.sc_backups || [];
     backups.unshift({ data, settings: result.stylecraft_settings || {}, timestamp: new Date().toISOString() });
     // Keep only last 3
     while (backups.length > 3) backups.pop();
     await chrome.storage.local.set({ sc_backups: backups });
-  } catch {}
+    await setBackupStatus({ ok: true, message: 'Backup completed', domains: Object.keys(data).length });
+  } catch (error) {
+    await setBackupStatus({ ok: false, message: error.message || String(error) });
+  }
 });

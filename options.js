@@ -1,4 +1,4 @@
-/* StyleCraft v1.16.0 - Options Page */
+/* StyleCraft v1.17.0 - Options Page */
 (async function(){
   const $=id=>document.getElementById(id);
   const send=msg=>new Promise(r=>chrome.runtime.sendMessage(msg,r));
@@ -34,26 +34,40 @@
   let undoSnapshot = null;
   let undoTimer = null;
   function snapshotForUndo(label) {
-    undoSnapshot = { data: JSON.parse(JSON.stringify(allData)), label };
+    undoSnapshot = {
+      data: JSON.parse(JSON.stringify(allData)),
+      settings: JSON.parse(JSON.stringify(settings || {})),
+      label
+    };
     clearTimeout(undoTimer);
     undoTimer = setTimeout(() => { undoSnapshot = null; }, 8000);
   }
   function showUndoToast(msg) {
     const el = $('toast');
+    el.style.pointerEvents = 'auto';
     el.innerHTML = esc(msg) + ' <button id="undo-toast-btn" style="margin-left:10px;padding:2px 10px;border-radius:4px;background:rgba(203,166,247,0.2);border:1px solid rgba(203,166,247,0.3);color:#cba6f7;cursor:pointer;font-weight:700;font-size:11px">Undo</button>';
     el.classList.add('show');
     clearTimeout(el._t);
-    el._t = setTimeout(() => el.classList.remove('show'), 6000);
+    el._t = setTimeout(() => {
+      el.classList.remove('show');
+      el.style.pointerEvents = 'none';
+    }, 6000);
     const btn = $('undo-toast-btn');
     if (btn) btn.addEventListener('click', async () => {
       if (!undoSnapshot) { toast('Undo expired'); return; }
+      const label = undoSnapshot.label || 'action';
       allData = undoSnapshot.data;
+      settings = undoSnapshot.settings || settings;
       await saveAllData(allData);
+      await saveSettings(settings);
+      syncSettingsControls();
+      SC_APPLY_THEME(settings.theme || 'catppuccin');
       notifyTabs('*');
       renderStyles(); renderThemes(); updateStats();
       undoSnapshot = null;
       el.classList.remove('show');
-      toast('Undone: ' + undoSnapshot?.label || 'action');
+      el.style.pointerEvents = 'none';
+      toast('Undone: ' + label);
     });
   }
 
@@ -61,7 +75,7 @@
   function exportSingleDomain(domain) {
     const data = allData[domain];
     if (!data) { toast('No data for ' + domain); return; }
-    const exp = { domain, data, version: '1.16.0', exported: new Date().toISOString() };
+    const exp = { domain, data, version: '1.17.0', exported: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(exp, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -474,7 +488,20 @@
   });
 
   /* ─── GLOBAL CSS ─── */
-  $('global-css').value=settings.globalCSS||'';
+  function syncSettingsControls() {
+    $('global-css').value = settings.globalCSS || '';
+    $('set-panel-width').value = settings.panelWidth || 420;
+    $('set-font-size').value = settings.fontSize || 12;
+    $('set-auto-picker').checked = settings.autoPicker !== false;
+    $('set-default-tab').value = settings.defaultTab || 'selector';
+    $('set-custom-on-top').checked = settings.customOnTop !== false;
+    $('set-important').checked = settings.useImportant === true;
+    $('set-live-preview').checked = settings.livePreview !== false;
+    $('set-accent').value = settings.accentColor || '#cba6f7';
+    $('set-highlight').value = settings.highlightColor || '#89b4fa';
+    if (themeSelect) themeSelect.value = settings.theme || 'catppuccin';
+  }
+  syncSettingsControls();
   $('save-global').addEventListener('click',async()=>{
     settings.globalCSS=$('global-css').value;
     await saveSettings(settings);
@@ -483,16 +510,6 @@
   });
 
   /* ─── SETTINGS ─── */
-  $('set-panel-width').value=settings.panelWidth||420;
-  $('set-font-size').value=settings.fontSize||12;
-  $('set-auto-picker').checked=settings.autoPicker!==false;
-  $('set-default-tab').value=settings.defaultTab||'selector';
-  $('set-custom-on-top').checked=settings.customOnTop!==false;
-  $('set-important').checked=settings.useImportant===true;
-  $('set-live-preview').checked=settings.livePreview!==false;
-  $('set-accent').value=settings.accentColor||'#cba6f7';
-  $('set-highlight').value=settings.highlightColor||'#89b4fa';
-
   $('save-settings').addEventListener('click',async()=>{
     settings.panelWidth=parseInt($('set-panel-width').value)||420;
     settings.fontSize=parseInt($('set-font-size').value)||12;
@@ -621,7 +638,7 @@
 
   /* ─── IMPORT/EXPORT ─── */
   $('btn-export').addEventListener('click',()=>{
-  const exp={data:allData,settings,version:'1.16.0',exported:new Date().toISOString()};
+  const exp={data:allData,settings,version:'1.17.0',exported:new Date().toISOString()};
     const blob=new Blob([JSON.stringify(exp,null,2)],{type:'application/json'});
     const url=URL.createObjectURL(blob);const a=document.createElement('a');
     a.href=url;a.download='stylecraft-export-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(url);
@@ -672,6 +689,8 @@
     if (settingsPatch) {
       settings = Object.assign(settings, settingsPatch);
       await saveSettings(settings);
+      syncSettingsControls();
+      SC_APPLY_THEME(settings.theme || 'catppuccin');
     }
     renderStyles(); renderThemes(); updateStats(); updateBrowseInstalled(); refreshBackupStatus();
     notifyTabs('*');
@@ -803,42 +822,125 @@
   }
 
   /* ─── Auto-backup status & restore ─── */
-  function renderBackupStatus(backups) {
-    backups = Array.isArray(backups) ? backups : [];
-    const statusEl = $('backup-status');
-    if (backups.length === 0) {
-      statusEl.textContent = 'No backups yet';
-    } else {
-      statusEl.textContent = backups.length + ' backup' + (backups.length > 1 ? 's' : '') + ' (latest: ' + new Date(backups[0].timestamp).toLocaleString() + ')';
+  let cachedBackups = [];
+
+  function summarizeBackup(backup) {
+    const rawData = backup && backup.data && typeof backup.data === 'object' ? backup.data : {};
+    const domains = Object.keys(rawData);
+    const themeCount = domains.reduce((count, domain) => {
+      const themes = rawData[domain] && rawData[domain].themes;
+      return count + (themes && typeof themes === 'object' ? Object.keys(themes).length : 0);
+    }, 0);
+    const summary = { domains, themeCount, validation: null, error: '' };
+    try {
+      const plan = StyleCraftData.planStyleDataImport(rawData, {}, { mode: 'replace', source: 'backup preview' });
+      summary.validation = plan.summary;
+    } catch (error) {
+      summary.error = error.message || 'Backup is corrupt.';
     }
+    return summary;
   }
+
+  function renderBackupStatus(backups, status) {
+    cachedBackups = Array.isArray(backups) ? backups : [];
+    const statusEl = $('backup-status');
+    if (status && status.ok === false) {
+      statusEl.textContent = 'Last backup failed: ' + (status.message || 'unknown error');
+      statusEl.style.color = 'var(--sc-red)';
+    } else if (cachedBackups.length === 0) {
+      statusEl.textContent = 'No backups yet';
+      statusEl.style.color = 'var(--sc-muted)';
+    } else {
+      const prefix = status && status.skipped ? 'Last check skipped; ' : '';
+      statusEl.textContent = prefix + cachedBackups.length + ' backup' + (cachedBackups.length > 1 ? 's' : '') +
+        ' (latest: ' + new Date(cachedBackups[0].timestamp).toLocaleString() + ')';
+      statusEl.style.color = 'var(--sc-muted)';
+    }
+    renderRestorePanel();
+  }
+
   function refreshBackupStatus() {
-    chrome.storage.local.get('sc_backups', (result) => {
-      renderBackupStatus(result.sc_backups || []);
+    chrome.storage.local.get(['sc_backups', 'sc_backup_status'], (result) => {
+      renderBackupStatus(result.sc_backups || [], result.sc_backup_status || null);
     });
   }
-  chrome.storage.local.get('sc_backups', (result) => {
-    renderBackupStatus(result.sc_backups || []);
-  });
+  refreshBackupStatus();
+
+  function renderRestorePanel() {
+    const select = $('backup-select');
+    if (!select) return;
+    if (!cachedBackups.length) {
+      select.innerHTML = '<option value="">No backups available</option>';
+      $('backup-preview').textContent = '';
+      return;
+    }
+    select.innerHTML = cachedBackups.map((backup, index) => {
+      const summary = summarizeBackup(backup);
+      const label = new Date(backup.timestamp).toLocaleString() + ' - ' + summary.domains.length + ' domain' + (summary.domains.length !== 1 ? 's' : '');
+      return '<option value="' + index + '">' + esc(label) + '</option>';
+    }).join('');
+    renderBackupPreview();
+  }
+
+  function renderBackupPreview() {
+    const select = $('backup-select');
+    const preview = $('backup-preview');
+    if (!select || !preview) return;
+    const index = parseInt(select.value, 10);
+    const backup = cachedBackups[index];
+    if (!backup) { preview.textContent = ''; return; }
+    const summary = summarizeBackup(backup);
+    const sample = summary.domains.slice(0, 3).join(', ');
+    const parts = [
+      summary.domains.length + ' domain' + (summary.domains.length !== 1 ? 's' : ''),
+      summary.themeCount + ' theme' + (summary.themeCount !== 1 ? 's' : '')
+    ];
+    if (sample) parts.push('sample: ' + sample);
+    if (summary.validation) {
+      parts.push(summary.validation.accepted + ' valid domain' + (summary.validation.accepted !== 1 ? 's' : ''));
+      if (summary.validation.rejected) parts.push(summary.validation.rejected + ' quarantined on restore');
+    } else {
+      parts.push('restore blocked: ' + summary.error);
+    }
+    parts.push('source: ' + (backup.source || backup.reason || 'scheduled backup'));
+    preview.textContent = parts.join('; ');
+  }
 
   $('btn-restore-backup').addEventListener('click', async () => {
-    const result = await chrome.storage.local.get('sc_backups');
-    const backups = result.sc_backups || [];
-    if (!backups.length) { toast('No backups available'); return; }
-    const choices = backups.map((b, i) => {
-      const domains = Object.keys(b.data || {}).length;
-      return (i + 1) + '. ' + new Date(b.timestamp).toLocaleString() + ' (' + domains + ' domains)';
-    }).join('\n');
-    const pick = prompt('Choose backup to restore:\n' + choices + '\n\nEnter number (1-' + backups.length + '):');
-    const idx = parseInt(pick) - 1;
-    if (isNaN(idx) || idx < 0 || idx >= backups.length) return;
+    const result = await chrome.storage.local.get(['sc_backups', 'sc_backup_status']);
+    renderBackupStatus(result.sc_backups || [], result.sc_backup_status || null);
+    if (!cachedBackups.length) { toast('No backups available'); return; }
+    $('backup-restore-panel').classList.add('show');
+  });
+  $('backup-select').addEventListener('change', renderBackupPreview);
+  $('backup-restore-cancel').addEventListener('click', () => $('backup-restore-panel').classList.remove('show'));
+  $('backup-restore-apply').addEventListener('click', async () => {
+    const idx = parseInt($('backup-select').value, 10);
+    const backup = cachedBackups[idx];
+    if (!backup) { toast('No backup selected'); return; }
+    let plan;
+    try {
+      plan = StyleCraftData.planStyleDataImport(backup.data || {}, allData, { mode: 'replace', source: 'backup restore' });
+    } catch (error) {
+      toast('Restore failed: ' + (error.message || 'corrupt backup'));
+      return;
+    }
     snapshotForUndo('Restore backup');
-    allData = backups[idx].data || {};
+    allData = plan.data;
+    await chrome.storage.local.set({ stylecraft_import_quarantine: plan.quarantine });
     await saveAllData(allData);
-    if (backups[idx].settings) { settings = Object.assign(settings, backups[idx].settings); await saveSettings(settings); }
+    const backupSettings = StyleCraftData.sanitizeSettings(backup.settings);
+    if (backupSettings) {
+      settings = Object.assign(settings, backupSettings);
+      await saveSettings(settings);
+      syncSettingsControls();
+      SC_APPLY_THEME(settings.theme || 'catppuccin');
+    }
     notifyTabs('*');
-    renderStyles(); renderThemes(); updateStats();
-    showUndoToast('Restored backup from ' + new Date(backups[idx].timestamp).toLocaleString());
+    renderStyles(); renderThemes(); updateStats(); updateBrowseInstalled();
+    $('backup-restore-panel').classList.remove('show');
+    refreshBackupStatus();
+    showUndoToast('Restored backup from ' + new Date(backup.timestamp).toLocaleString());
   });
 
   $('btn-reset').addEventListener('click',async()=>{
@@ -848,5 +950,5 @@
   });
 
   function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
-  function toast(msg){const el=$('toast');el.textContent=msg;el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),3000);}
+  function toast(msg){const el=$('toast');el.style.pointerEvents='none';el.textContent=msg;el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),3000);}
 })();

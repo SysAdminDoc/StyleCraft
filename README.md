@@ -1,6 +1,6 @@
 # StyleCraft
 
-![Version](https://img.shields.io/badge/version-1.16.0-blue)
+![Version](https://img.shields.io/badge/version-1.17.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Chrome%20%7C%20Edge%20%7C%20Brave-4285F4?logo=googlechrome&logoColor=white)
 ![Manifest](https://img.shields.io/badge/manifest-v3-orange)
@@ -93,7 +93,7 @@ The same matcher drives early injection, popup installed-style state, badge coun
 | Feature | Description |
 |---------|-------------|
 | Auto-Backup | Daily automatic backup, keeps last 3 snapshots |
-| Restore from Backup | One-click restore from any saved backup |
+| Restore from Backup | In-page backup picker with preview counts, validation, and undo |
 | Undo for Deletes | 8-second undo window on all destructive operations |
 | Quota Protection | Catches and surfaces storage quota errors |
 | Import Guard | Validates imported data, quarantines invalid entries, blocks dangerous CSS schemes, and creates a pre-import backup before storage writes |

@@ -2,6 +2,15 @@
 
 All notable changes to StyleCraft are documented here.
 
+## [1.17.0] - 2026-06-28
+
+### Added
+- Explicit backup status reporting plus an in-page restore picker with backup preview counts, validation, and corrupt-backup handling.
+- Backup restore smoke coverage for failure visibility, restore, undo, and corrupt backup refusal.
+
+### Fixed
+- Undo toast text now keeps the restored/deleted action label and the Undo button remains clickable while visible.
+
 ## [1.16.0] - 2026-06-28
 
 ### Added
