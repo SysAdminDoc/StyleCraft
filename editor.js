@@ -4,6 +4,8 @@
   const highlight = document.getElementById('highlight');
   const gutter = document.getElementById('gutter');
   const gutterInner = document.getElementById('gutter-inner');
+  const editorContainer = document.getElementById('editor-container');
+  const cmHost = document.getElementById('codemirror-host');
   const acPopup = document.getElementById('ac-popup');
   const domainList = document.getElementById('domain-list');
   const tbDomain = document.getElementById('tb-domain');
@@ -28,6 +30,80 @@
   let acIndex = -1;
   let acItems = [];
   let acVisible = false;
+  let cmEditor = null;
+  let usingCodeMirror = false;
+
+  function shouldUseLegacyEditor() {
+    const params = new URLSearchParams(location.search);
+    if (params.has('legacy') || params.get('editor') === 'legacy') return true;
+    if (navigator.deviceMemory && navigator.deviceMemory <= 2) return true;
+    return false;
+  }
+
+  function installCodeMirrorProxy(editor) {
+    try {
+      Object.defineProperty(code, 'value', {
+        configurable: true,
+        get() { return editor.getValue(); },
+        set(value) { editor.setValue(value); }
+      });
+      Object.defineProperty(code, 'selectionStart', {
+        configurable: true,
+        get() { return editor.selectionStart(); },
+        set(value) {
+          const start = Math.max(0, Number(value) || 0);
+          const end = Math.max(start, editor.selectionEnd());
+          editor.setSelectionRange(start, end);
+        }
+      });
+      Object.defineProperty(code, 'selectionEnd', {
+        configurable: true,
+        get() { return editor.selectionEnd(); },
+        set(value) {
+          const end = Math.max(0, Number(value) || 0);
+          const start = Math.min(editor.selectionStart(), end);
+          editor.setSelectionRange(start, end);
+        }
+      });
+      Object.defineProperty(code, 'scrollTop', {
+        configurable: true,
+        get() { return editor.scrollTop; },
+        set(value) { editor.scrollTop = value; }
+      });
+      Object.defineProperty(code, 'scrollLeft', {
+        configurable: true,
+        get() { return editor.scrollLeft; },
+        set(value) { editor.scrollLeft = value; }
+      });
+      Object.defineProperty(code, 'clientHeight', {
+        configurable: true,
+        get() { return editor.clientHeight; }
+      });
+      code.focus = () => editor.focus();
+      code.getBoundingClientRect = () => editor.getBoundingClientRect();
+      code.setSelectionRange = (start, end) => editor.setSelectionRange(start, end);
+      code.setRangeText = (replacement, start = code.selectionStart, end = code.selectionEnd, selectionMode = 'preserve') => {
+        editor.replaceRange(replacement, start, end, selectionMode);
+      };
+      return true;
+    } catch (error) {
+      console.warn('StyleCraft CodeMirror proxy unavailable; using legacy editor', error);
+      return false;
+    }
+  }
+
+  if (!shouldUseLegacyEditor() && window.StyleCraftCodeMirror && cmHost) {
+    cmEditor = window.StyleCraftCodeMirror.create({ host: cmHost, textarea: code });
+    if (cmEditor && installCodeMirrorProxy(cmEditor)) {
+      usingCodeMirror = true;
+      editorContainer.classList.add('cm-active');
+      code.dataset.editorEngine = 'codemirror';
+    } else if (cmEditor && cmEditor.destroy) {
+      cmEditor.destroy();
+      cmEditor = null;
+    }
+  }
+  if (!usingCodeMirror) code.dataset.editorEngine = 'legacy';
 
   /* ─── Storage ─── */
   async function loadAllData() {
@@ -327,10 +403,20 @@
     return out + '\n';
   }
 
-  function updateHighlight() { highlight.innerHTML = highlightCSS(code.value); }
+  function updateHighlight() {
+    if (usingCodeMirror) {
+      cmEditor.setExternalMarks();
+      return;
+    }
+    highlight.innerHTML = highlightCSS(code.value);
+  }
 
   /* ─── Line Numbers ─── */
   function updateGutter() {
+    if (usingCodeMirror) {
+      gutterInner.innerHTML = '';
+      return;
+    }
     const lines = code.value.split('\n').length;
     const curLine = code.value.substring(0, code.selectionStart).split('\n').length;
     let html = '';
@@ -567,6 +653,7 @@
   ];
 
   function tryAutocomplete() {
+    if (usingCodeMirror) return;
     const pos = code.selectionStart;
     const before = code.value.substring(0, pos);
     const lastOpen = before.lastIndexOf('{');
@@ -798,6 +885,11 @@
     if (e.key === 'Escape' && findOpen) closeFind();
   }
   document.addEventListener('keydown', handleFindKeys);
+  code.addEventListener('sc-editor-shortcut', (e) => {
+    const key = (e.detail && e.detail.key) || '';
+    if (key === 'f') { e.preventDefault(); openFind(false); }
+    if (key === 'h') { e.preventDefault(); openFind(true); }
+  });
 
   /* ─── Find Highlight Post-Processor ─── */
   // Wraps find matches and bracket matches into the highlighted HTML
@@ -894,6 +986,10 @@
   const _origHighlight = updateHighlight;
   updateHighlight = function() {
     updateBracketMatch();
+    if (usingCodeMirror) {
+      cmEditor.setExternalMarks({ findMatches, findCurrent, bracketA, bracketB });
+      return;
+    }
     highlight.innerHTML = postProcessHighlight(highlightCSS(code.value));
   };
 
@@ -916,8 +1012,17 @@
     }
   });
 
+  code.addEventListener('sc-color-swatch-click', (e) => {
+    const detail = e.detail || {};
+    if (!detail.rect) return;
+    openColorPickerAtRect(detail.rect, detail.start, detail.end, detail.color);
+  });
+
   function openColorPicker(swatch, start, end, val) {
-    const rect = swatch.getBoundingClientRect();
+    openColorPickerAtRect(swatch.getBoundingClientRect(), start, end, val);
+  }
+
+  function openColorPickerAtRect(rect, start, end, val) {
     colorPicker.style.display = 'flex';
     colorPicker.style.left = Math.min(rect.left, window.innerWidth - 200) + 'px';
     colorPicker.style.top = (rect.bottom + 4) + 'px';
@@ -949,7 +1054,7 @@
   });
 
   document.addEventListener('click', (e) => {
-    if (colorPicker.style.display !== 'none' && !colorPicker.contains(e.target) && !e.target.closest('.hl-color-swatch')) {
+    if (colorPicker.style.display !== 'none' && !colorPicker.contains(e.target) && !e.target.closest('.hl-color-swatch') && !e.target.closest('.cm-sc-color-swatch')) {
       closeColorPicker();
     }
   });
@@ -1298,6 +1403,10 @@
   // Override updateGutter to add fold buttons + lint dots
   const _origUpdateGutter = updateGutter;
   updateGutter = function() {
+    if (usingCodeMirror) {
+      gutterInner.innerHTML = '';
+      return;
+    }
     const lines = code.value.split('\n');
     const curLine = code.value.substring(0, code.selectionStart).split('\n').length;
     const foldable = findFoldRanges(code.value);
@@ -1338,6 +1447,7 @@
   const _p4OrigUpdateHighlight = updateHighlight;
   updateHighlight = function() {
     _p4OrigUpdateHighlight();
+    if (usingCodeMirror) return;
     if (foldedRanges.length > 0) {
       // Post-process: hide folded lines in highlight
       const lines = highlight.innerHTML.split('\n');

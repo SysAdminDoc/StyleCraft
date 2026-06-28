@@ -119,6 +119,9 @@ body{background:var(--sc-bg);color:var(--sc-text);font-family:'SFMono-Regular','
 .gutter{width:60px;background:var(--sc-gutter-bg);border-right:1px solid var(--sc-border);overflow:hidden;flex-shrink:0;user-select:none;}
 .gutter-inner{padding:10px 0;}
 .code-wrap{flex:1;position:relative;overflow:hidden;}
+.cm-host{display:none;flex:1;min-width:0;height:100%;overflow:hidden;background:var(--sc-bg);}
+.editor-container.cm-active .gutter,.editor-container.cm-active .legacy-code-wrap{display:none;}
+.editor-container.cm-active .cm-host{display:block;}
 .code-highlight,.code-input{position:absolute;top:0;left:0;width:100%;height:100%;padding:10px 14px;font-family:'SFMono-Regular','Cascadia Code','Consolas','Liberation Mono','Menlo',monospace;font-size:13px;line-height:20px;tab-size:2;white-space:pre;overflow:auto;margin:0;}
 .code-highlight{pointer-events:none;color:var(--sc-text);z-index:1;}
 .code-input{background:transparent;color:transparent;caret-color:var(--sc-cursor);border:none;outline:none;resize:none;z-index:2;-webkit-text-fill-color:transparent;}
@@ -366,12 +369,13 @@ body{background:var(--sc-bg);color:var(--sc-text);font-family:'SFMono-Regular','
         <svg class="ap-toggle-chevron" id="ap-toggle-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
         <span class="ap-toggle-label" id="ap-toggle-label">Applies To: domain</span>
       </div>
-      <div class="editor-container">
+      <div class="editor-container" id="editor-container">
         <div class="gutter" id="gutter"><div class="gutter-inner" id="gutter-inner"></div></div>
-        <div class="code-wrap">
+        <div class="code-wrap legacy-code-wrap">
           <pre class="code-highlight" id="highlight"></pre>
           <textarea class="code-input" id="code" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
         </div>
+        <div class="cm-host" id="codemirror-host"></div>
       </div>
       <!-- Lint panel -->
       <div class="lint-toggle" id="lint-toggle">
@@ -420,6 +424,7 @@ body{background:var(--sc-bg);color:var(--sc-text);font-family:'SFMono-Regular','
 </div>
 
 <script src="theme.js"></script>
+<script src="vendor/codemirror/stylecraft-codemirror.js"></script>
 <script src="editor.js"></script>
 </body>
 </html>

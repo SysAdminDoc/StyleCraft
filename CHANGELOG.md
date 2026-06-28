@@ -2,6 +2,17 @@
 
 All notable changes to StyleCraft are documented here.
 
+## [1.6.0] - 2026-06-27
+
+### Added
+- **CodeMirror 6 editor engine** — full CSS editor now uses a bundled local CodeMirror 6 surface with CSS syntax highlighting, folding, bracket matching, autocomplete, search highlights, and color swatches.
+- **Low-memory editor fallback** — the original textarea/highlight editor remains available automatically on very low-memory devices and via `editor.html?legacy=1`.
+- Local extension validation and ZIP packaging scripts.
+
+### Fixed
+- Manifest and popup icon paths now point at the shipped `icon.png` asset.
+- Version strings are synchronized across manifest, UI, export metadata, README, changelog, and working notes.
+
 ## [1.5.0] - 2026-02-13
 
 ### Added

@@ -5,7 +5,6 @@ Roadmap for StyleCraft, the Chrome MV3 CSS style manager with visual element pic
 ## Planned Features
 
 ### Editor depth
-- Move from hand-rolled tokenizer to CodeMirror 6 or Monaco for the full editor (keep current fallback for low-RAM mode)
 - SCSS / Sass source support with client-side compilation via `sass-embedded`
 - PostCSS pipeline for auto-prefixing and modern CSS nesting on older browsers
 - CSS-in-JS style templates (var-driven, with variant support)
