@@ -17,6 +17,7 @@
   const newDomainWrap = document.getElementById('new-domain-wrap');
   const newDomainInput = document.getElementById('new-domain-input');
   const liveBtn = document.getElementById('btn-live');
+  const sourceModeSelect = document.getElementById('source-mode');
 
   /* ─── State ─── */
   let allData = {};
@@ -24,9 +25,13 @@
   let activeThemeId = null; // null = custom CSS, string = theme id
   let modified = false;
   let livePreview = false;
+  let livePreviewSeq = 0;
+  let lastPreviewError = '';
   let undoStack = [];
   let redoStack = [];
   let lastSaved = '';
+  let sourceMode = 'css';
+  let activeLabelBase = '';
   let acIndex = -1;
   let acItems = [];
   let acVisible = false;
@@ -130,6 +135,44 @@
   function setHash(domain, themeId) {
     if (themeId) location.hash = encodeURIComponent(domain) + '/theme/' + encodeURIComponent(themeId);
     else location.hash = encodeURIComponent(domain);
+  }
+
+  function getActiveRecord(domain = activeDomain, themeId = activeThemeId) {
+    if (!domain || !allData[domain]) return null;
+    if (themeId) return (allData[domain].themes || {})[themeId] || null;
+    return allData[domain];
+  }
+
+  function getRecordSourceMode(record) {
+    const syntax = record && record.preprocessor && record.preprocessor.syntax;
+    return ['scss', 'sass'].includes(syntax) ? syntax : 'css';
+  }
+
+  function getRecordSource(record, mode, fallbackCss) {
+    if (!record) return '';
+    if (mode === 'css') return fallbackCss || '';
+    return (record.preprocessor && record.preprocessor.source) || fallbackCss || '';
+  }
+
+  function setSourceMode(mode) {
+    sourceMode = ['css', 'scss', 'sass'].includes(mode) ? mode : 'css';
+    if (sourceModeSelect) sourceModeSelect.value = sourceMode;
+  }
+
+  function updateDomainLabels() {
+    const suffix = sourceMode !== 'css' ? ' (' + sourceMode.toUpperCase() + ')' : '';
+    const label = (activeLabelBase || 'No domain selected') + suffix;
+    tbDomain.textContent = label;
+    sbDomainInfo.textContent = label;
+  }
+
+  async function compileEditorSource(source = code.value) {
+    if (sourceMode === 'css') return source;
+    if (!window.StyleCraftSass || typeof window.StyleCraftSass.compile !== 'function') {
+      throw new Error('Sass compiler bundle is unavailable');
+    }
+    const result = window.StyleCraftSass.compile(source, { syntax: sourceMode });
+    return result.css;
   }
 
   /* ─── Init ─── */
@@ -244,7 +287,7 @@
             else setEditorText('/* No domains left */');
           }
         } else if (type === 'custom') {
-          if (allData[d]) { allData[d].customCSS = ''; allData[d].customEnabled = true; }
+          if (allData[d]) { allData[d].customCSS = ''; allData[d].customEnabled = true; delete allData[d].preprocessor; }
           await saveAllData(allData);
           notifyTabs();
           toast('Cleared custom CSS for ' + d);
@@ -256,7 +299,7 @@
           const name = (allData[d] && allData[d].themes && allData[d].themes[tid]) ? (allData[d].themes[tid].name || tid) : tid;
           if (allData[d] && allData[d].themes) delete allData[d].themes[tid];
           // Clean up empty domain
-          if (allData[d] && !(allData[d].customCSS || '').trim() && !Object.keys(allData[d].themes || {}).length) delete allData[d];
+          if (allData[d] && !(allData[d].customCSS || '').trim() && !(allData[d].preprocessor && allData[d].preprocessor.source) && !Object.keys(allData[d].themes || {}).length) delete allData[d];
           await saveAllData(allData);
           notifyTabs();
           toast('Deleted ' + name);
@@ -279,26 +322,30 @@
     activeDomain = domain;
     activeThemeId = themeId;
     const data = allData[domain] || {};
-    let css = '';
+    let source = '';
     let label = '';
 
     if (themeId) {
       const theme = (data.themes || {})[themeId];
-      css = theme ? (theme.rawCSS || theme.css || '') : '';
+      const mode = getRecordSourceMode(theme);
+      setSourceMode(mode);
+      source = getRecordSource(theme, mode, theme ? (theme.rawCSS || theme.css || '') : '');
       label = domain + ' / ' + (theme ? (theme.name || themeId) : themeId);
     } else {
-      css = data.customCSS || '';
+      const mode = getRecordSourceMode(data);
+      setSourceMode(mode);
+      source = getRecordSource(data, mode, data.customCSS || '');
       label = domain + ' / Custom CSS';
     }
+    activeLabelBase = label;
 
-    setEditorText(css);
-    lastSaved = css;
+    setEditorText(source);
+    lastSaved = source;
     modified = false;
     updateIndicator();
-    tbDomain.textContent = label;
-    sbDomainInfo.textContent = label;
+    updateDomainLabels();
     setHash(domain, themeId);
-    undoStack = [css];
+    undoStack = [source];
     redoStack = [];
     renderSidebar();
     code.focus();
@@ -548,27 +595,39 @@
   /* ─── Save ─── */
   async function doSave() {
     if (!activeDomain) { toast('No domain selected'); return; }
-    const css = code.value;
+    const source = code.value;
+    let css;
+    try {
+      css = await compileEditorSource(source);
+    } catch (error) {
+      toast((sourceMode === 'sass' ? 'Sass' : 'SCSS') + ' compile failed: ' + error.message);
+      return;
+    }
     allData = await loadAllData();
     if (!allData[activeDomain]) allData[activeDomain] = { themes: {}, customCSS: '', customEnabled: true };
 
     if (activeThemeId) {
       // Save theme CSS
       if (allData[activeDomain].themes && allData[activeDomain].themes[activeThemeId]) {
-        allData[activeDomain].themes[activeThemeId].rawCSS = css;
-        allData[activeDomain].themes[activeThemeId].css = css;
+        const theme = allData[activeDomain].themes[activeThemeId];
+        theme.rawCSS = css;
+        theme.css = css;
+        if (sourceMode === 'css') delete theme.preprocessor;
+        else theme.preprocessor = { syntax: sourceMode, source };
       }
     } else {
       // Save custom CSS
       allData[activeDomain].customCSS = css;
+      if (sourceMode === 'css') delete allData[activeDomain].preprocessor;
+      else allData[activeDomain].preprocessor = { syntax: sourceMode, source };
     }
 
     await saveAllData(allData);
-    lastSaved = css;
+    lastSaved = source;
     setModified(false);
     renderSidebar();
     notifyTabs();
-    toast('Saved' + (activeThemeId ? ' theme' : ' CSS') + ' for ' + activeDomain);
+    toast('Saved' + (sourceMode === 'css' ? '' : ' compiled ' + sourceMode.toUpperCase()) + (activeThemeId ? ' theme' : ' CSS') + ' for ' + activeDomain);
   }
   document.getElementById('btn-save').addEventListener('click', doSave);
 
@@ -591,10 +650,25 @@
         if (t.url && !t.url.startsWith('chrome'))
           chrome.tabs.sendMessage(t.id, { action: 'sc-end-preview' }).catch(() => {});
       }));
+    } else {
+      doLivePreview();
     }
   });
-  function doLivePreview() {
-    const css = code.value;
+  async function doLivePreview() {
+    const seq = ++livePreviewSeq;
+    let css;
+    try {
+      css = await compileEditorSource(code.value);
+      lastPreviewError = '';
+    } catch (error) {
+      const msg = error.message || String(error);
+      if (msg !== lastPreviewError) {
+        toast((sourceMode === 'sass' ? 'Sass' : 'SCSS') + ' compile failed: ' + msg);
+        lastPreviewError = msg;
+      }
+      return;
+    }
+    if (seq !== livePreviewSeq) return;
     chrome.tabs.query({}, tabs => tabs.forEach(t => {
       if (!t.url || t.url.startsWith('chrome') || t.url.startsWith('about:')) return;
       try {
@@ -710,6 +784,14 @@
   /* ─── Options ─── */
   document.getElementById('btn-options').addEventListener('click', () => {
     chrome.tabs.create({ url: chrome.runtime.getURL('options.html') });
+  });
+
+  sourceModeSelect.addEventListener('change', () => {
+    setSourceMode(sourceModeSelect.value);
+    updateDomainLabels();
+    setModified(true);
+    runLint();
+    if (livePreview && activeDomain) doLivePreview();
   });
 
   /* ─── Theme ─── */
@@ -1562,6 +1644,14 @@
   }
 
   function runLint() {
+    if (sourceMode !== 'css') {
+      lintResults = [];
+      lintByLine = {};
+      lintSummary.textContent = sourceMode.toUpperCase() + ': compile on save/live preview';
+      lintPanel.innerHTML = '<div class="lint-row"><span class="lint-msg" style="color:var(--sc-green)">Compiled CSS is validated when saved or previewed</span></div>';
+      updateGutter();
+      return;
+    }
     lintResults = lintCSS(code.value);
     lintByLine = {};
     for (const r of lintResults) {

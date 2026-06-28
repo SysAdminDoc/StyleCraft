@@ -38,6 +38,9 @@ const editorHtml = read('editor.html');
 if (!editorHtml.includes('vendor/codemirror/stylecraft-codemirror.js')) {
   fail('editor.html does not load the bundled CodeMirror adapter');
 }
+if (!editorHtml.includes('vendor/sass/stylecraft-sass.js')) {
+  fail('editor.html does not load the bundled Sass compiler');
+}
 if (/https?:\/\//i.test(editorHtml.match(/<script[\s\S]*?<\/script>/g)?.join('\n') || '')) {
   fail('editor.html contains a remote script reference');
 }
@@ -46,6 +49,11 @@ const bundlePath = 'vendor/codemirror/stylecraft-codemirror.js';
 if (!exists(bundlePath)) fail(`${bundlePath} missing; run npm run build:codemirror`);
 const bundle = read(bundlePath);
 if (!bundle.includes('StyleCraftCodeMirror')) fail('CodeMirror bundle missing StyleCraftCodeMirror export');
+
+const sassBundlePath = 'vendor/sass/stylecraft-sass.js';
+if (!exists(sassBundlePath)) fail(`${sassBundlePath} missing; run npm run build:sass`);
+const sassBundle = read(sassBundlePath);
+if (!sassBundle.includes('StyleCraftSass')) fail('Sass bundle missing StyleCraftSass export');
 
 const roadmap = read('ROADMAP.md');
 if (roadmap.includes('Move from hand-rolled tokenizer to CodeMirror 6 or Monaco')) {

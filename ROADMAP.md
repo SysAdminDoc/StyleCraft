@@ -5,7 +5,6 @@ Roadmap for StyleCraft, the Chrome MV3 CSS style manager with visual element pic
 ## Planned Features
 
 ### Editor depth
-- SCSS / Sass source support with client-side compilation via `sass-embedded`
 - PostCSS pipeline for auto-prefixing and modern CSS nesting on older browsers
 - CSS-in-JS style templates (var-driven, with variant support)
 - Snippet library with hotkey expansion (type `;dark` -> inserts a dark-mode media block)

@@ -1,6 +1,6 @@
 # StyleCraft
 
-![Version](https://img.shields.io/badge/version-1.6.0-blue)
+![Version](https://img.shields.io/badge/version-1.7.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Chrome%20%7C%20Edge%20%7C%20Brave-4285F4?logo=googlechrome&logoColor=white)
 ![Manifest](https://img.shields.io/badge/manifest-v3-orange)
@@ -35,6 +35,7 @@ Chrome, Edge, Brave, Vivaldi, Opera, Arc — any Chromium-based browser supporti
 | Feature | Description |
 |---------|-------------|
 | Syntax Highlighting | CodeMirror 6 CSS editor with local bundled syntax highlighting and low-memory fallback |
+| SCSS / Sass | CSS, SCSS, and indented Sass source modes compile locally before save/live preview |
 | Find & Replace | Ctrl+F / Ctrl+H with regex, case-sensitive toggle, match highlighting |
 | Color Picker | Inline swatches for hex/rgb/hsl — click to edit with native color input |
 | Bracket Matching | Highlights matching `{}`, `()`, `[]` at cursor position |
@@ -172,12 +173,12 @@ The global toggle shortcut can be configured at `chrome://extensions/shortcuts`.
 
 ```bash
 npm install
-npm run build:codemirror
+npm run build
 npm test
 npm run build:zip
 ```
 
-The CodeMirror bundle is generated into `vendor/codemirror/` and shipped locally with the extension; no remote runtime scripts are used.
+The CodeMirror and Sass bundles are generated into `vendor/` and shipped locally with the extension; no remote runtime scripts are used.
 
 ## Import Compatibility
 

@@ -26,7 +26,8 @@ const include = [
   'PRIVACY.md',
   'README.md',
   'theme.js',
-  'vendor/codemirror/stylecraft-codemirror.js'
+  'vendor/codemirror/stylecraft-codemirror.js',
+  'vendor/sass/stylecraft-sass.js'
 ];
 
 for (const file of include) {

@@ -7,6 +7,7 @@ const repoRoot = process.cwd();
 function extensionApiMock(initialStore) {
   const store = structuredClone(initialStore);
   const messageListeners = [];
+  window.__stylecraftStore = store;
 
   function select(keys) {
     if (!keys) return { ...store };
@@ -114,6 +115,23 @@ test('full editor uses CodeMirror with legacy data APIs intact', async ({ page }
   await page.locator('#color-picker-text').fill('#112233');
   await page.locator('#color-picker-ok').click();
   await expect(page.locator('.cm-content')).toContainText('#112233');
+
+  await page.locator('#source-mode').selectOption('scss');
+  await expect(page.locator('#tb-domain')).toContainText('(SCSS)');
+  await expect(page.locator('#lint-summary')).toContainText('SCSS: compile on save/live preview');
+
+  await page.locator('.cm-content').click();
+  await page.keyboard.press('Control+A');
+  await page.keyboard.insertText('$accent: #336699;\nbody {\n  color: $accent;\n  .child {\n    margin: 0;\n  }\n}\n');
+  await page.locator('#btn-save').click();
+
+  const saved = await page.evaluate(() => window.__stylecraftStore.stylecraft_data['example.com']);
+  expect(saved.preprocessor).toEqual({
+    syntax: 'scss',
+    source: '$accent: #336699;\nbody {\n  color: $accent;\n  .child {\n    margin: 0;\n  }\n}\n'
+  });
+  expect(saved.customCSS).toContain('color: #336699');
+  expect(saved.customCSS).toContain('body .child');
 
   if (process.env.STYLECRAFT_SCREENSHOT_PATH) {
     await page.screenshot({ path: process.env.STYLECRAFT_SCREENSHOT_PATH, fullPage: false });

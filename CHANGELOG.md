@@ -2,6 +2,12 @@
 
 All notable changes to StyleCraft are documented here.
 
+## [1.7.0] - 2026-06-27
+
+### Added
+- **SCSS / Sass source modes** — editor can preserve CSS, SCSS, or indented Sass source and compile Sass modes locally before save/live preview.
+- Bundled local Sass compiler build and smoke coverage for compiled storage output.
+
 ## [1.6.0] - 2026-06-27
 
 ### Added

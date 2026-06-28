@@ -1,4 +1,4 @@
-/* StyleCraft v1.6.0 — Popup */
+/* StyleCraft v1.7.0 — Popup */
 (async function() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const url = tab?.url || '';
@@ -281,7 +281,7 @@
   $('btn-export').addEventListener('click', async () => {
     const data = await loadAllData();
     const s = await chrome.storage.local.get('stylecraft_settings');
-    const exp = { data, settings: s.stylecraft_settings || {}, version: '1.6.0', exported: new Date().toISOString() };
+    const exp = { data, settings: s.stylecraft_settings || {}, version: '1.7.0', exported: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(exp, null, 2)], { type: 'application/json' });
     const u = URL.createObjectURL(blob); const a = document.createElement('a');
     a.href = u; a.download = 'stylecraft-export.json'; a.click(); URL.revokeObjectURL(u);
