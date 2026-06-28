@@ -82,8 +82,6 @@ if (roadmap.includes('Selector simplification')) {
 
 const allowedMd = new Set([
   'README.md',
-  'CLAUDE.md',
-  'AGENTS.md',
   'CHANGELOG.md',
   'ROADMAP.md',
   'RESEARCH.md',
