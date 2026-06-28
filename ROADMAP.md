@@ -78,3 +78,89 @@ Roadmap for StyleCraft, the Chrome MV3 CSS style manager with visual element pic
 - Per-style ServiceWorker event hooks so a style can run JS prep once per navigation (Stylus advanced feature)
 - Option-page iframe sandbox for preview — render target page in srcdoc with injected style to preview before apply (Stylus)
 - Violentmonkey's MV3 migration approach for scripts — applicable if StyleCraft adds a user-script sibling mode
+
+## Research-Driven Additions
+
+- [ ] P0 - Unify URL and style matching
+  Why: Badge/update logic can disagree with injected styles because `background.js` does not use the `appliesTo` matcher from `inject-styles.js`.
+  Evidence: `background.js` `matchDomain()`; `inject-styles.js` `entryMatchesPage()`/`patternMatchesUrl()`; Chrome content-script matching docs.
+  Touches: `background.js`, `inject-styles.js`, `editor.js`, `tests/`
+  Acceptance: One shared matcher drives injection, badge counts, preview, update broadcasts, and tests for domain/url/url-prefix/regexp/wildcard patterns.
+  Complexity: M
+
+- [ ] P0 - Validate and quarantine imports before storage writes
+  Why: Native JSON import currently replaces `stylecraft_data` with `raw.data || raw` without schema validation, merge preview, size checks, or a guaranteed pre-import restore point.
+  Evidence: `options.js` import handler; Stylebot import/migration model; existing "Safer import" roadmap note.
+  Touches: `options.js`, `background.js`, `tools/validate-extension.mjs`, `tests/`
+  Acceptance: Invalid entries are listed and skipped/quarantined, a pre-import backup is created, merge/replace counts are shown, and corrupt input cannot overwrite existing valid data.
+  Complexity: M
+
+- [ ] P0 - Add dangerous-CSS trust checks for imported and community styles
+  Why: User CSS is intentionally powerful, but community/imported styles can still trigger remote `@import`/`url()` requests, deceptive overlays, and CSS exfiltration patterns.
+  Evidence: OWASP CSS Injection guidance; MDN `@import`; `background.js` `installTheme()`; `inject-styles.js` style injection.
+  Touches: `background.js`, `options.js`, `editor.js`, `inject-styles.js`, `tests/`
+  Acceptance: Import/install/update/save flows flag remote fetches, blocked schemes, and high-risk selectors with per-style trust status and tests for warning/block behavior.
+  Complexity: M
+
+- [ ] P0 - Make backups and restore recovery explicit
+  Why: Backups are three daily snapshots with swallowed failures, and restore uses `prompt()` plus an undo-toast label bug after `undoSnapshot` is cleared.
+  Evidence: `background.js` alarm backup block; `options.js` restore and `showUndoToast()`; Stylebot import/export simplicity.
+  Touches: `background.js`, `options.js`, `options.html`, `tests/`
+  Acceptance: Backup failures surface in options, restore uses an in-page picker with preview counts, undo text is accurate, and tests cover restore/undo/corrupt-backup paths.
+  Complexity: M
+
+- [ ] P1 - Replace UserStyles.world HTML scraping with a resilient catalog adapter
+  Why: Search currently parses UserStyles.world card HTML by regex, so markup changes can break discovery while install/update already use API-style JSON.
+  Evidence: `background.js` `searchUSw()` and `fetchUSwCSS()`; UserStyles.world; Stylus UserCSS install flow.
+  Touches: `background.js`, `popup.js`, `options.js`, `tests/`
+  Acceptance: Search uses a typed adapter with parser tests, graceful empty/error states, cached last-known results, and no silent failure on changed markup.
+  Complexity: M
+
+- [ ] P1 - Build a shared UserCSS metadata and variable parser
+  Why: Stylus-compatible `.user.css` metadata, variables, update URLs, includes, excludes, and preprocessors are ecosystem table-stakes and current parsing is regex-fragmented.
+  Evidence: Stylus UserCSS and Writing UserCSS docs; `background.js` `resolveUserCSS()`; `options.js` `convertStylusImport()`.
+  Touches: `background.js`, `inject-styles.js`, `options.js`, `editor.js`, `tests/`
+  Acceptance: UserCSS metadata round-trips on import/export, variables render editable controls, update URLs are preserved, and parser fixtures cover nested document blocks.
+  Complexity: L
+
+- [ ] P1 - Add options/popup accessibility and focus coverage
+  Why: The extension uses custom tabs, icon buttons, inline SVG buttons, CodeMirror, and Shadow DOM controls, but tests do not verify accessible names, tab order, or focus recovery.
+  Evidence: WAI-ARIA APG tabs/focus guidance; WebAIM form-control guidance; CodeMirror accessibility docs; `popup.html`, `options.html`, `editor.html`, `content.js`.
+  Touches: `popup.html`, `options.html`, `editor.html`, `content.js`, `tests/`
+  Acceptance: Playwright verifies labels/names, tablist semantics, visible focus, dialog/panel focus return, CodeMirror escape path, and picker operation without pointer input.
+  Complexity: M
+
+- [ ] P1 - Minimize broad host-permission trust friction
+  Why: `<all_urls>` and all-frame document-start injection support anti-FOUC but create review and trust friction; Chrome supports optional runtime permissions for clearer user intent.
+  Evidence: `manifest.json`; Chrome permission and `chrome.permissions` docs; Chrome Web Store policy guidance.
+  Touches: `manifest.json`, `background.js`, `popup.js`, `options.js`, `inject-styles.js`, `README.md`
+  Acceptance: A reviewed permission model documents why early injection needs broad access or offers a per-site grant mode that preserves no-flash behavior for enabled sites.
+  Complexity: L
+
+- [ ] P1 - Expand smoke tests into workflow regression tests
+  Why: Current Playwright coverage exercises editor and picker happy paths only, leaving import/export, updates, backup/restore, popup search, packaging, and error states untested.
+  Evidence: `tests/editor-smoke.spec.mjs`, `tests/content-picker-smoke.spec.mjs`, `tools/validate-extension.mjs`.
+  Touches: `tests/`, `tools/`, `background.js`, `options.js`, `popup.js`
+  Acceptance: `npm test` covers import/export schemas, USw adapter failures, backup restore, popup install/update, matcher parity, and build artifact validation.
+  Complexity: M
+
+- [ ] P2 - Add computed-style and design-token extraction to the Visual panel
+  Why: CSS Peeper, VisBug, and Site Palette show demand for readable computed fonts/colors/spacing/assets without digging through DevTools.
+  Evidence: CSS Peeper, VisBug, Site Palette; existing ROADMAP CSS Peeper note; `content.js` visual editor.
+  Touches: `content.js`, `editor.js`, `popup.js`, `tests/`
+  Acceptance: Selecting an element shows computed color/font/spacing tokens with copy/insert actions, contrast warnings, and tests for token extraction on sample pages.
+  Complexity: L
+
+- [ ] P2 - Add optional external-file import/export workflow
+  Why: Magic CSS and Stylus users value editing styles in their chosen editor and syncing through their own tools.
+  Evidence: Magic CSS file save/reloader features; Stylus local-filesystem request; existing raw URL install roadmap item.
+  Touches: `editor.js`, `options.js`, `manifest.json`, `README.md`, `tests/`
+  Acceptance: Users can export a style as `.user.css`, re-import it without metadata loss, and optionally refresh from a chosen local file where browser APIs permit.
+  Complexity: L
+
+- [ ] P2 - Add privacy-safe diagnostics export
+  Why: Service-worker, storage, quota, and community-style failures currently surface inconsistently, making support and recovery harder without collecting telemetry.
+  Evidence: `background.js` swallowed backup errors; `options.js` quota toast; Chrome extension security guidance; no telemetry promise in `PRIVACY.md`.
+  Touches: `background.js`, `options.js`, `popup.js`, `PRIVACY.md`, `tests/`
+  Acceptance: Options page exposes a local diagnostic log/export with redacted URLs by default, storage usage, last backup status, adapter errors, and no network transmission.
+  Complexity: M
