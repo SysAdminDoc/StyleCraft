@@ -1,6 +1,6 @@
 # StyleCraft
 
-![Version](https://img.shields.io/badge/version-1.10.0-blue)
+![Version](https://img.shields.io/badge/version-1.11.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Chrome%20%7C%20Edge%20%7C%20Brave-4285F4?logo=googlechrome&logoColor=white)
 ![Manifest](https://img.shields.io/badge/manifest-v3-orange)
@@ -39,6 +39,7 @@ Chrome, Edge, Brave, Vivaldi, Opera, Arc — any Chromium-based browser supporti
 | PostCSS Pipeline | Modern CSS nesting is flattened and vendor prefixes are added before save/live preview |
 | Style Templates | Insert var-driven surface, button, card, and form templates with variant selectors |
 | Snippet Triggers | Type `;dark`, `;motion`, `;contrast`, `;vars`, or `;focus` to expand reusable CSS blocks inline |
+| CSS Assist | Opt-in drafting panel inserts CSS from a local or OpenAI-compatible endpoint |
 | Find & Replace | Ctrl+F / Ctrl+H with regex, case-sensitive toggle, match highlighting |
 | Color Picker | Inline swatches for hex/rgb/hsl — click to edit with native color input |
 | Bracket Matching | Highlights matching `{}`, `()`, `[]` at cursor position |
@@ -92,6 +93,7 @@ Configure per-style via the "Applies To" panel in the CSS editor.
 | Restore from Backup | One-click restore from any saved backup |
 | Undo for Deletes | 8-second undo window on all destructive operations |
 | Quota Protection | Catches and surfaces storage quota errors |
+| Local Assist Settings | CSS assist endpoint/model stay in settings; optional key is stored separately from exports |
 | Full Export/Import | JSON export of all data, compatible cross-browser |
 | Context Menu | Right-click "Style this element" and "Hide this element" |
 | Badge Counter | Shows active style count per tab |

@@ -4,9 +4,6 @@ Roadmap for StyleCraft, the Chrome MV3 CSS style manager with visual element pic
 
 ## Planned Features
 
-### Editor depth
-- AI-assist toggle: describe change in plain English, CSS is drafted inline (opt-in, local or user-provided key)
-
 ### Element picker
 - Multi-select with shift-click (build combined selectors: `h1, h2, h3`)
 - Selector simplification (prefer stable data-attributes over auto-generated classes)

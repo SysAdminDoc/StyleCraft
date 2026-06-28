@@ -20,6 +20,16 @@
   const sourceModeSelect = document.getElementById('source-mode');
   const templateSelect = document.getElementById('template-select');
   const insertTemplateBtn = document.getElementById('btn-insert-template');
+  const aiAssistBtn = document.getElementById('btn-ai-assist');
+  const aiPanel = document.getElementById('ai-panel');
+  const aiProvider = document.getElementById('ai-provider');
+  const aiEndpoint = document.getElementById('ai-endpoint');
+  const aiModel = document.getElementById('ai-model');
+  const aiKey = document.getElementById('ai-key');
+  const aiPrompt = document.getElementById('ai-prompt');
+  const aiSaveBtn = document.getElementById('btn-ai-save');
+  const aiDraftBtn = document.getElementById('btn-ai-draft');
+  const aiStatus = document.getElementById('ai-status');
 
   /* ─── State ─── */
   let allData = {};
@@ -38,6 +48,7 @@
   let acItems = [];
   let acVisible = false;
   let snippetExpanding = false;
+  let aiSettingsLoaded = false;
   let cmEditor = null;
   let usingCodeMirror = false;
 
@@ -938,6 +949,184 @@
     }
     return true;
   }
+
+  /* ─── AI Assist ─── */
+  const aiDefaults = {
+    provider: 'local',
+    endpoint: 'http://localhost:11434/v1/chat/completions',
+    model: '',
+    apiKey: ''
+  };
+
+  function defaultAIEndpoint(provider) {
+    return provider === 'openai' ? 'https://api.openai.com/v1/chat/completions' : aiDefaults.endpoint;
+  }
+
+  function setAIStatus(text, isError = false) {
+    aiStatus.textContent = text || '';
+    aiStatus.style.color = isError ? 'var(--sc-red)' : 'var(--sc-muted)';
+  }
+
+  async function loadAIAssistSettings() {
+    const s = await chrome.storage.local.get(['stylecraft_settings', 'stylecraft_ai_key']);
+    const settings = s.stylecraft_settings || {};
+    const stored = settings.aiAssist || {};
+    const provider = ['local', 'openai'].includes(stored.provider) ? stored.provider : aiDefaults.provider;
+    aiProvider.value = provider;
+    aiEndpoint.value = stored.endpoint || defaultAIEndpoint(provider);
+    aiModel.value = stored.model || aiDefaults.model;
+    aiKey.value = s.stylecraft_ai_key || aiDefaults.apiKey;
+    aiSettingsLoaded = true;
+  }
+
+  function readAIAssistSettings() {
+    const provider = ['local', 'openai'].includes(aiProvider.value) ? aiProvider.value : aiDefaults.provider;
+    return {
+      provider,
+      endpoint: aiEndpoint.value.trim() || defaultAIEndpoint(provider),
+      model: aiModel.value.trim(),
+      apiKey: aiKey.value.trim()
+    };
+  }
+
+  async function saveAIAssistSettings(showToast = true) {
+    const s = await chrome.storage.local.get('stylecraft_settings');
+    const settings = s.stylecraft_settings || {};
+    const assist = readAIAssistSettings();
+    const { apiKey, ...publicAssist } = assist;
+    settings.aiAssist = publicAssist;
+    await chrome.storage.local.set({ stylecraft_settings: settings, stylecraft_ai_key: apiKey });
+    if (showToast) toast('AI assist settings saved');
+  }
+
+  function buildAIAssistPrompt(instruction) {
+    const selected = code.selectionStart !== code.selectionEnd
+      ? code.value.substring(code.selectionStart, code.selectionEnd)
+      : '';
+    const currentSource = code.value.length > 12000 ? code.value.slice(-12000) : code.value;
+    const syntaxLabel = sourceMode === 'css' ? 'CSS' : sourceMode.toUpperCase();
+    return [
+      'Domain: ' + (activeDomain || 'not selected'),
+      'Source syntax: ' + syntaxLabel,
+      'Selected source:',
+      selected.trim() || '(none)',
+      '',
+      'Current source:',
+      currentSource.trim() || '(empty)',
+      '',
+      'Requested change:',
+      instruction,
+      '',
+      'Return only valid ' + syntaxLabel + '. Do not include markdown fences or explanation.'
+    ].join('\n');
+  }
+
+  function extractAICSSDraft(content) {
+    let draft = String(content || '').trim();
+    const fenced = draft.match(/```(?:css|scss|sass)?\s*([\s\S]*?)```/i);
+    if (fenced) draft = fenced[1].trim();
+    return draft;
+  }
+
+  async function requestAICSSDraft(settings, instruction) {
+    const headers = { 'Content-Type': 'application/json' };
+    if (settings.apiKey) headers.Authorization = 'Bearer ' + settings.apiKey;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 45000);
+    try {
+      const response = await fetch(settings.endpoint, {
+        method: 'POST',
+        headers,
+        signal: controller.signal,
+        body: JSON.stringify({
+          model: settings.model,
+          temperature: 0.2,
+          stream: false,
+          messages: [
+            {
+              role: 'system',
+              content: 'You draft compact website styling code for a browser CSS editor. Return code only.'
+            },
+            { role: 'user', content: buildAIAssistPrompt(instruction) }
+          ]
+        })
+      });
+      if (!response.ok) {
+        const detail = await response.text().catch(() => '');
+        throw new Error('Request failed ' + response.status + (detail ? ': ' + detail.slice(0, 160) : ''));
+      }
+      const json = await response.json();
+      const content = json.choices?.[0]?.message?.content
+        || json.choices?.[0]?.text
+        || json.message?.content
+        || json.response
+        || '';
+      return extractAICSSDraft(content);
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  function insertAICSSDraft(draft) {
+    const css = draft.trim();
+    if (!css) throw new Error('Empty draft');
+    const prefix = code.value && !code.value.endsWith('\n') ? '\n\n' : '';
+    code.setRangeText(prefix + css + '\n', code.selectionStart, code.selectionEnd, 'end');
+    updateHighlight(); updateGutter(); updateStatus();
+    setModified(true); pushUndo();
+    if (livePreview && activeDomain) doLivePreview();
+    hideAC();
+  }
+
+  async function draftAICSS() {
+    if (!aiSettingsLoaded) await loadAIAssistSettings();
+    const settings = readAIAssistSettings();
+    const instruction = aiPrompt.value.trim();
+    if (!instruction) { toast('Describe the CSS change first'); return; }
+    if (!settings.model) { toast('Enter a model name'); return; }
+    if (settings.provider === 'openai' && !settings.apiKey) { toast('Enter an API key'); return; }
+
+    aiDraftBtn.disabled = true;
+    setAIStatus('Drafting...');
+    try {
+      await saveAIAssistSettings(false);
+      const draft = await requestAICSSDraft(settings, instruction);
+      insertAICSSDraft(draft);
+      aiPrompt.value = '';
+      setAIStatus('Draft inserted');
+      toast('AI draft inserted');
+    } catch (error) {
+      const message = error.name === 'AbortError' ? 'Request timed out' : (error.message || String(error));
+      setAIStatus(message, true);
+      toast('AI draft failed: ' + message);
+    } finally {
+      aiDraftBtn.disabled = false;
+    }
+  }
+
+  aiAssistBtn.addEventListener('click', async () => {
+    const open = !aiPanel.classList.contains('active');
+    aiPanel.classList.toggle('active', open);
+    aiAssistBtn.classList.toggle('active', open);
+    if (open) {
+      const activeFindBar = document.getElementById('find-bar');
+      if (activeFindBar) activeFindBar.style.display = 'none';
+      if (!aiSettingsLoaded) await loadAIAssistSettings();
+      setAIStatus('');
+      aiPrompt.focus();
+    }
+  });
+  aiProvider.addEventListener('change', () => {
+    const nextDefault = defaultAIEndpoint(aiProvider.value);
+    if (!aiEndpoint.value.trim() || aiEndpoint.value === defaultAIEndpoint(aiProvider.value === 'openai' ? 'local' : 'openai')) {
+      aiEndpoint.value = nextDefault;
+    }
+  });
+  aiSaveBtn.addEventListener('click', async () => {
+    await saveAIAssistSettings();
+    setAIStatus('Settings saved');
+  });
+  aiDraftBtn.addEventListener('click', draftAICSS);
 
   /* ─── Autocomplete ─── */
   const cssProps = [

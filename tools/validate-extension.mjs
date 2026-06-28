@@ -70,6 +70,9 @@ if (roadmap.includes('Move from hand-rolled tokenizer to CodeMirror 6 or Monaco'
 if (roadmap.includes('Snippet library with hotkey expansion')) {
   fail('Completed snippet roadmap item is still present in ROADMAP.md');
 }
+if (roadmap.includes('AI-assist toggle')) {
+  fail('Completed CSS assist roadmap item is still present in ROADMAP.md');
+}
 
 const allowedMd = new Set([
   'README.md',

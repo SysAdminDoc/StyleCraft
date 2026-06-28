@@ -2,6 +2,13 @@
 
 All notable changes to StyleCraft are documented here.
 
+## [1.11.0] - 2026-06-27
+
+### Added
+- **CSS assist panel** - editor can draft CSS inline from a local or OpenAI-compatible chat endpoint when the user opts in.
+- Smoke coverage for mocked local drafting, response extraction, and inline CodeMirror insertion.
+- Optional assist key is stored separately from exported settings.
+
 ## [1.10.0] - 2026-06-27
 
 ### Added

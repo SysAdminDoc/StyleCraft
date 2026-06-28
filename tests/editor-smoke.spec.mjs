@@ -88,6 +88,35 @@ test('full editor uses CodeMirror with legacy data APIs intact', async ({ page }
       }
     }
   });
+  const aiRequests = [];
+  await page.route('http://localhost:11434/v1/chat/completions', async (route) => {
+    if (route.request().method() === 'OPTIONS') {
+      await route.fulfill({
+        status: 204,
+        headers: {
+          'access-control-allow-origin': '*',
+          'access-control-allow-methods': 'POST, OPTIONS',
+          'access-control-allow-headers': 'content-type, authorization'
+        }
+      });
+      return;
+    }
+    aiRequests.push(JSON.parse(route.request().postData() || '{}'));
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      headers: { 'access-control-allow-origin': '*' },
+      body: JSON.stringify({
+        choices: [
+          {
+            message: {
+              content: '```css\n.ai-card {\n  border-color: #3b82f6;\n}\n```'
+            }
+          }
+        ]
+      })
+    });
+  });
 
   const editorUrl = pathToFileURL(path.join(repoRoot, 'editor.html')).href + '#example.com';
   await page.goto(editorUrl);
@@ -156,6 +185,23 @@ test('full editor uses CodeMirror with legacy data APIs intact', async ({ page }
   await page.keyboard.insertText('\n;dark');
   await expect(page.locator('.cm-content')).toContainText('@media (prefers-color-scheme: dark)');
   await expect(page.locator('.cm-content')).toContainText('--page-bg');
+
+  await page.locator('#btn-ai-assist').click();
+  await expect(page.locator('#ai-panel')).toBeVisible();
+  await page.locator('#ai-model').fill('stylecraft-test-model');
+  await page.locator('#ai-key').fill('secret-test-key');
+  await page.locator('#btn-ai-save').click();
+  await expect(page.locator('#ai-status')).toContainText('Settings saved');
+  await expect.poll(async () => page.evaluate(() => window.__stylecraftStore.stylecraft_settings?.aiAssist?.apiKey)).toBeUndefined();
+  await expect.poll(async () => page.evaluate(() => window.__stylecraftStore.stylecraft_ai_key)).toBe('secret-test-key');
+  await page.locator('#ai-key').fill('');
+  await page.locator('#ai-prompt').fill('Add a muted blue card outline.');
+  await page.locator('#btn-ai-draft').click();
+  await expect(page.locator('.cm-content')).toContainText('.ai-card');
+  await expect(page.locator('#ai-status')).toContainText('Draft inserted');
+  expect(aiRequests).toHaveLength(1);
+  expect(aiRequests[0].model).toBe('stylecraft-test-model');
+  expect(aiRequests[0].messages.at(-1).content).toContain('Add a muted blue card outline.');
 
   if (process.env.STYLECRAFT_SCREENSHOT_PATH) {
     await page.screenshot({ path: process.env.STYLECRAFT_SCREENSHOT_PATH, fullPage: false });
