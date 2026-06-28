@@ -27,7 +27,8 @@ const include = [
   'README.md',
   'theme.js',
   'vendor/codemirror/stylecraft-codemirror.js',
-  'vendor/sass/stylecraft-sass.js'
+  'vendor/sass/stylecraft-sass.js',
+  'vendor/postcss/stylecraft-postcss.js'
 ];
 
 for (const file of include) {

@@ -125,13 +125,26 @@ test('full editor uses CodeMirror with legacy data APIs intact', async ({ page }
   await page.keyboard.insertText('$accent: #336699;\nbody {\n  color: $accent;\n  .child {\n    margin: 0;\n  }\n}\n');
   await page.locator('#btn-save').click();
 
-  const saved = await page.evaluate(() => window.__stylecraftStore.stylecraft_data['example.com']);
-  expect(saved.preprocessor).toEqual({
+  await expect.poll(async () => page.evaluate(() => window.__stylecraftStore.stylecraft_data['example.com']?.preprocessor)).toEqual({
     syntax: 'scss',
     source: '$accent: #336699;\nbody {\n  color: $accent;\n  .child {\n    margin: 0;\n  }\n}\n'
   });
+  const saved = await page.evaluate(() => window.__stylecraftStore.stylecraft_data['example.com']);
   expect(saved.customCSS).toContain('color: #336699');
   expect(saved.customCSS).toContain('body .child');
+
+  await page.locator('#source-mode').selectOption('css');
+  await page.locator('.cm-content').click();
+  await page.keyboard.press('Control+A');
+  await page.keyboard.insertText('.card {\n  & .title {\n    user-select: none;\n  }\n}\n');
+  await page.locator('#btn-save').click();
+
+  await expect.poll(async () => page.evaluate(() => window.__stylecraftStore.stylecraft_data['example.com']?.customCSS || '')).toContain('.card .title');
+  const postCssSaved = await page.evaluate(() => window.__stylecraftStore.stylecraft_data['example.com']);
+  expect(postCssSaved.preprocessor).toBeUndefined();
+  expect(postCssSaved.customCSS).toContain('.card .title');
+  expect(postCssSaved.customCSS).toContain('-webkit-user-select: none');
+  expect(postCssSaved.customCSS).toContain('user-select: none');
 
   if (process.env.STYLECRAFT_SCREENSHOT_PATH) {
     await page.screenshot({ path: process.env.STYLECRAFT_SCREENSHOT_PATH, fullPage: false });

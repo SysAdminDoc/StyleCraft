@@ -167,12 +167,19 @@
   }
 
   async function compileEditorSource(source = code.value) {
-    if (sourceMode === 'css') return source;
-    if (!window.StyleCraftSass || typeof window.StyleCraftSass.compile !== 'function') {
-      throw new Error('Sass compiler bundle is unavailable');
+    let css = source;
+    if (sourceMode !== 'css') {
+      if (!window.StyleCraftSass || typeof window.StyleCraftSass.compile !== 'function') {
+        throw new Error('Sass compiler bundle is unavailable');
+      }
+      const result = window.StyleCraftSass.compile(source, { syntax: sourceMode });
+      css = result.css;
     }
-    const result = window.StyleCraftSass.compile(source, { syntax: sourceMode });
-    return result.css;
+    if (!window.StyleCraftPostCSS || typeof window.StyleCraftPostCSS.process !== 'function') {
+      throw new Error('PostCSS bundle is unavailable');
+    }
+    const processed = await window.StyleCraftPostCSS.process(css);
+    return processed.css;
   }
 
   /* ─── Init ─── */
@@ -600,7 +607,8 @@
     try {
       css = await compileEditorSource(source);
     } catch (error) {
-      toast((sourceMode === 'sass' ? 'Sass' : 'SCSS') + ' compile failed: ' + error.message);
+      const label = sourceMode === 'css' ? 'CSS processing' : (sourceMode === 'sass' ? 'Sass compile' : 'SCSS compile');
+      toast(label + ' failed: ' + error.message);
       return;
     }
     allData = await loadAllData();
@@ -663,7 +671,8 @@
     } catch (error) {
       const msg = error.message || String(error);
       if (msg !== lastPreviewError) {
-        toast((sourceMode === 'sass' ? 'Sass' : 'SCSS') + ' compile failed: ' + msg);
+        const label = sourceMode === 'css' ? 'CSS processing' : (sourceMode === 'sass' ? 'Sass compile' : 'SCSS compile');
+        toast(label + ' failed: ' + msg);
         lastPreviewError = msg;
       }
       return;

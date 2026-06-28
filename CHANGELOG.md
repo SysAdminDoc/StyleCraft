@@ -2,6 +2,12 @@
 
 All notable changes to StyleCraft are documented here.
 
+## [1.8.0] - 2026-06-27
+
+### Added
+- **PostCSS save pipeline** — CSS from all source modes now runs through local PostCSS nesting and Autoprefixer before save/live preview.
+- Smoke coverage for nested CSS flattening and vendor prefix output.
+
 ## [1.7.0] - 2026-06-27
 
 ### Added
