@@ -67,6 +67,9 @@ const roadmap = read('ROADMAP.md');
 if (roadmap.includes('Move from hand-rolled tokenizer to CodeMirror 6 or Monaco')) {
   fail('Completed CodeMirror roadmap item is still present in ROADMAP.md');
 }
+if (roadmap.includes('Snippet library with hotkey expansion')) {
+  fail('Completed snippet roadmap item is still present in ROADMAP.md');
+}
 
 const allowedMd = new Set([
   'README.md',

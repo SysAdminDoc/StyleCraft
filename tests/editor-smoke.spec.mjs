@@ -151,6 +151,12 @@ test('full editor uses CodeMirror with legacy data APIs intact', async ({ page }
   await expect(page.locator('.cm-content')).toContainText('--sc-button-bg');
   await expect(page.locator('.cm-content')).toContainText('[data-variant="danger"]');
 
+  await page.locator('.cm-content').click();
+  await page.keyboard.press('Control+End');
+  await page.keyboard.insertText('\n;dark');
+  await expect(page.locator('.cm-content')).toContainText('@media (prefers-color-scheme: dark)');
+  await expect(page.locator('.cm-content')).toContainText('--page-bg');
+
   if (process.env.STYLECRAFT_SCREENSHOT_PATH) {
     await page.screenshot({ path: process.env.STYLECRAFT_SCREENSHOT_PATH, fullPage: false });
   }

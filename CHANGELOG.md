@@ -2,6 +2,12 @@
 
 All notable changes to StyleCraft are documented here.
 
+## [1.10.0] - 2026-06-27
+
+### Added
+- **Snippet trigger library** - editor expands typed triggers like `;dark`, `;motion`, `;contrast`, `;vars`, and `;focus` into reusable CSS blocks.
+- Smoke coverage for typed snippet expansion in the CodeMirror editor.
+
 ## [1.9.0] - 2026-06-27
 
 ### Added

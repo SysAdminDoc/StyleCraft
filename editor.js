@@ -37,6 +37,7 @@
   let acIndex = -1;
   let acItems = [];
   let acVisible = false;
+  let snippetExpanding = false;
   let cmEditor = null;
   let usingCodeMirror = false;
 
@@ -504,8 +505,9 @@
   code.addEventListener('input', () => {
     updateHighlight(); updateGutter(); updateStatus();
     setModified(true); pushUndo();
+    const expandedSnippet = trySnippetExpansion();
     if (livePreview && activeDomain) doLivePreview();
-    tryAutocomplete();
+    if (!expandedSnippet) tryAutocomplete();
   });
   code.addEventListener('click', () => { updateGutter(); updateStatus(); hideAC(); });
   code.addEventListener('keyup', (e) => {
@@ -853,6 +855,89 @@
     toast('Inserted template');
   }
   insertTemplateBtn.addEventListener('click', insertTemplate);
+
+  const snippetLibrary = {
+    ';dark': `@media (prefers-color-scheme: dark) {
+  :root {
+    --page-bg: #0f172a;
+    --page-fg: #f8fafc;
+  }
+
+  body {
+    background: var(--page-bg);
+    color: var(--page-fg);
+  }
+}
+`,
+    ';motion': `@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+`,
+    ';contrast': `@media (prefers-contrast: more) {
+  :root {
+    --focus-ring: #facc15;
+  }
+
+  a,
+  button,
+  input,
+  select,
+  textarea {
+    outline-color: var(--focus-ring);
+  }
+}
+`,
+    ';vars': `:root {
+  --surface-bg: #ffffff;
+  --surface-fg: #111827;
+  --surface-muted: #6b7280;
+  --surface-border: #d1d5db;
+  --accent-bg: #2563eb;
+  --accent-fg: #ffffff;
+}
+`,
+    ';focus': `:focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 3px;
+}
+`
+  };
+
+  function trySnippetExpansion() {
+    if (snippetExpanding) return false;
+    const pos = code.selectionStart;
+    if (pos !== code.selectionEnd) return false;
+    const before = code.value.substring(0, pos);
+    const match = before.match(/(^|[\s{;])(;[a-z0-9-]+)$/i);
+    if (!match) return false;
+
+    const trigger = match[2].toLowerCase();
+    const snippet = snippetLibrary[trigger];
+    if (!snippet) return false;
+
+    const start = pos - trigger.length;
+    snippetExpanding = true;
+    try {
+      code.setRangeText(snippet.trimEnd() + '\n', start, pos, 'end');
+      updateHighlight();
+      updateGutter();
+      updateStatus();
+      setModified(true);
+      pushUndo();
+      hideAC();
+      toast('Expanded ' + trigger);
+    } finally {
+      snippetExpanding = false;
+    }
+    return true;
+  }
 
   /* ─── Autocomplete ─── */
   const cssProps = [
