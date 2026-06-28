@@ -1,4 +1,4 @@
-/* StyleCraft v1.0.9 — Content Script / Editor */
+/* StyleCraft v1.12.0 — Content Script / Editor */
 (function () {
   if (window.__stylecraft_editor_loaded) return;
   window.__stylecraft_editor_loaded = true;
@@ -60,7 +60,7 @@
     selector: '',
     readability: false, grayscale: false,
     undoStack: [], redoStack: [], basicProps: {},
-    pickedElement: null, pickerAncestors: [], pickerDepth: 0,
+    pickedElement: null, pickerAncestors: [], pickerDepth: 0, pickerMultiElements: [],
     pickerSpecificity: 0, pickerCandidates: [],
     hiddenElements: []
   };
@@ -79,14 +79,47 @@
   Object.assign(persistentHighlight.style, {position:'absolute',pointerEvents:'none',zIndex:'2147483643',border:'2px dashed rgba(137,180,250,0.5)',borderRadius:'2px',display:'none',background:'rgba(137,180,250,0.04)'});
   document.documentElement.appendChild(persistentHighlight);
 
+  const multiHighlightLayer = document.createElement('div');
+  multiHighlightLayer.id = 'sc-multi-highlight-layer';
+  Object.assign(multiHighlightLayer.style, {position:'absolute',left:'0',top:'0',pointerEvents:'none',zIndex:'2147483642',display:'none'});
+  document.documentElement.appendChild(multiHighlightLayer);
+
   function showPersistentHighlight() {
+    if (state.pickerMultiElements.length > 1) {
+      persistentHighlight.style.display='none';
+      showMultiPersistentHighlights();
+      return;
+    }
+    hideMultiPersistentHighlights();
     const el = getCurrentDepthElement();
     if (!el) { persistentHighlight.style.display='none'; return; }
     const r = el.getBoundingClientRect();
     Object.assign(persistentHighlight.style, {display:'block',left:(r.left+window.scrollX)+'px',top:(r.top+window.scrollY)+'px',width:r.width+'px',height:r.height+'px'});
   }
-  function hidePersistentHighlight() { persistentHighlight.style.display='none'; }
-  function updatePersistentHighlight() { if(state.pickedElement) showPersistentHighlight(); }
+  function showMultiPersistentHighlights() {
+    state.pickerMultiElements = state.pickerMultiElements.filter(el => el && document.documentElement.contains(el));
+    if (state.pickerMultiElements.length < 2) { hideMultiPersistentHighlights(); return; }
+    multiHighlightLayer.innerHTML = '';
+    for (const el of state.pickerMultiElements) {
+      const r = el.getBoundingClientRect();
+      const box = document.createElement('div');
+      Object.assign(box.style, {
+        position:'absolute',
+        left:(r.left+window.scrollX)+'px',
+        top:(r.top+window.scrollY)+'px',
+        width:r.width+'px',
+        height:r.height+'px',
+        border:'2px dashed rgba(166,227,161,0.68)',
+        borderRadius:'2px',
+        background:'rgba(166,227,161,0.05)'
+      });
+      multiHighlightLayer.appendChild(box);
+    }
+    multiHighlightLayer.style.display = 'block';
+  }
+  function hideMultiPersistentHighlights() { multiHighlightLayer.style.display='none'; multiHighlightLayer.innerHTML=''; }
+  function hidePersistentHighlight() { persistentHighlight.style.display='none'; hideMultiPersistentHighlights(); }
+  function updatePersistentHighlight() { if(state.pickedElement || state.pickerMultiElements.length) showPersistentHighlight(); }
   window.addEventListener('scroll', updatePersistentHighlight);
   window.addEventListener('resize', updatePersistentHighlight);
 
@@ -575,13 +608,29 @@
     if(!el||el===panelHost||panelHost.contains(el)||el===highlightOverlay||el===selectorLabel||el===persistentHighlight) return;
     const r=el.getBoundingClientRect();
     Object.assign(highlightOverlay.style,{display:'block',left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px'});
-    const sel=generateBestSelector(el); selectorLabel.textContent=sel;
+    const sel=generateBestSelector(el); selectorLabel.textContent=(e.shiftKey||state.pickerMultiElements.length?'+ ':'')+sel;
     Object.assign(selectorLabel.style,{display:'block',left:Math.min(r.left,window.innerWidth-420)+'px',top:Math.max(0,r.top-26)+'px'});
   }
   function onPickerClick(e) {
     e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
     const el=document.elementFromPoint(e.clientX,e.clientY);
     if(!el||el===panelHost||panelHost.contains(el)||el===persistentHighlight) return;
+    if(e.shiftKey||state.pickerMultiElements.length){
+      const added=addMultiPickerElement(el);
+      rebuildMultiSelection();
+      showPersistentHighlight();
+      updateHideBtn();
+      populateVisualFromElement(getCurrentDepthElement());
+      if (state.activeTab !== 'selector') switchTab('selector');
+      if(e.shiftKey){toast(added?'Added '+state.pickerMultiElements.length+' elements':'Already selected');}
+      else{toast('Selected '+state.pickerMultiElements.length+' elements');stopPicker();}
+      return;
+    }
+    selectSinglePickedElement(el);
+  }
+  function selectSinglePickedElement(el) {
+    state.pickerMultiElements=[];
+    hideMultiPersistentHighlights();
     state.pickedElement=el; state.pickerAncestors=buildAncestorChain(el);
     state.pickerDepth=0; state.pickerSpecificity=0;
     refs.depthSlider.max=Math.max(0,state.pickerAncestors.length-1); refs.depthSlider.value=0; refs.depthVal.textContent='0';
@@ -595,7 +644,34 @@
 
   function buildAncestorChain(el) { const c=[]; let cur=el; while(cur&&cur!==document.documentElement&&cur!==document){c.push(cur);cur=cur.parentElement;} return c; }
 
+  function addMultiPickerElement(el) {
+    if(!el||el===panelHost||panelHost.contains(el)) return false;
+    state.pickedElement=el;
+    state.pickerAncestors=buildAncestorChain(el);
+    state.pickerDepth=0;
+    if(state.pickerMultiElements.includes(el)) return false;
+    state.pickerMultiElements.push(el);
+    return true;
+  }
+
+  function rebuildMultiSelection() {
+    state.pickerMultiElements = state.pickerMultiElements.filter(el => el && document.documentElement.contains(el));
+    if(!state.pickerMultiElements.length) return;
+    const selectors=[...new Set(state.pickerMultiElements.map(generateBestSelector).filter(Boolean))];
+    const combined=selectors.join(', ');
+    state.pickerCandidates=selectors.length>1?[combined,...selectors]:selectors;
+    refs.depthSlider.max=0;refs.depthSlider.value=0;refs.depthVal.textContent='0';
+    refs.specSlider.max=Math.max(0,state.pickerCandidates.length-1);
+    if(state.pickerSpecificity>=state.pickerCandidates.length) state.pickerSpecificity=0;
+    refs.specSlider.value=state.pickerSpecificity;refs.specVal.textContent=state.pickerSpecificity;
+    state.selector=state.pickerCandidates[state.pickerSpecificity]||combined;
+    refs.selectorInput.value=state.selector;
+    showPersistentHighlight();
+    updateMatchCount(); renderFilterList(); updateHideBtn();
+  }
+
   function rebuildFromSliders() {
+    if(state.pickerMultiElements.length){rebuildMultiSelection();return;}
     const el = getCurrentDepthElement();
     if(!el) return;
     state.pickerCandidates=generateAllCandidates(el);
@@ -639,7 +715,7 @@
     return [...c];
   }
 
-  function onSelectorChange() { state.selector=refs.selectorInput.value; updateMatchCount(); }
+  function onSelectorChange() { state.pickerMultiElements=[]; hideMultiPersistentHighlights(); state.selector=refs.selectorInput.value; updateMatchCount(); }
   function updateMatchCount() { try{const n=document.querySelectorAll(state.selector).length;refs.matchCount.textContent=n+' match'+(n!==1?'es':'');}catch{refs.matchCount.textContent='Invalid selector';} updateQuickPickLabel(); }
   function updateQuickPickLabel() { if(!refs.quickPickLabel) return; if(state.selector){refs.quickPickLabel.textContent=state.selector;refs.quickPickLabel.classList.add('has-sel');}else{refs.quickPickLabel.textContent='No element selected';refs.quickPickLabel.classList.remove('has-sel');} }
   function updateHideBtn() {

@@ -5,7 +5,6 @@ Roadmap for StyleCraft, the Chrome MV3 CSS style manager with visual element pic
 ## Planned Features
 
 ### Element picker
-- Multi-select with shift-click (build combined selectors: `h1, h2, h3`)
 - Selector simplification (prefer stable data-attributes over auto-generated classes)
 - XPath fallback for sites with no stable class/id
 - Before/after live diff preview

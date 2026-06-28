@@ -73,6 +73,9 @@ if (roadmap.includes('Snippet library with hotkey expansion')) {
 if (roadmap.includes('AI-assist toggle')) {
   fail('Completed CSS assist roadmap item is still present in ROADMAP.md');
 }
+if (roadmap.includes('Multi-select with shift-click')) {
+  fail('Completed picker multi-select roadmap item is still present in ROADMAP.md');
+}
 
 const allowedMd = new Set([
   'README.md',

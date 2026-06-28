@@ -2,6 +2,12 @@
 
 All notable changes to StyleCraft are documented here.
 
+## [1.12.0] - 2026-06-27
+
+### Added
+- **Element picker multi-select** - shift-click multiple page elements to build combined selectors such as `h1, h2, h3`.
+- Content-script smoke coverage for real picker clicks, combined selector output, match count, and multi-target outlines.
+
 ## [1.11.0] - 2026-06-27
 
 ### Added
