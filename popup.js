@@ -1,4 +1,4 @@
-/* StyleCraft v1.13.0 — Popup */
+/* StyleCraft v1.14.0 - Popup */
 (async function() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const url = tab?.url || '';
@@ -41,45 +41,7 @@
   $('style-count').textContent = siteCount + ' site' + (siteCount !== 1 ? 's' : '') + ' styled';
 
   function matchDomain(pattern, data) {
-    // Check appliesTo patterns if available
-    if (data && data.appliesTo && data.appliesTo.length) {
-      for (const p of data.appliesTo) {
-        if (!p || !p.value) continue;
-        const v = p.value;
-        switch (p.type) {
-          case 'domain':
-            if (domain === v || domain.endsWith('.' + v)) return true;
-            break;
-          case 'url':
-            if (url === v) return true;
-            break;
-          case 'url-prefix':
-            if (url.startsWith(v)) return true;
-            break;
-          case 'regexp':
-            try { if (new RegExp(v).test(url)) return true; } catch {}
-            break;
-          case 'wildcard':
-            if (v.includes('://') || v.includes('/')) {
-              const re = new RegExp('^' + v.replace(/[.+?{}|()[\]\\]/g, '\\$&').replace(/\*/g, '.*') + '$');
-              if (re.test(url)) return true;
-            } else {
-              if (domain === v || domain.endsWith('.' + v)) return true;
-              if (v.includes('*')) {
-                const re = new RegExp('^' + v.replace(/[.+?{}|()[\]\\]/g, '\\$&').replace(/\*/g, '.*') + '$');
-                if (re.test(domain)) return true;
-              }
-            }
-            break;
-        }
-      }
-      return false;
-    }
-    // Fallback: match by key
-    if (pattern === '*') return true;
-    if (pattern === domain) return true;
-    if (domain.endsWith('.' + pattern)) return true;
-    return false;
+    return StyleCraftMatcher.entryMatchesPage(pattern, data, url, domain);
   }
 
   function renderInstalled() {
@@ -281,7 +243,7 @@
   $('btn-export').addEventListener('click', async () => {
     const data = await loadAllData();
     const s = await chrome.storage.local.get('stylecraft_settings');
-    const exp = { data, settings: s.stylecraft_settings || {}, version: '1.13.0', exported: new Date().toISOString() };
+    const exp = { data, settings: s.stylecraft_settings || {}, version: '1.14.0', exported: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(exp, null, 2)], { type: 'application/json' });
     const u = URL.createObjectURL(blob); const a = document.createElement('a');
     a.href = u; a.download = 'stylecraft-export.json'; a.click(); URL.revokeObjectURL(u);

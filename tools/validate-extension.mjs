@@ -19,6 +19,7 @@ const versionFiles = [
   ['options.html', `v${version}`],
   ['popup.js', `version: '${version}'`],
   ['options.js', `version: '${version}'`],
+  ['style-match.js', `StyleCraft v${version}`],
   ['inject-styles.js', `StyleCraft v${version}`]
 ];
 
@@ -35,8 +36,25 @@ for (const [size, iconPath] of Object.entries(manifest.action?.default_icon || {
 }
 
 const editorHtml = read('editor.html');
+const popupHtml = read('popup.html');
+const manifestContentScripts = (manifest.content_scripts || []).flatMap((entry) => entry.js || []);
+if (manifestContentScripts.indexOf('style-match.js') === -1) {
+  fail('manifest.json does not inject style-match.js before style injection');
+}
+if (manifestContentScripts.indexOf('style-match.js') > manifestContentScripts.indexOf('inject-styles.js')) {
+  fail('manifest.json injects style-match.js after inject-styles.js');
+}
+if (!read('background.js').includes("importScripts('style-match.js')")) {
+  fail('background.js does not load the shared matcher');
+}
+if (!popupHtml.includes('style-match.js')) {
+  fail('popup.html does not load the shared matcher');
+}
 if (!editorHtml.includes('vendor/codemirror/stylecraft-codemirror.js')) {
   fail('editor.html does not load the bundled CodeMirror adapter');
+}
+if (!editorHtml.includes('style-match.js')) {
+  fail('editor.html does not load the shared matcher');
 }
 if (!editorHtml.includes('vendor/sass/stylecraft-sass.js')) {
   fail('editor.html does not load the bundled Sass compiler');

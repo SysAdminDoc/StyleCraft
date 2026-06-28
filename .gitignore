@@ -7,6 +7,8 @@ dist/
 .env
 *.log
 CLAUDE.md
+AGENTS.md
+Roadmap_Blocked.md
 CODEX_CHANGELOG.md
 .claude/
 test-results/

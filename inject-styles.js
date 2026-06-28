@@ -1,4 +1,4 @@
-/* StyleCraft v1.13.0 — Style Injector (document_start) */
+/* StyleCraft v1.14.0 - Style Injector (document_start) */
 (function() {
   if (window.__stylecraft_injected) return;
   window.__stylecraft_injected = true;
@@ -17,52 +17,14 @@
     return el;
   }
 
+  const SC_MATCH = window.StyleCraftMatcher;
+
   function getDomain() {
-    try { return new URL(location.href).hostname; } catch { return location.hostname; }
+    return SC_MATCH.extractDomain(location.href) || location.hostname;
   }
 
-  function domainMatches(pageDomain, storedKey) {
-    if (!storedKey) return false;
-    if (storedKey.includes(',')) return storedKey.split(',').map(p => p.trim()).some(p => domainMatches(pageDomain, p));
-    if (storedKey.includes('*')) {
-      const re = new RegExp('^' + storedKey.replace(/[.+?{}|()[\]\\]/g, '\\$&').replace(/\*/g, '.*') + '$');
-      return re.test(pageDomain);
-    }
-    return pageDomain === storedKey || pageDomain.endsWith('.' + storedKey);
-  }
-
-  /* Advanced URL pattern matching via appliesTo array */
   function entryMatchesPage(storedKey, data, pageDomain, pageUrl) {
-    const patterns = data.appliesTo;
-    if (!patterns || !patterns.length) return domainMatches(pageDomain, storedKey);
-    for (const p of patterns) {
-      if (patternMatchesUrl(p, pageDomain, pageUrl)) return true;
-    }
-    return false;
-  }
-
-  function patternMatchesUrl(p, pageDomain, pageUrl) {
-    if (!p || !p.value) return false;
-    const v = p.value;
-    switch (p.type) {
-      case 'domain':
-        return pageDomain === v || pageDomain.endsWith('.' + v);
-      case 'url':
-        return pageUrl === v;
-      case 'url-prefix':
-        return pageUrl.startsWith(v);
-      case 'regexp':
-        try { return new RegExp(v).test(pageUrl); } catch { return false; }
-      case 'wildcard': {
-        if (v.includes('://') || v.includes('/')) {
-          const re = new RegExp('^' + v.replace(/[.+?{}|()[\]\\]/g, '\\$&').replace(/\*/g, '.*') + '$');
-          return re.test(pageUrl);
-        }
-        return domainMatches(pageDomain, v);
-      }
-      default:
-        return domainMatches(pageDomain, v);
-    }
+    return SC_MATCH.entryMatchesPage(storedKey, data, pageUrl, pageDomain);
   }
 
   /* Read directly from storage — no service worker needed */
@@ -155,18 +117,7 @@
   }
 
   function matchConditions(condStr, pageUrl, pageDomain) {
-    const conds = condStr.match(/(domain|url|url-prefix|regexp)\s*\(["']?([^"')]+)["']?\)/g);
-    if (!conds || conds.length === 0) return true;
-    for (const c of conds) {
-      const m = c.match(/(domain|url|url-prefix|regexp)\s*\(["']?([^"')]+)["']?\)/);
-      if (!m) continue;
-      const [, fn, val] = m;
-      if (fn === 'domain' && (pageDomain === val || pageDomain.endsWith('.' + val))) return true;
-      if (fn === 'url' && pageUrl === val) return true;
-      if (fn === 'url-prefix' && pageUrl.startsWith(val)) return true;
-      if (fn === 'regexp') { try { if (new RegExp(val).test(pageUrl)) return true; } catch {} }
-    }
-    return false;
+    return SC_MATCH.documentConditionsMatch(condStr, pageUrl, pageDomain);
   }
 
   /* Init */

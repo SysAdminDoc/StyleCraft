@@ -1,6 +1,6 @@
 # StyleCraft
 
-![Version](https://img.shields.io/badge/version-1.13.0-blue)
+![Version](https://img.shields.io/badge/version-1.14.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Chrome%20%7C%20Edge%20%7C%20Brave-4285F4?logo=googlechrome&logoColor=white)
 ![Manifest](https://img.shields.io/badge/manifest-v3-orange)
@@ -65,6 +65,7 @@ Chrome, Edge, Brave, Vivaldi, Opera, Arc — any Chromium-based browser supporti
 | `wildcard` | `*.google.com` | Glob pattern with `*` wildcards |
 
 Configure per-style via the "Applies To" panel in the CSS editor.
+The same matcher drives early injection, popup installed-style state, badge counts, editor live preview, and background update broadcasts.
 
 ### Theme Management
 | Feature | Description |
@@ -137,6 +138,7 @@ The popup includes a collapsible Quick CSS textarea for fast edits without openi
 |------|---------|
 | `manifest.json` | Extension config (MV3) |
 | `background.js` | Service worker — USw API, context menus, badge, auto-backup |
+| `style-match.js` | Shared URL and UserCSS document matcher for injection, popup, editor preview, and badge logic |
 | `content.js` | Visual editor, element picker, readability mode |
 | `inject-styles.js` | Style injection at document_start |
 | `popup.html/js` | Extension popup — installed styles, quick CSS, theme browser |

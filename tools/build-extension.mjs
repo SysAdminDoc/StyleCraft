@@ -25,6 +25,7 @@ const include = [
   'popup.js',
   'PRIVACY.md',
   'README.md',
+  'style-match.js',
   'theme.js',
   'vendor/codemirror/stylecraft-codemirror.js',
   'vendor/sass/stylecraft-sass.js',

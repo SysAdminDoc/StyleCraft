@@ -657,8 +657,20 @@
   function notifyTabs() {
     chrome.tabs.query({}, tabs => tabs.forEach(t => {
       if (t.url && !t.url.startsWith('chrome') && !t.url.startsWith('about:'))
-        chrome.tabs.sendMessage(t.id, { action: 'sc-styles-updated', domain: activeDomain }).catch(() => {});
+        if (activeDomainMatchesUrl(t.url))
+          chrome.tabs.sendMessage(t.id, { action: 'sc-styles-updated', domain: activeDomain }).catch(() => {});
     }));
+  }
+
+  function activeDomainMatchesUrl(tabUrl) {
+    if (!activeDomain) return false;
+    if (!window.StyleCraftMatcher) {
+      try {
+        const d = new URL(tabUrl).hostname;
+        return activeDomain === '*' || d === activeDomain || d.endsWith('.' + activeDomain);
+      } catch { return false; }
+    }
+    return window.StyleCraftMatcher.entryMatchesPage(activeDomain, allData[activeDomain] || {}, tabUrl);
   }
 
   function setModified(v) { modified = v; updateIndicator(); }
@@ -696,8 +708,7 @@
     chrome.tabs.query({}, tabs => tabs.forEach(t => {
       if (!t.url || t.url.startsWith('chrome') || t.url.startsWith('about:')) return;
       try {
-        const d = new URL(t.url).hostname;
-        if (d === activeDomain || activeDomain === '*' || d.endsWith('.' + activeDomain))
+        if (activeDomainMatchesUrl(t.url))
           chrome.tabs.sendMessage(t.id, { action: 'sc-apply-preview', css }).catch(() => {});
       } catch {}
     }));

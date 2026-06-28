@@ -81,13 +81,6 @@ Roadmap for StyleCraft, the Chrome MV3 CSS style manager with visual element pic
 
 ## Research-Driven Additions
 
-- [ ] P0 - Unify URL and style matching
-  Why: Badge/update logic can disagree with injected styles because `background.js` does not use the `appliesTo` matcher from `inject-styles.js`.
-  Evidence: `background.js` `matchDomain()`; `inject-styles.js` `entryMatchesPage()`/`patternMatchesUrl()`; Chrome content-script matching docs.
-  Touches: `background.js`, `inject-styles.js`, `editor.js`, `tests/`
-  Acceptance: One shared matcher drives injection, badge counts, preview, update broadcasts, and tests for domain/url/url-prefix/regexp/wildcard patterns.
-  Complexity: M
-
 - [ ] P0 - Validate and quarantine imports before storage writes
   Why: Native JSON import currently replaces `stylecraft_data` with `raw.data || raw` without schema validation, merge preview, size checks, or a guaranteed pre-import restore point.
   Evidence: `options.js` import handler; Stylebot import/migration model; existing "Safer import" roadmap note.

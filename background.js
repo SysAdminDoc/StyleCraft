@@ -1,4 +1,7 @@
-/* StyleCraft v1.0.9 — Background Service Worker */
+/* StyleCraft v1.14.0 - Background Service Worker */
+importScripts('style-match.js');
+
+const SC_MATCH = globalThis.StyleCraftMatcher;
 
 async function injectAndSend(tabId, message) {
   try { await chrome.scripting.executeScript({ target: { tabId }, files: ['content.js'] }); } catch {}
@@ -7,7 +10,7 @@ async function injectAndSend(tabId, message) {
 
 const getStorage = (k) => new Promise(r => chrome.storage.local.get(k, r));
 const setStorage = (d) => new Promise(r => chrome.storage.local.set(d, r));
-function extractDomain(url) { try { return new URL(url).hostname; } catch { return url; } }
+function extractDomain(url) { return SC_MATCH.extractDomain(url); }
 
 /* ═══════════════════════════════════════════════════════════
    Storage Model
@@ -44,7 +47,7 @@ async function buildCSSForUrl(url) {
   let foundCustom = false;
 
   for (const [pattern, data] of Object.entries(all)) {
-    if (matchDomain(url, domain, pattern)) {
+    if (entryMatchesPage(pattern, data, url, domain)) {
       // Themes layer — aggregate from all matching patterns
       for (const [id, theme] of Object.entries(data.themes || {})) {
         if (theme.enabled !== false) {
@@ -64,14 +67,11 @@ async function buildCSSForUrl(url) {
 }
 
 function matchDomain(url, domain, pattern) {
-  if (!pattern) return false;
-  if (pattern.includes(',')) return pattern.split(',').map(p => p.trim()).some(p => matchDomain(url, domain, p));
-  if (pattern.startsWith('^')) { try { return new RegExp(pattern).test(url); } catch { return false; } }
-  if (pattern.includes('*')) {
-    const re = new RegExp('^' + pattern.replace(/[.+?{}|()[\]\\]/g, '\\$&').replace(/\*/g, '.*') + '$');
-    return re.test(domain) || re.test(url);
-  }
-  return domain === pattern || domain.endsWith('.' + pattern);
+  return SC_MATCH.storedKeyMatchesPage(pattern, url, domain);
+}
+
+function entryMatchesPage(pattern, data, url, domain) {
+  return SC_MATCH.entryMatchesPage(pattern, data, url, domain);
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -121,33 +121,7 @@ function resolveUserCSS(rawCSS, pageUrl) {
 }
 
 function matchesDocumentConditions(conditions, pageUrl) {
-  // Parse conditions: domain("x"), url("x"), url-prefix("x"), regexp("x")
-  const parts = conditions.match(/(?:domain|url-prefix|url|regexp)\s*\(\s*(['"]?)([^)'"]*)\1\s*\)/gi);
-  if (!parts || parts.length === 0) return true; // no conditions = match all
-
-  let hostname;
-  try { hostname = new URL(pageUrl).hostname; } catch { hostname = ''; }
-
-  for (const part of parts) {
-    const cm = part.match(/(domain|url-prefix|url|regexp)\s*\(\s*['"]?([^)'"]*)/i);
-    if (!cm) continue;
-    const [, type, value] = cm;
-    switch (type.toLowerCase()) {
-      case 'domain':
-        if (hostname === value || hostname.endsWith('.' + value)) return true;
-        break;
-      case 'url':
-        if (pageUrl === value) return true;
-        break;
-      case 'url-prefix':
-        if (pageUrl.startsWith(value)) return true;
-        break;
-      case 'regexp':
-        try { if (new RegExp(value).test(pageUrl)) return true; } catch {}
-        break;
-    }
-  }
-  return false;
+  return SC_MATCH.documentConditionsMatch(conditions, pageUrl);
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -212,13 +186,15 @@ async function getInstalledIds(domain) {
   return Object.keys(dd.themes || {});
 }
 
-function broadcastUpdate(domain) {
+async function broadcastUpdate(domain) {
+  const all = await getAllData();
+  const data = all[domain];
   chrome.tabs.query({}, tabs => {
     for (const tab of tabs) {
       if (!tab.url || tab.url.startsWith('chrome') || tab.url.startsWith('about:') || tab.url.startsWith('edge:')) continue;
       try {
         const d = new URL(tab.url).hostname;
-        if (domain === '*' || matchDomain(tab.url, d, domain))
+        if (domain === '*' || entryMatchesPage(domain, data, tab.url, d))
           chrome.tabs.sendMessage(tab.id, { action: 'sc-styles-updated' }).catch(() => {});
       } catch {}
     }
@@ -231,7 +207,7 @@ async function previewTheme(id, tabId) {
   const fetched = await fetchUSwCSS(id);
   const tab = await chrome.tabs.get(tabId);
   const css = resolveUserCSS(fetched.rawCSS, tab.url);
-  try { await chrome.scripting.executeScript({ target: { tabId }, files: ['inject-styles.js'] }); } catch {}
+  try { await chrome.scripting.executeScript({ target: { tabId }, files: ['style-match.js', 'inject-styles.js'] }); } catch {}
   setTimeout(() => {
     chrome.tabs.sendMessage(tabId, { action: 'sc-apply-preview', css }).catch(() => {});
   }, 50);
@@ -406,7 +382,7 @@ async function updateBadge(tabId, url) {
     const domain = extractDomain(url);
     const all = await getAllData();
     for (const [pattern, data] of Object.entries(all)) {
-      if (matchDomain(url, domain, pattern)) {
+      if (entryMatchesPage(pattern, data, url, domain)) {
         for (const [, theme] of Object.entries(data.themes || {})) {
           if (theme.enabled !== false) count++;
         }

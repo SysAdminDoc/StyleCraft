@@ -1,4 +1,4 @@
-/* StyleCraft v1.13.0 — Options Page */
+/* StyleCraft v1.14.0 - Options Page */
 (async function(){
   const $=id=>document.getElementById(id);
   const send=msg=>new Promise(r=>chrome.runtime.sendMessage(msg,r));
@@ -61,7 +61,7 @@
   function exportSingleDomain(domain) {
     const data = allData[domain];
     if (!data) { toast('No data for ' + domain); return; }
-    const exp = { domain, data, version: '1.13.0', exported: new Date().toISOString() };
+    const exp = { domain, data, version: '1.14.0', exported: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(exp, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -609,7 +609,7 @@
 
   /* ─── IMPORT/EXPORT ─── */
   $('btn-export').addEventListener('click',()=>{
-  const exp={data:allData,settings,version:'1.13.0',exported:new Date().toISOString()};
+  const exp={data:allData,settings,version:'1.14.0',exported:new Date().toISOString()};
     const blob=new Blob([JSON.stringify(exp,null,2)],{type:'application/json'});
     const url=URL.createObjectURL(blob);const a=document.createElement('a');
     a.href=url;a.download='stylecraft-export-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(url);

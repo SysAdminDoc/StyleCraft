@@ -2,6 +2,12 @@
 
 All notable changes to StyleCraft are documented here.
 
+## [1.14.0] - 2026-06-28
+
+### Added
+- Shared URL/style matcher for injection, popup installed-state, badge counts, editor live preview, background update broadcasts, and UserCSS document matching.
+- Matcher parity smoke coverage for domain, url, url-prefix, regexp, wildcard, stored-key, and `@-moz-document` conditions.
+
 ## [1.13.0] - 2026-06-27
 
 ### Added
