@@ -2,6 +2,13 @@
 
 All notable changes to StyleCraft are documented here.
 
+## [1.18.0] - 2026-06-28
+
+### Added
+- Tested UserStyles.world catalog adapter for search-card parsing, style detail/source normalization, and cached last-known search fallback.
+- Popup and options warnings when cached UserStyles.world results are shown because live search failed.
+- Adapter smoke coverage for current card markup, markup-drift detection, cache fallback, and raw-source fallback.
+
 ## [1.17.0] - 2026-06-28
 
 ### Added

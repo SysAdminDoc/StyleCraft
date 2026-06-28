@@ -1,4 +1,4 @@
-/* StyleCraft v1.17.0 - Popup */
+/* StyleCraft v1.18.0 - Popup */
 (async function() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const url = tab?.url || '';
@@ -243,7 +243,7 @@
   $('btn-export').addEventListener('click', async () => {
     const data = await loadAllData();
     const s = await chrome.storage.local.get('stylecraft_settings');
-    const exp = { data, settings: s.stylecraft_settings || {}, version: '1.17.0', exported: new Date().toISOString() };
+    const exp = { data, settings: s.stylecraft_settings || {}, version: '1.18.0', exported: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(exp, null, 2)], { type: 'application/json' });
     const u = URL.createObjectURL(blob); const a = document.createElement('a');
     a.href = u; a.download = 'stylecraft-export.json'; a.click(); URL.revokeObjectURL(u);
@@ -253,6 +253,14 @@
   let currentSearchQuery = '';
   let currentSearchPage = 1;
   let searchHasMore = false;
+
+  function showSearchNotice(message, append) {
+    const notice = document.createElement('div');
+    notice.className = 'empty-msg warning';
+    notice.textContent = message;
+    if (append) searchResults.appendChild(notice);
+    else searchResults.prepend(notice);
+  }
 
   function doSearch(query, page = 1, append = false) {
     if (!query) return;
@@ -298,7 +306,6 @@
         if (!append) searchResults.innerHTML = '<div class="empty-msg">No styles found for "' + esc(query) + '"</div>';
         return;
       }
-
       if (res.installed) installedSet = new Set([...installedSet, ...(res.installed || [])]);
       searchHasMore = !!res.hasMore;
 
@@ -311,6 +318,9 @@
       }
 
       renderResults(res.styles, append);
+      if (res.stale) {
+        showSearchNotice('Showing cached UserStyles.world results; live search failed: ' + (res.warning || 'unknown error'), append);
+      }
 
       // Add Load More button if there are more pages
       if (searchHasMore) {

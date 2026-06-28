@@ -1,6 +1,6 @@
 # StyleCraft
 
-![Version](https://img.shields.io/badge/version-1.17.0-blue)
+![Version](https://img.shields.io/badge/version-1.18.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Chrome%20%7C%20Edge%20%7C%20Brave-4285F4?logo=googlechrome&logoColor=white)
 ![Manifest](https://img.shields.io/badge/manifest-v3-orange)
@@ -70,7 +70,7 @@ The same matcher drives early injection, popup installed-style state, badge coun
 ### Theme Management
 | Feature | Description |
 |---------|-------------|
-| UserStyles.world Browser | Search, preview, and install themes directly from the popup |
+| UserStyles.world Browser | Search, preview, and install themes through a tested catalog adapter with cached fallback |
 | Stylus Import | Import Stylus backup JSON with full @-moz-document parsing and multi-domain aggregation |
 | Stylebot Import | Import Stylebot exports |
 | Auto-Update Check | Compares installed USw themes against remote, one-click apply updates |
@@ -142,6 +142,7 @@ The popup includes a collapsible Quick CSS textarea for fast edits without openi
 | `background.js` | Service worker — USw API, context menus, badge, auto-backup |
 | `style-data.js` | Shared import schema guard, CSS trust analyzer, quarantine, merge/replace summary, and pre-import backup helpers |
 | `style-match.js` | Shared URL and UserCSS document matcher for injection, popup, editor preview, and badge logic |
+| `usw-adapter.js` | UserStyles.world catalog/search parser, cached fallback helpers, and style detail/source adapter |
 | `content.js` | Visual editor, element picker, readability mode |
 | `inject-styles.js` | Style injection at document_start |
 | `popup.html/js` | Extension popup — installed styles, quick CSS, theme browser |

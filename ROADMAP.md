@@ -81,13 +81,6 @@ Roadmap for StyleCraft, the Chrome MV3 CSS style manager with visual element pic
 
 ## Research-Driven Additions
 
-- [ ] P1 - Replace UserStyles.world HTML scraping with a resilient catalog adapter
-  Why: Search currently parses UserStyles.world card HTML by regex, so markup changes can break discovery while install/update already use API-style JSON.
-  Evidence: `background.js` `searchUSw()` and `fetchUSwCSS()`; UserStyles.world; Stylus UserCSS install flow.
-  Touches: `background.js`, `popup.js`, `options.js`, `tests/`
-  Acceptance: Search uses a typed adapter with parser tests, graceful empty/error states, cached last-known results, and no silent failure on changed markup.
-  Complexity: M
-
 - [ ] P1 - Build a shared UserCSS metadata and variable parser
   Why: Stylus-compatible `.user.css` metadata, variables, update URLs, includes, excludes, and preprocessors are ecosystem table-stakes and current parsing is regex-fragmented.
   Evidence: Stylus UserCSS and Writing UserCSS docs; `background.js` `resolveUserCSS()`; `options.js` `convertStylusImport()`.

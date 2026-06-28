@@ -21,6 +21,7 @@ const versionFiles = [
   ['options.js', `version: '${version}'`],
   ['style-data.js', `StyleCraft v${version}`],
   ['style-match.js', `StyleCraft v${version}`],
+  ['usw-adapter.js', `StyleCraft v${version}`],
   ['inject-styles.js', `StyleCraft v${version}`]
 ];
 
@@ -45,8 +46,8 @@ if (manifestContentScripts.indexOf('style-match.js') === -1) {
 if (manifestContentScripts.indexOf('style-match.js') > manifestContentScripts.indexOf('inject-styles.js')) {
   fail('manifest.json injects style-match.js after inject-styles.js');
 }
-if (!read('background.js').includes("importScripts('style-match.js', 'style-data.js')")) {
-  fail('background.js does not load shared matcher/data guard');
+if (!read('background.js').includes("importScripts('style-match.js', 'style-data.js', 'usw-adapter.js')")) {
+  fail('background.js does not load shared matcher/data guard and USw adapter');
 }
 if (!popupHtml.includes('style-match.js')) {
   fail('popup.html does not load the shared matcher');

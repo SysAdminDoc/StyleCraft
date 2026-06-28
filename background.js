@@ -1,8 +1,9 @@
-/* StyleCraft v1.17.0 - Background Service Worker */
-importScripts('style-match.js', 'style-data.js');
+/* StyleCraft v1.18.0 - Background Service Worker */
+importScripts('style-match.js', 'style-data.js', 'usw-adapter.js');
 
 const SC_MATCH = globalThis.StyleCraftMatcher;
 const SC_DATA = globalThis.StyleCraftData;
+const SC_USW = globalThis.StyleCraftUSw;
 
 async function injectAndSend(tabId, message) {
   try { await chrome.scripting.executeScript({ target: { tabId }, files: ['content.js'] }); } catch {}
@@ -129,39 +130,54 @@ function matchesDocumentConditions(conditions, pageUrl) {
    USw Search & Install
    ═══════════════════════════════════════════════════════════ */
 
+async function readUSwSearchCache() {
+  const stored = await getStorage('sc_usw_search_cache');
+  return stored.sc_usw_search_cache || {};
+}
+
+async function writeUSwSearchCache(cache) {
+  await setStorage({ sc_usw_search_cache: cache });
+}
+
+async function setUSwCatalogStatus(status) {
+  try {
+    await setStorage({ sc_usw_catalog_status: Object.assign({ timestamp: new Date().toISOString() }, status) });
+  } catch {}
+}
+
 async function searchUSw(query, page = 1) {
-  const url = `https://userstyles.world/search?q=${encodeURIComponent(query)}&sort=installs_weekly&page=${page}`;
-  const resp = await fetch(url);
-  if (!resp.ok) throw new Error('USw HTTP ' + resp.status);
-  const html = await resp.text();
-  const styles = [];
-  const cards = html.split('<div class="card col gap">').slice(1);
-  for (const block of cards) {
-    const chunk = block.substring(0, 2000);
-    const idM = chunk.match(/href="\/style\/(\d+)\//);
-    const nameM = chunk.match(/class="name[^"]*"[^>]*>([^<]+)/);
-    if (!idM || !nameM) continue;
-    const id = idM[1];
-    const webpM = chunk.match(/srcset="(https:\/\/userstyles\.world\/preview\/[^"]+\.webp)"/);
-    const imgM = chunk.match(/src="(https:\/\/userstyles\.world\/preview\/[^"]+\.(?:jpeg|webp))"/);
-    const authorM = chunk.match(/class="fg:2" href="\/user\/[^"]*">([^<]+)/);
-    const installsM = chunk.match(/([\d,]+)\s*install/);
-    const thumbUrl = webpM ? webpM[1] : (imgM ? imgM[1] : '');
-    const fullUrl = thumbUrl ? thumbUrl.replace(/t\.(webp|jpeg)$/, '.webp') : '';
-    styles.push({ id, name: nameM[1].trim(), url: 'https://userstyles.world/style/' + id + '/',
-      thumb: thumbUrl, preview: fullUrl, author: authorM ? authorM[1].trim() : '', installs: installsM ? installsM[1] : '0' });
+  try {
+    const result = await SC_USW.searchStylesWithCache({
+      query,
+      page,
+      fetchImpl: fetch,
+      readCache: readUSwSearchCache,
+      writeCache: writeUSwSearchCache
+    });
+    await setUSwCatalogStatus({
+      ok: !result.stale,
+      stale: !!result.stale,
+      message: result.stale ? ('Showing cached results: ' + (result.warning || 'live search failed')) : 'Search completed',
+      query: String(query || '').trim(),
+      page: result.page,
+      styles: (result.styles || []).length,
+      source: result.source
+    });
+    return result;
+  } catch (error) {
+    await setUSwCatalogStatus({
+      ok: false,
+      message: error.message || String(error),
+      query: String(query || '').trim(),
+      page
+    });
+    throw error;
   }
-  // Check if there's a next page
-  const hasMore = html.includes('rel="next"') || html.includes('page=' + (page + 1));
-  return { styles, hasMore, page };
 }
 
 async function fetchUSwCSS(id) {
-  const resp = await fetch('https://userstyles.world/api/style/' + id);
-  if (!resp.ok) throw new Error('API HTTP ' + resp.status);
-  const json = await resp.json();
-  const data = json.data || json;
-  return { rawCSS: data.code || '', name: data.name || 'Style #' + id };
+  const style = await SC_USW.fetchStyle(id, fetch);
+  return { rawCSS: style.rawCSS || '', name: style.name || ('Style #' + id), sourceUrl: style.sourceUrl, updatedAt: style.updatedAt };
 }
 
 async function installTheme(id, name, domain) {
@@ -323,7 +339,15 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       case 'sc-search-styles': {
         const result = await searchUSw(msg.query, msg.page || 1);
         const installed = await getInstalledIds(msg.domain || '');
-        return { styles: result.styles, installed, hasMore: result.hasMore, page: result.page };
+        return {
+          styles: result.styles,
+          installed,
+          hasMore: result.hasMore,
+          page: result.page,
+          stale: !!result.stale,
+          warning: result.warning || '',
+          source: result.source || ''
+        };
       }
       case 'sc-install-style': return await installTheme(msg.id, msg.name, msg.domain);
       case 'sc-uninstall-style': return await uninstallTheme(msg.id, msg.domain);

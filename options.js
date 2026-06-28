@@ -1,4 +1,4 @@
-/* StyleCraft v1.17.0 - Options Page */
+/* StyleCraft v1.18.0 - Options Page */
 (async function(){
   const $=id=>document.getElementById(id);
   const send=msg=>new Promise(r=>chrome.runtime.sendMessage(msg,r));
@@ -75,7 +75,7 @@
   function exportSingleDomain(domain) {
     const data = allData[domain];
     if (!data) { toast('No data for ' + domain); return; }
-    const exp = { domain, data, version: '1.17.0', exported: new Date().toISOString() };
+    const exp = { domain, data, version: '1.18.0', exported: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(exp, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -551,7 +551,8 @@
     if(!res||res.error){results.innerHTML='<div class="empty-state"><div class="empty-text">Search failed: '+(res?.error||'Unknown error')+'</div></div>';return;}
     if(!res.styles||!res.styles.length){results.innerHTML='<div class="empty-state"><div class="empty-text">No styles found for "'+esc(q)+'"</div></div>';return;}
     if(res.installed)res.installed.forEach(id=>browseInstalled.add(id));
-    results.innerHTML=res.styles.map(s=>{
+    const warningHtml=res.stale?'<div class="browse-warning">Showing cached UserStyles.world results; live search failed: '+esc(res.warning||'unknown error')+'</div>':'';
+    results.innerHTML=warningHtml+res.styles.map(s=>{
       const inst=browseInstalled.has(s.id);
       const thumbHtml=s.thumb?'<img class="browse-thumb" src="'+esc(s.thumb)+'" loading="lazy"/>':'';
       return '<div class="browse-card'+(inst?' installed':'')+'" data-id="'+esc(s.id)+'" data-name="'+esc(s.name)+'">'+
@@ -638,7 +639,7 @@
 
   /* ─── IMPORT/EXPORT ─── */
   $('btn-export').addEventListener('click',()=>{
-  const exp={data:allData,settings,version:'1.17.0',exported:new Date().toISOString()};
+  const exp={data:allData,settings,version:'1.18.0',exported:new Date().toISOString()};
     const blob=new Blob([JSON.stringify(exp,null,2)],{type:'application/json'});
     const url=URL.createObjectURL(blob);const a=document.createElement('a');
     a.href=url;a.download='stylecraft-export-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(url);

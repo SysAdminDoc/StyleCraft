@@ -27,6 +27,7 @@ const include = [
   'README.md',
   'style-data.js',
   'style-match.js',
+  'usw-adapter.js',
   'theme.js',
   'vendor/codemirror/stylecraft-codemirror.js',
   'vendor/sass/stylecraft-sass.js',

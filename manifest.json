@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "StyleCraft",
-  "version": "1.17.0",
+  "version": "1.18.0",
   "description": "Customize any website's appearance with custom CSS. Pick elements visually, write CSS directly, or install community styles from UserStyles.world.",
   "homepage_url": "https://github.com/SysAdminDoc/StyleCraft",
   "permissions": [
