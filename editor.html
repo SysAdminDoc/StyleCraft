@@ -263,6 +263,13 @@ body{background:var(--sc-bg);color:var(--sc-text);font-family:'SFMono-Regular','
 .ap-add-btn:hover{background:var(--sc-accent-dim);color:var(--sc-accent);border-color:var(--sc-accent);}
 .ap-meta-row{display:flex;gap:6px;}
 .ap-meta-info{font-size:10px;color:var(--sc-faint);margin-top:4px;}
+.uc-vars{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:6px;}
+.uc-var{display:grid;grid-template-columns:minmax(70px,0.8fr) minmax(90px,1.2fr);gap:6px;align-items:center;}
+.uc-var-label{font-size:10px;color:var(--sc-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.uc-var input,.uc-var select{height:24px;padding:0 7px;background:var(--sc-input-bg);border:1px solid var(--sc-input-border);border-radius:4px;color:var(--sc-text);font-size:11px;font-family:inherit;outline:none;min-width:0;}
+.uc-var input[type=checkbox]{width:16px;height:16px;accent-color:var(--sc-accent);}
+.uc-var input[type=color]{padding:1px;width:42px;}
+.uc-var input:focus,.uc-var select:focus{border-color:var(--sc-accent);}
 .ap-toggle-bar{display:flex;align-items:center;gap:4px;padding:3px 14px;background:var(--sc-bg);border-bottom:1px solid var(--sc-border);cursor:pointer;transition:background .12s;flex-shrink:0;}
 .ap-toggle-bar:hover{background:var(--sc-accent-dim);}
 .ap-toggle-chevron{flex-shrink:0;transition:transform .15s;color:var(--sc-muted);}
@@ -392,6 +399,10 @@ body{background:var(--sc-bg);color:var(--sc-text);font-family:'SFMono-Regular','
           </div>
           <div class="ap-meta-info" id="meta-info"></div>
         </div>
+        <div class="ap-section" id="usercss-vars-section" style="display:none">
+          <div class="ap-label">Variables</div>
+          <div class="uc-vars" id="usercss-vars"></div>
+        </div>
       </div>
       <!-- Toggle bar -->
       <div class="ap-toggle-bar" id="ap-toggle-bar" title="Toggle Applies To &amp; Metadata panel">
@@ -471,6 +482,7 @@ body{background:var(--sc-bg);color:var(--sc-text);font-family:'SFMono-Regular','
 
 <script src="theme.js"></script>
 <script src="style-match.js"></script>
+<script src="usercss.js"></script>
 <script src="style-data.js"></script>
 <script src="vendor/codemirror/stylecraft-codemirror.js"></script>
 <script src="vendor/sass/stylecraft-sass.js"></script>

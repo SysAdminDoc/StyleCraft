@@ -2,6 +2,13 @@
 
 All notable changes to StyleCraft are documented here.
 
+## [1.19.0] - 2026-06-28
+
+### Added
+- Shared UserCSS parser for metadata, variables, update URLs, match rules, and nested `@-moz-document` resolution.
+- Editor variable controls for parsed UserCSS variables with saved local values applied during injection.
+- UserCSS smoke coverage for parser round-trip, import preservation, nested document blocks, and editor variable controls.
+
 ## [1.18.0] - 2026-06-28
 
 ### Added

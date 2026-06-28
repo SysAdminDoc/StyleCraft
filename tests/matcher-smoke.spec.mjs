@@ -114,6 +114,7 @@ test('document-start injector uses shared matcher for applies-to rules', async (
   });
 
   await page.addScriptTag({ path: path.join(repoRoot, 'style-match.js') });
+  await page.addScriptTag({ path: path.join(repoRoot, 'usercss.js') });
   await page.addScriptTag({ path: path.join(repoRoot, 'inject-styles.js') });
 
   const injected = await page.evaluate(() => ({

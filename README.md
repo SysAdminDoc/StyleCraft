@@ -1,6 +1,6 @@
 # StyleCraft
 
-![Version](https://img.shields.io/badge/version-1.18.0-blue)
+![Version](https://img.shields.io/badge/version-1.19.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Chrome%20%7C%20Edge%20%7C%20Brave-4285F4?logo=googlechrome&logoColor=white)
 ![Manifest](https://img.shields.io/badge/manifest-v3-orange)
@@ -39,6 +39,7 @@ Chrome, Edge, Brave, Vivaldi, Opera, Arc — any Chromium-based browser supporti
 | Syntax Highlighting | CodeMirror 6 CSS editor with local bundled syntax highlighting and low-memory fallback |
 | SCSS / Sass | CSS, SCSS, and indented Sass source modes compile locally before save/live preview |
 | PostCSS Pipeline | Modern CSS nesting is flattened and vendor prefixes are added before save/live preview |
+| UserCSS Metadata | `.user.css` metadata, update URLs, match rules, and variables are parsed and preserved |
 | Style Templates | Insert var-driven surface, button, card, and form templates with variant selectors |
 | Snippet Triggers | Type `;dark`, `;motion`, `;contrast`, `;vars`, or `;focus` to expand reusable CSS blocks inline |
 | CSS Assist | Opt-in drafting panel inserts CSS from a local or OpenAI-compatible endpoint |
@@ -142,6 +143,7 @@ The popup includes a collapsible Quick CSS textarea for fast edits without openi
 | `background.js` | Service worker — USw API, context menus, badge, auto-backup |
 | `style-data.js` | Shared import schema guard, CSS trust analyzer, quarantine, merge/replace summary, and pre-import backup helpers |
 | `style-match.js` | Shared URL and UserCSS document matcher for injection, popup, editor preview, and badge logic |
+| `usercss.js` | Shared `.user.css` metadata, variable, and nested `@-moz-document` parser/resolver |
 | `usw-adapter.js` | UserStyles.world catalog/search parser, cached fallback helpers, and style detail/source adapter |
 | `content.js` | Visual editor, element picker, readability mode |
 | `inject-styles.js` | Style injection at document_start |

@@ -1,4 +1,4 @@
-/* StyleCraft v1.18.0 - shared import and storage data guard */
+/* StyleCraft v1.19.0 - shared import and storage data guard */
 (function(global) {
   if (global.StyleCraftData) return;
 
@@ -93,6 +93,56 @@
     return { syntax, source: value.source };
   }
 
+  function sanitizeUserCssState(value) {
+    if (!isPlainObject(value)) return null;
+    const out = {};
+    const meta = sanitizeMeta(value.meta);
+    if (meta) out.meta = meta;
+    if (Array.isArray(value.variables)) {
+      out.variables = value.variables.filter(item => isPlainObject(item) && typeof item.name === 'string').map(item => ({
+        kind: typeof item.kind === 'string' ? item.kind : 'var',
+        type: typeof item.type === 'string' ? item.type : 'text',
+        name: item.name,
+        label: typeof item.label === 'string' ? item.label : item.name,
+        default: item.default,
+        value: item.value,
+        options: Array.isArray(item.options) ? item.options.filter(opt => isPlainObject(opt)).map(opt => ({
+          value: String(opt.value || ''),
+          label: String(opt.label || opt.value || ''),
+          default: opt.default === true
+        })) : []
+      }));
+    }
+    if (isPlainObject(value.values)) out.values = cloneJson(value.values);
+    if (Array.isArray(value.appliesTo)) out.appliesTo = value.appliesTo.filter(item => isPlainObject(item) && typeof item.type === 'string' && typeof item.value === 'string').map(item => ({ type: item.type, value: item.value }));
+    return Object.keys(out).length ? out : null;
+  }
+
+  function parseUserCssState(css, existingState) {
+    const parser = global.StyleCraftUserCSS;
+    if (!parser || typeof parser.parse !== 'function') return sanitizeUserCssState(existingState);
+    const parsed = parser.parse(css || '');
+    if (!parsed.hasMeta && !parsed.variables.length && !parsed.appliesTo.length) return sanitizeUserCssState(existingState);
+    const values = parser.mergeValues(parsed.variables, existingState && existingState.values);
+    return {
+      meta: parsed.meta,
+      variables: parsed.variables,
+      values,
+      appliesTo: parsed.appliesTo
+    };
+  }
+
+  function attachUserCssState(out, css, existingState) {
+    const usercss = parseUserCssState(css, existingState);
+    if (!usercss) return null;
+    out.usercss = usercss;
+    out.meta = Object.assign({}, usercss.meta || {}, out.meta || {});
+    if (usercss.meta && usercss.meta.updateURL && !out.sourceUrl) out.sourceUrl = usercss.meta.updateURL;
+    if (usercss.meta && usercss.meta.updateURL && out.meta && !out.meta.sourceUrl) out.meta.sourceUrl = usercss.meta.updateURL;
+    if (usercss.appliesTo && usercss.appliesTo.length && !out.appliesTo) out.appliesTo = usercss.appliesTo;
+    return usercss;
+  }
+
   function sanitizeAppliesTo(value, path, rejected) {
     if (value === undefined) return undefined;
     if (!Array.isArray(value)) {
@@ -146,7 +196,10 @@
       enabled: theme.enabled !== false,
       trust
     };
-    for (const key of ['source', 'installedAt', 'updatedAt', 'sourceUrl']) {
+    const meta = sanitizeMeta(theme.meta);
+    if (meta) out.meta = meta;
+    attachUserCssState(out, rawCSS || css, theme.usercss);
+    for (const key of ['source', 'installedAt', 'updatedAt', 'sourceUrl', 'updateUrl']) {
       if (typeof theme[key] === 'string') out[key] = theme[key];
     }
     const preprocessor = sanitizePreprocessor(theme.preprocessor, path + '.preprocessor', rejected);
@@ -174,6 +227,7 @@
         out.trust = trust;
       }
     }
+    attachUserCssState(out, out.customCSS, entry.usercss);
 
     if (entry.themes !== undefined) {
       if (!isPlainObject(entry.themes)) {
@@ -194,7 +248,8 @@
     const appliesTo = sanitizeAppliesTo(entry.appliesTo, domain + '.appliesTo', rejected);
     if (appliesTo) out.appliesTo = appliesTo;
     const meta = sanitizeMeta(entry.meta);
-    if (meta) out.meta = meta;
+    if (meta) out.meta = Object.assign({}, out.meta || {}, meta);
+    if (typeof entry.sourceUrl === 'string') out.sourceUrl = entry.sourceUrl;
     const preprocessor = sanitizePreprocessor(entry.preprocessor, domain + '.preprocessor', rejected);
     if (preprocessor) out.preprocessor = preprocessor;
 

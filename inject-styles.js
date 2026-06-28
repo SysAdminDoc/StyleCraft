@@ -1,4 +1,4 @@
-/* StyleCraft v1.18.0 - Style Injector (document_start) */
+/* StyleCraft v1.19.0 - Style Injector (document_start) */
 (function() {
   if (window.__stylecraft_injected) return;
   window.__stylecraft_injected = true;
@@ -18,6 +18,7 @@
   }
 
   const SC_MATCH = window.StyleCraftMatcher;
+  const SC_USERCSS = window.StyleCraftUserCSS;
 
   function getDomain() {
     return SC_MATCH.extractDomain(location.href) || location.hostname;
@@ -53,12 +54,12 @@
         for (const [id, theme] of Object.entries(data.themes || {})) {
           if (theme.enabled !== false) {
             const raw = theme.rawCSS || theme.css || '';
-            const resolved = simpleResolve(raw, pageUrl, pageDomain);
+            const resolved = simpleResolve(raw, pageUrl, pageDomain, theme.usercss && theme.usercss.values);
             if (resolved.trim()) themeCSS += (themeCSS ? '\n' : '') + resolved;
           }
         }
         if (!foundCustom && data.customCSS) {
-          customCSS = data.customCSS;
+          customCSS = simpleResolve(data.customCSS, pageUrl, pageDomain, data.usercss && data.usercss.values);
           customEnabled = data.customEnabled !== false;
           foundCustom = true;
         }
@@ -81,8 +82,11 @@
   }
 
   /* Lightweight @-moz-document resolver */
-  function simpleResolve(raw, pageUrl, pageDomain) {
+  function simpleResolve(raw, pageUrl, pageDomain, values) {
     if (!raw || !raw.trim()) return '';
+    if (SC_USERCSS && typeof SC_USERCSS.resolveForUrl === 'function') {
+      return SC_USERCSS.resolveForUrl(raw, pageUrl, pageDomain, SC_MATCH, values);
+    }
     if (!/@(-moz-)?document\b/.test(raw)) return raw;
 
     let out = '';

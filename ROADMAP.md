@@ -81,13 +81,6 @@ Roadmap for StyleCraft, the Chrome MV3 CSS style manager with visual element pic
 
 ## Research-Driven Additions
 
-- [ ] P1 - Build a shared UserCSS metadata and variable parser
-  Why: Stylus-compatible `.user.css` metadata, variables, update URLs, includes, excludes, and preprocessors are ecosystem table-stakes and current parsing is regex-fragmented.
-  Evidence: Stylus UserCSS and Writing UserCSS docs; `background.js` `resolveUserCSS()`; `options.js` `convertStylusImport()`.
-  Touches: `background.js`, `inject-styles.js`, `options.js`, `editor.js`, `tests/`
-  Acceptance: UserCSS metadata round-trips on import/export, variables render editable controls, update URLs are preserved, and parser fixtures cover nested document blocks.
-  Complexity: L
-
 - [ ] P1 - Add options/popup accessibility and focus coverage
   Why: The extension uses custom tabs, icon buttons, inline SVG buttons, CodeMirror, and Shadow DOM controls, but tests do not verify accessible names, tab order, or focus recovery.
   Evidence: WAI-ARIA APG tabs/focus guidance; WebAIM form-control guidance; CodeMirror accessibility docs; `popup.html`, `options.html`, `editor.html`, `content.js`.

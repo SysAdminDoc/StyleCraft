@@ -21,6 +21,7 @@ const versionFiles = [
   ['options.js', `version: '${version}'`],
   ['style-data.js', `StyleCraft v${version}`],
   ['style-match.js', `StyleCraft v${version}`],
+  ['usercss.js', `StyleCraft v${version}`],
   ['usw-adapter.js', `StyleCraft v${version}`],
   ['inject-styles.js', `StyleCraft v${version}`]
 ];
@@ -43,10 +44,16 @@ const manifestContentScripts = (manifest.content_scripts || []).flatMap((entry) 
 if (manifestContentScripts.indexOf('style-match.js') === -1) {
   fail('manifest.json does not inject style-match.js before style injection');
 }
+if (manifestContentScripts.indexOf('usercss.js') === -1) {
+  fail('manifest.json does not inject usercss.js before style injection');
+}
 if (manifestContentScripts.indexOf('style-match.js') > manifestContentScripts.indexOf('inject-styles.js')) {
   fail('manifest.json injects style-match.js after inject-styles.js');
 }
-if (!read('background.js').includes("importScripts('style-match.js', 'style-data.js', 'usw-adapter.js')")) {
+if (manifestContentScripts.indexOf('usercss.js') > manifestContentScripts.indexOf('inject-styles.js')) {
+  fail('manifest.json injects usercss.js after inject-styles.js');
+}
+if (!read('background.js').includes("importScripts('style-match.js', 'usercss.js', 'style-data.js', 'usw-adapter.js')")) {
   fail('background.js does not load shared matcher/data guard and USw adapter');
 }
 if (!popupHtml.includes('style-match.js')) {
@@ -54,6 +61,9 @@ if (!popupHtml.includes('style-match.js')) {
 }
 if (!popupHtml.includes('style-data.js')) {
   fail('popup.html does not load the shared import/trust guard');
+}
+if (!popupHtml.includes('usercss.js')) {
+  fail('popup.html does not load the shared UserCSS parser');
 }
 if (!editorHtml.includes('vendor/codemirror/stylecraft-codemirror.js')) {
   fail('editor.html does not load the bundled CodeMirror adapter');
@@ -64,8 +74,14 @@ if (!editorHtml.includes('style-match.js')) {
 if (!editorHtml.includes('style-data.js')) {
   fail('editor.html does not load the shared import/trust guard');
 }
+if (!editorHtml.includes('usercss.js')) {
+  fail('editor.html does not load the shared UserCSS parser');
+}
 if (!read('options.html').includes('style-data.js')) {
   fail('options.html does not load the shared import guard');
+}
+if (!read('options.html').includes('usercss.js')) {
+  fail('options.html does not load the shared UserCSS parser');
 }
 if (!editorHtml.includes('vendor/sass/stylecraft-sass.js')) {
   fail('editor.html does not load the bundled Sass compiler');

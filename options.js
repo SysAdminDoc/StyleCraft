@@ -1,4 +1,4 @@
-/* StyleCraft v1.18.0 - Options Page */
+/* StyleCraft v1.19.0 - Options Page */
 (async function(){
   const $=id=>document.getElementById(id);
   const send=msg=>new Promise(r=>chrome.runtime.sendMessage(msg,r));
@@ -75,7 +75,7 @@
   function exportSingleDomain(domain) {
     const data = allData[domain];
     if (!data) { toast('No data for ' + domain); return; }
-    const exp = { domain, data, version: '1.18.0', exported: new Date().toISOString() };
+    const exp = { domain, data, version: '1.19.0', exported: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(exp, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -639,7 +639,7 @@
 
   /* ─── IMPORT/EXPORT ─── */
   $('btn-export').addEventListener('click',()=>{
-  const exp={data:allData,settings,version:'1.18.0',exported:new Date().toISOString()};
+  const exp={data:allData,settings,version:'1.19.0',exported:new Date().toISOString()};
     const blob=new Blob([JSON.stringify(exp,null,2)],{type:'application/json'});
     const url=URL.createObjectURL(blob);const a=document.createElement('a');
     a.href=url;a.download='stylecraft-export-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(url);
@@ -807,6 +807,13 @@
       }
 
       if (!rawCSS) continue;
+      const parsedUserCss = window.StyleCraftUserCSS ? window.StyleCraftUserCSS.parse(rawCSS) : { meta: {}, variables: [], values: {}, appliesTo: [] };
+      (parsedUserCss.appliesTo || []).forEach(rule => {
+        if (rule.type === 'domain') domains.add(rule.value);
+        else if (rule.type === 'url' || rule.type === 'url-prefix') {
+          try { domains.add(new URL(rule.value).hostname); } catch {}
+        } else if (rule.type === 'regexp') domains.add('*');
+      });
       count++;
       if (domains.size === 0) domains.add('*');
 
@@ -814,7 +821,22 @@
         const key = domain === '*' ? '*' : domain;
         if (!merged[key]) merged[key] = { themes: {}, customCSS: '', customEnabled: true };
         if (!merged[key].themes) merged[key].themes = {};
-        merged[key].themes[id] = { name, css: flatCSS || rawCSS, rawCSS, enabled, source: 'stylus-import' };
+        const themeRecord = {
+          name: parsedUserCss.meta.name || name,
+          css: flatCSS || rawCSS,
+          rawCSS,
+          enabled,
+          source: 'stylus-import',
+          meta: parsedUserCss.meta || {},
+          usercss: parsedUserCss.hasMeta || parsedUserCss.variables.length || parsedUserCss.appliesTo.length ? {
+            meta: parsedUserCss.meta,
+            variables: parsedUserCss.variables,
+            values: window.StyleCraftUserCSS ? window.StyleCraftUserCSS.mergeValues(parsedUserCss.variables) : parsedUserCss.values,
+            appliesTo: parsedUserCss.appliesTo
+          } : null
+        };
+        if (parsedUserCss.meta.updateURL) themeRecord.sourceUrl = parsedUserCss.meta.updateURL;
+        merged[key].themes[id] = themeRecord;
         touchedDomains.add(key);
       }
     }

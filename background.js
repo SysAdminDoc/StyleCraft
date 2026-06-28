@@ -1,7 +1,8 @@
-/* StyleCraft v1.18.0 - Background Service Worker */
-importScripts('style-match.js', 'style-data.js', 'usw-adapter.js');
+/* StyleCraft v1.19.0 - Background Service Worker */
+importScripts('style-match.js', 'usercss.js', 'style-data.js', 'usw-adapter.js');
 
 const SC_MATCH = globalThis.StyleCraftMatcher;
+const SC_USERCSS = globalThis.StyleCraftUserCSS;
 const SC_DATA = globalThis.StyleCraftData;
 const SC_USW = globalThis.StyleCraftUSw;
 
@@ -53,13 +54,13 @@ async function buildCSSForUrl(url) {
       // Themes layer — aggregate from all matching patterns
       for (const [id, theme] of Object.entries(data.themes || {})) {
         if (theme.enabled !== false) {
-          const resolved = resolveUserCSS(theme.rawCSS || theme.css || '', url);
+          const resolved = resolveUserCSS(theme.rawCSS || theme.css || '', url, theme.usercss && theme.usercss.values);
           if (resolved.trim()) themeCSS += (themeCSS ? '\n\n' : '') + '/* USw:' + id + ' ' + (theme.name||'').replace(/\*\//g,'') + ' */\n' + resolved;
         }
       }
       // Custom layer — use the most specific (non-wildcard) match
       if (!foundCustom && data.customCSS) {
-        customCSS = data.customCSS;
+        customCSS = resolveUserCSS(data.customCSS, url, data.usercss && data.usercss.values);
         customEnabled = data.customEnabled !== false;
         foundCustom = true;
       }
@@ -81,45 +82,9 @@ function entryMatchesPage(pattern, data, url, domain) {
    Evaluates URL-matching directives and extracts applicable CSS
    ═══════════════════════════════════════════════════════════ */
 
-function resolveUserCSS(rawCSS, pageUrl) {
+function resolveUserCSS(rawCSS, pageUrl, values) {
   if (!rawCSS || !rawCSS.trim()) return '';
-  // Strip metadata block
-  let css = rawCSS.replace(/\/\*\s*==UserStyle==[\s\S]*?==\/UserStyle==\s*\*\//, '').trim();
-
-  // If no @-moz-document or @document rules, return as-is
-  if (!/@-?moz-?document|@document/i.test(css)) return css;
-
-  const blocks = [];
-  // Match @-moz-document (and @document) blocks
-  const re = /@(?:-moz-)?document\s+((?:[^{]|\n)*?)\s*\{/gi;
-  let m, lastEnd = 0;
-
-  // Collect top-level CSS before any @-moz-document
-  const firstMatch = re.exec(css);
-  if (firstMatch && firstMatch.index > 0) {
-    const before = css.substring(0, firstMatch.index).trim();
-    if (before) blocks.push(before);
-  }
-  if (firstMatch) re.lastIndex = 0; // reset
-
-  while ((m = re.exec(css)) !== null) {
-    const conditions = m[1];
-    const bodyStart = m.index + m[0].length;
-    // Find matching closing brace (handle nesting)
-    let depth = 1, pos = bodyStart;
-    while (pos < css.length && depth > 0) {
-      if (css[pos] === '{') depth++;
-      else if (css[pos] === '}') depth--;
-      pos++;
-    }
-    const body = css.substring(bodyStart, pos - 1).trim();
-
-    if (matchesDocumentConditions(conditions, pageUrl)) {
-      blocks.push(body);
-    }
-  }
-
-  return blocks.join('\n\n');
+  return SC_USERCSS.resolveForUrl(rawCSS, pageUrl, extractDomain(pageUrl), SC_MATCH, values);
 }
 
 function matchesDocumentConditions(conditions, pageUrl) {
@@ -184,8 +149,25 @@ async function installTheme(id, name, domain) {
   const fetched = await fetchUSwCSS(id);
   if (!fetched.rawCSS.trim()) throw new Error('Empty CSS');
   const trust = SC_DATA.assertCssAllowed(fetched.rawCSS);
+  const parsed = SC_USERCSS.parse(fetched.rawCSS);
+  const usercss = parsed.hasMeta || parsed.variables.length || parsed.appliesTo.length ? {
+    meta: parsed.meta,
+    variables: parsed.variables,
+    values: SC_USERCSS.mergeValues(parsed.variables),
+    appliesTo: parsed.appliesTo
+  } : null;
   const dd = await getDomainData(domain);
-  dd.themes[id] = { rawCSS: fetched.rawCSS, name: fetched.name, enabled: true, installedAt: new Date().toISOString(), trust };
+  dd.themes[id] = {
+    rawCSS: fetched.rawCSS,
+    name: (parsed.meta && parsed.meta.name) || fetched.name,
+    enabled: true,
+    installedAt: new Date().toISOString(),
+    sourceUrl: (parsed.meta && parsed.meta.updateURL) || fetched.sourceUrl || '',
+    updatedAt: fetched.updatedAt || '',
+    meta: parsed.meta || {},
+    usercss,
+    trust
+  };
   await setDomainData(domain, dd);
   broadcastUpdate(domain);
   return { ok: true, name: fetched.name };

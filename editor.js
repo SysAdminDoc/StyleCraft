@@ -645,6 +645,7 @@
         if (trust) theme.trust = trust;
         if (sourceMode === 'css') delete theme.preprocessor;
         else theme.preprocessor = { syntax: sourceMode, source };
+        syncUserCssState(theme, source);
       }
     } else {
       // Save custom CSS
@@ -652,6 +653,7 @@
       if (trust) allData[activeDomain].trust = trust;
       if (sourceMode === 'css') delete allData[activeDomain].preprocessor;
       else allData[activeDomain].preprocessor = { syntax: sourceMode, source };
+      syncUserCssState(allData[activeDomain], source);
     }
 
     await saveAllData(allData);
@@ -1707,6 +1709,8 @@
   const metaName = document.getElementById('meta-name');
   const metaDesc = document.getElementById('meta-desc');
   const metaInfo = document.getElementById('meta-info');
+  const usercssVarsSection = document.getElementById('usercss-vars-section');
+  const usercssVars = document.getElementById('usercss-vars');
   let apPanelOpen = false;
 
   // Toggle panel
@@ -1722,8 +1726,101 @@
   }
 
   function getMeta() {
-    if (!activeDomain || !allData[activeDomain]) return {};
-    return allData[activeDomain].meta || {};
+    const record = getActiveRecord();
+    return (record && record.meta) || {};
+  }
+
+  function syncUserCssState(record, source) {
+    if (!record || !window.StyleCraftUserCSS) return;
+    const parsed = window.StyleCraftUserCSS.parse(source || '');
+    if (!parsed.hasMeta && !parsed.variables.length && !parsed.appliesTo.length) {
+      delete record.usercss;
+      return;
+    }
+    record.meta = Object.assign({}, parsed.meta || {}, record.meta || {});
+    if (parsed.meta.updateURL && !record.sourceUrl) record.sourceUrl = parsed.meta.updateURL;
+    if (parsed.meta.updateURL && !record.meta.sourceUrl) record.meta.sourceUrl = parsed.meta.updateURL;
+    record.usercss = {
+      meta: parsed.meta,
+      variables: parsed.variables,
+      values: window.StyleCraftUserCSS.mergeValues(parsed.variables, record.usercss && record.usercss.values),
+      appliesTo: parsed.appliesTo
+    };
+    if (!activeThemeId && parsed.appliesTo.length && !(record.appliesTo && record.appliesTo.length)) {
+      record.appliesTo = parsed.appliesTo;
+    }
+  }
+
+  function activeUserCssState(record) {
+    if (!record) return null;
+    if (record.usercss && Array.isArray(record.usercss.variables) && record.usercss.variables.length) return record.usercss;
+    if (!window.StyleCraftUserCSS) return null;
+    const parsed = window.StyleCraftUserCSS.parse(code.value || '');
+    if (!parsed.variables.length) return null;
+    return {
+      meta: parsed.meta,
+      variables: parsed.variables,
+      values: window.StyleCraftUserCSS.mergeValues(parsed.variables, record.usercss && record.usercss.values),
+      appliesTo: parsed.appliesTo
+    };
+  }
+
+  function renderUserCssVariables(record) {
+    const state = activeUserCssState(record);
+    if (!state || !state.variables || !state.variables.length) {
+      usercssVarsSection.style.display = 'none';
+      usercssVars.innerHTML = '';
+      return;
+    }
+    usercssVarsSection.style.display = '';
+    const values = Object.assign({}, state.values || {});
+    usercssVars.innerHTML = state.variables.map(variable => {
+      const value = values[variable.name] !== undefined ? values[variable.name] : variable.default;
+      const label = esc(variable.label || variable.name);
+      const name = esc(variable.name);
+      const type = esc(variable.type || 'text');
+      let control = '';
+      if (variable.type === 'checkbox') {
+        control = '<input class="uc-var-control" type="checkbox" ' + (value ? 'checked' : '') + '/>';
+      } else if ((variable.type === 'select' || variable.type === 'dropdown') && variable.options && variable.options.length) {
+        control = '<select class="uc-var-control">' + variable.options.map(option => {
+          const selected = String(option.value) === String(value) ? ' selected' : '';
+          return '<option value="' + esc(option.value) + '"' + selected + '>' + esc(option.label || option.value) + '</option>';
+        }).join('') + '</select>';
+      } else if (variable.type === 'color' && /^#[0-9a-f]{3,8}$/i.test(String(value))) {
+        control = '<input class="uc-var-control" type="color" value="' + esc(value) + '"/>';
+      } else if (variable.type === 'number' || variable.type === 'range') {
+        const min = variable.min !== undefined ? ' min="' + esc(variable.min) + '"' : '';
+        const max = variable.max !== undefined ? ' max="' + esc(variable.max) + '"' : '';
+        const step = variable.step !== undefined ? ' step="' + esc(variable.step) + '"' : '';
+        control = '<input class="uc-var-control" type="number" value="' + esc(value) + '"' + min + max + step + '/>';
+      } else {
+        control = '<input class="uc-var-control" type="text" value="' + esc(value) + '" spellcheck="false"/>';
+      }
+      return '<div class="uc-var" data-name="' + name + '" data-type="' + type + '"><div class="uc-var-label" title="' + label + '">' + label + '</div>' + control + '</div>';
+    }).join('');
+    usercssVars.querySelectorAll('.uc-var').forEach(row => {
+      const input = row.querySelector('.uc-var-control');
+      input.addEventListener('change', () => saveUserCssVariable(row.dataset.name, row.dataset.type, input));
+    });
+  }
+
+  async function saveUserCssVariable(name, type, input) {
+    const record = getActiveRecord();
+    if (!record) return;
+    if (!record.usercss) {
+      const state = activeUserCssState(record);
+      record.usercss = state || { meta: {}, variables: [], values: {}, appliesTo: [] };
+    }
+    if (!record.usercss.values) record.usercss.values = {};
+    let value = input.value;
+    if (type === 'checkbox') value = input.checked;
+    else if (type === 'number' || type === 'range') value = Number(input.value);
+    record.usercss.values[name] = value;
+    if (!record.meta) record.meta = {};
+    record.meta.modified = new Date().toISOString();
+    await saveAllData(allData);
+    notifyTabs();
   }
 
   function renderAppliesTo() {
@@ -1733,11 +1830,13 @@
       metaName.value = '';
       metaDesc.value = '';
       metaInfo.textContent = '';
+      renderUserCssVariables(null);
       return;
     }
 
     const patterns = getAppliesTo();
     const meta = getMeta();
+    const record = getActiveRecord();
 
     // Update toggle bar label
     if (patterns.length) {
@@ -1799,6 +1898,7 @@
     if (meta.modified) parts.push('Modified: ' + new Date(meta.modified).toLocaleDateString());
     if (meta.sourceUrl) parts.push('Source: ' + meta.sourceUrl);
     metaInfo.textContent = parts.join(' · ');
+    renderUserCssVariables(record);
   }
 
   // Add new rule
@@ -1829,18 +1929,20 @@
 
   // Metadata save on blur
   metaName.addEventListener('change', async () => {
-    if (!activeDomain || !allData[activeDomain]) return;
-    if (!allData[activeDomain].meta) allData[activeDomain].meta = {};
-    allData[activeDomain].meta.name = metaName.value.trim();
-    allData[activeDomain].meta.modified = new Date().toISOString();
+    const record = getActiveRecord();
+    if (!record) return;
+    if (!record.meta) record.meta = {};
+    record.meta.name = metaName.value.trim();
+    record.meta.modified = new Date().toISOString();
     await saveAllData(allData);
     renderSidebar();
   });
   metaDesc.addEventListener('change', async () => {
-    if (!activeDomain || !allData[activeDomain]) return;
-    if (!allData[activeDomain].meta) allData[activeDomain].meta = {};
-    allData[activeDomain].meta.description = metaDesc.value.trim();
-    allData[activeDomain].meta.modified = new Date().toISOString();
+    const record = getActiveRecord();
+    if (!record) return;
+    if (!record.meta) record.meta = {};
+    record.meta.description = metaDesc.value.trim();
+    record.meta.modified = new Date().toISOString();
     await saveAllData(allData);
   });
 
