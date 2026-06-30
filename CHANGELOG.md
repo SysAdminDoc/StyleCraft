@@ -2,6 +2,12 @@
 
 All notable changes to StyleCraft are documented here.
 
+## [1.23.0] - 2026-06-30
+
+### Added
+- Computed design-token extraction in the Visual panel with color/type/spacing tokens, contrast status, copy actions, and insert-to-CSS actions.
+- Content-script regression coverage for computed token extraction and Visual-panel token insertion.
+
 ## [1.22.0] - 2026-06-30
 
 ### Added

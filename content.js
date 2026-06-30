@@ -1,4 +1,4 @@
-/* StyleCraft v1.22.0 - Content Script / Editor */
+/* StyleCraft v1.23.0 - Content Script / Editor */
 (function () {
   if (window.__stylecraft_editor_loaded) return;
   window.__stylecraft_editor_loaded = true;
@@ -147,6 +147,7 @@
       specSlider: $('#sc-spec-slider'), specVal: $('#sc-spec-val'),
       matchCount: $('#sc-match-count'), filterList: $('#sc-filter-list'),
       codeEditor: $('#sc-code-editor'), customToggle: $('#sc-custom-toggle'),
+      tokenList: $('#sc-token-list'), tokenContrast: $('#sc-token-contrast'),
       themeList: $('#sc-theme-list'),
       quickPickBtn: $('#sc-quick-pick-btn'), quickPickLabel: $('#sc-quick-pick-label'),
       toastEl: $('#sc-toast'), $$, $
@@ -317,6 +318,7 @@
         state.customCSS=basicToCSS(); refs.codeEditor.value=state.customCSS; applyLiveCSS(); saveCustomCSS();
       });
     });
+    if (refs.tokenList) refs.tokenList.addEventListener('click', onTokenAction);
     refs.$$('.sc-group-header').forEach(gh => {
       gh.addEventListener('click', () => gh.parentElement.classList.toggle('collapsed'));
     });
@@ -366,6 +368,10 @@
     refs.$$('.sc-bm-cell,.sc-bm-vcell,.sc-bm-content').forEach(cell => {
       if (!cell.getAttribute('aria-label')) cell.setAttribute('aria-label', 'Box model ' + (cell.dataset.bm || 'value'));
       cell.setAttribute('tabindex', '0');
+    });
+    refs.$$('.sc-token-btn').forEach(btn => {
+      const label = btn.dataset.action === 'copy' ? 'Copy computed token' : 'Insert computed token';
+      if (!btn.getAttribute('aria-label')) btn.setAttribute('aria-label', label);
     });
   }
 
@@ -889,7 +895,7 @@
 
   /* ═══════ VISUAL <-> CSS ═══════ */
   function populateVisualFromElement(el) {
-    if(!el) return;
+    if(!el) { clearBoxModel(); clearDesignTokens(); return; }
     const cs = getComputedStyle(el);
     refs.$$('.sc-prop-input').forEach(input => { input.value=''; });
     refs.$$('.sc-select-input').forEach(sel => { sel.value=''; });
@@ -903,6 +909,242 @@
     });
     state.basicProps={};
     updateBoxModel(el);
+    updateDesignTokens(el, cs);
+  }
+
+  function updateDesignTokens(el, cs) {
+    if (!refs.tokenList) return;
+    const tokens = collectDesignTokens(el, cs);
+    renderDesignTokens(tokens, getContrastStatus(el, cs));
+  }
+
+  function clearDesignTokens() {
+    if (refs.tokenContrast) {
+      refs.tokenContrast.textContent = 'Pick an element';
+      refs.tokenContrast.className = 'sc-token-contrast warn';
+    }
+    if (refs.tokenList) refs.tokenList.innerHTML = '<div class="sc-token-empty">Pick an element to inspect computed colors, type, and spacing.</div>';
+  }
+
+  function collectDesignTokens(el, cs) {
+    const tokens = [];
+    const add = (label, prop, value, opts = {}) => addDesignToken(tokens, label, prop, value, opts);
+    add('Text color', 'color', cs.getPropertyValue('color'), { kind: 'color' });
+    add('Background', 'background-color', effectiveBackgroundColor(el, cs), { kind: 'color' });
+    add('Border color', 'border-color', dominantBorderColor(cs), { kind: 'color', skipTransparent: true });
+    add('Font family', 'font-family', cs.getPropertyValue('font-family'), { kind: 'text' });
+    add('Font size', 'font-size', cs.getPropertyValue('font-size'), { kind: 'length' });
+    add('Font weight', 'font-weight', cs.getPropertyValue('font-weight'), { kind: 'text' });
+    add('Line height', 'line-height', cs.getPropertyValue('line-height'), { kind: 'length' });
+    add('Letter spacing', 'letter-spacing', cs.getPropertyValue('letter-spacing'), { kind: 'length', skip: ['normal'] });
+    add('Margin', 'margin', sideShorthand(cs, 'margin'), { kind: 'length' });
+    add('Padding', 'padding', sideShorthand(cs, 'padding'), { kind: 'length' });
+    add('Radius', 'border-radius', radiusShorthand(cs), { kind: 'length', skipZero: true });
+    add('Gap', 'gap', gapShorthand(cs), { kind: 'length', skip: ['normal'] });
+    add('Display', 'display', cs.getPropertyValue('display'), { kind: 'text' });
+    add('Box shadow', 'box-shadow', cs.getPropertyValue('box-shadow'), { kind: 'text', skip: ['none'] });
+    return tokens.slice(0, 16);
+  }
+
+  function addDesignToken(tokens, label, prop, value, opts) {
+    const normalized = normalizeTokenValue(value, opts);
+    if (!normalized) return;
+    tokens.push({ label, prop, value: normalized.value, swatch: normalized.swatch || '', warning: normalized.warning || '' });
+  }
+
+  function normalizeTokenValue(value, opts = {}) {
+    let raw = String(value || '').trim();
+    if (!raw) return null;
+    if (opts.skip && opts.skip.includes(raw.toLowerCase())) return null;
+    if (opts.kind === 'color') {
+      const parsed = parseCssColor(raw);
+      if (!parsed || (opts.skipTransparent && parsed.a === 0)) return null;
+      if (parsed.a === 0) return { value: 'transparent', warning: 'No solid fill' };
+      const hex = colorToHex(parsed);
+      return { value: parsed.a < 1 ? formatRgba(parsed) : hex, swatch: parsed.a < 1 ? formatRgba(parsed) : hex };
+    }
+    raw = raw.replace(/\s*,\s*/g, ', ').replace(/\s+/g, ' ');
+    if (opts.skipZero && /^0(?:px|em|rem|%)?(?:\s+0(?:px|em|rem|%)?)*$/i.test(raw)) return null;
+    return { value: raw };
+  }
+
+  function renderDesignTokens(tokens, contrast) {
+    refs.tokenContrast.textContent = contrast.label;
+    refs.tokenContrast.className = 'sc-token-contrast ' + (contrast.ok ? 'ok' : 'warn');
+    if (!tokens.length) {
+      refs.tokenList.innerHTML = '<div class="sc-token-empty">Pick an element to inspect computed colors, type, and spacing.</div>';
+      return;
+    }
+    refs.tokenList.innerHTML = tokens.map(token => {
+      const swatch = token.swatch ? '<span class="sc-token-swatch" style="background:' + escHTML(token.swatch) + '"></span>' : '<span class="sc-token-swatch empty"></span>';
+      const warn = token.warning ? '<span class="sc-token-note">' + escHTML(token.warning) + '</span>' : '';
+      return '<div class="sc-token-row" data-prop="' + escHTML(token.prop) + '">' +
+        swatch +
+        '<div class="sc-token-main"><span class="sc-token-name">' + escHTML(token.label) + '</span><span class="sc-token-value">' + escHTML(token.value) + '</span>' + warn + '</div>' +
+        '<button type="button" class="sc-token-btn" data-action="copy" data-value="' + escHTML(token.value) + '" data-prop="' + escHTML(token.prop) + '" aria-label="Copy ' + escHTML(token.label) + '">Copy</button>' +
+        '<button type="button" class="sc-token-btn primary" data-action="insert" data-value="' + escHTML(token.value) + '" data-prop="' + escHTML(token.prop) + '" aria-label="Insert ' + escHTML(token.label) + '">Insert</button>' +
+      '</div>';
+    }).join('');
+  }
+
+  function onTokenAction(e) {
+    const btn = e.target.closest('.sc-token-btn');
+    if (!btn) return;
+    const value = btn.dataset.value || '';
+    const prop = btn.dataset.prop || '';
+    if (!value || !prop) return;
+    if (btn.dataset.action === 'copy') {
+      copyTokenValue(value);
+      return;
+    }
+    insertComputedToken(prop, value);
+  }
+
+  function insertComputedToken(prop, value) {
+    if (!state.selector) { toast('Pick an element first'); return; }
+    pushUndo();
+    state.basicProps[prop] = value;
+    state.customCSS = basicToCSS();
+    refs.codeEditor.value = state.customCSS;
+    syncVisualControlValue(prop, value);
+    applyLiveCSS();
+    saveCustomCSS();
+    updateLineNumbers();
+    toast('Inserted ' + prop);
+  }
+
+  function syncVisualControlValue(prop, value) {
+    refs.$$('.sc-prop-input,.sc-select-input').forEach(control => {
+      if (control.dataset.prop === prop) control.value = value;
+    });
+    refs.$$('.sc-color-input').forEach(control => {
+      if (control.dataset.prop === prop) {
+        const hex = rgbToHex(value) || (/^#[0-9a-f]{6}$/i.test(value) ? value : null);
+        if (hex) control.value = hex;
+      }
+    });
+    refs.$$('.sc-range-input').forEach(control => {
+      if (control.dataset.prop !== prop) return;
+      const num = parseFloat(value);
+      if (isNaN(num)) return;
+      control.value = String(num);
+      if (control.nextElementSibling) control.nextElementSibling.textContent = control.dataset.unit ? num + control.dataset.unit : num;
+    });
+  }
+
+  function copyTokenValue(value) {
+    const fallbackCopy = () => {
+      const ta = document.createElement('textarea');
+      ta.value = value;
+      ta.style.cssText = 'position:fixed;left:-9999px;top:0';
+      document.documentElement.appendChild(ta);
+      ta.focus();
+      ta.select();
+      try { document.execCommand('copy'); } catch {}
+      ta.remove();
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(value).then(() => toast('Token copied'), () => { fallbackCopy(); toast('Token copied'); });
+    } else {
+      fallbackCopy();
+      toast('Token copied');
+    }
+  }
+
+  function sideShorthand(cs, base) {
+    const vals = ['top','right','bottom','left'].map(side => normalizeLength(cs.getPropertyValue(base + '-' + side)));
+    if (vals.every(v => v === '0px')) return '';
+    if (vals[0] === vals[2] && vals[1] === vals[3]) return vals[0] === vals[1] ? vals[0] : vals[0] + ' ' + vals[1];
+    return vals.join(' ');
+  }
+
+  function radiusShorthand(cs) {
+    const props = ['border-top-left-radius','border-top-right-radius','border-bottom-right-radius','border-bottom-left-radius'];
+    const vals = props.map(prop => normalizeLength(cs.getPropertyValue(prop)));
+    if (vals.every(v => v === '0px')) return '';
+    if (vals[0] === vals[2] && vals[1] === vals[3]) return vals[0] === vals[1] ? vals[0] : vals[0] + ' ' + vals[1];
+    return vals.join(' ');
+  }
+
+  function gapShorthand(cs) {
+    const row = normalizeLength(cs.getPropertyValue('row-gap'));
+    const col = normalizeLength(cs.getPropertyValue('column-gap'));
+    if (!row || row === 'normal') return '';
+    return row === col ? row : row + ' ' + col;
+  }
+
+  function dominantBorderColor(cs) {
+    const width = ['top','right','bottom','left'].some(side => parseFloat(cs.getPropertyValue('border-' + side + '-width')) > 0);
+    return width ? cs.getPropertyValue('border-top-color') : '';
+  }
+
+  function normalizeLength(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    const n = parseFloat(raw);
+    if (!isNaN(n) && /px$/i.test(raw)) return Math.round(n * 100) / 100 + 'px';
+    return raw.replace(/\s+/g, ' ');
+  }
+
+  function getContrastStatus(el, cs) {
+    const fg = parseCssColor(cs.getPropertyValue('color'));
+    const bg = parseCssColor(effectiveBackgroundColor(el, cs));
+    if (!fg || !bg || fg.a === 0 || bg.a === 0) return { label: 'Contrast unavailable', ok: false };
+    const ratio = contrastRatio(fg, bg);
+    const label = 'Contrast ' + ratio.toFixed(1) + ':1 ' + (ratio >= 4.5 ? 'AA' : 'below AA');
+    return { label, ok: ratio >= 4.5 };
+  }
+
+  function effectiveBackgroundColor(el, cs) {
+    let cur = el;
+    let curStyle = cs;
+    while (cur && cur !== document) {
+      const color = curStyle && curStyle.getPropertyValue('background-color');
+      const parsed = parseCssColor(color);
+      if (parsed && parsed.a > 0) return color;
+      cur = cur.parentElement;
+      curStyle = cur ? getComputedStyle(cur) : null;
+    }
+    return '#ffffff';
+  }
+
+  function parseCssColor(value) {
+    const raw = String(value || '').trim().toLowerCase();
+    if (!raw || raw === 'transparent') return { r: 0, g: 0, b: 0, a: 0 };
+    if (/^#[0-9a-f]{3}$/i.test(raw)) {
+      const h = expandHex(raw);
+      return { r: parseInt(h.slice(1,3),16), g: parseInt(h.slice(3,5),16), b: parseInt(h.slice(5,7),16), a: 1 };
+    }
+    if (/^#[0-9a-f]{6}$/i.test(raw)) return { r: parseInt(raw.slice(1,3),16), g: parseInt(raw.slice(3,5),16), b: parseInt(raw.slice(5,7),16), a: 1 };
+    const m = raw.match(/^rgba?\((.*)\)$/);
+    if (!m) return null;
+    const body = m[1].replace(/\//g, ' ');
+    const parts = body.includes(',') ? body.split(',').map(p => p.trim()) : body.split(/\s+/).filter(Boolean);
+    if (parts.length < 3) return null;
+    const toByte = p => p.endsWith('%') ? Math.round(parseFloat(p) * 2.55) : parseFloat(p);
+    const alpha = parts[3] == null ? 1 : parseFloat(parts[3]);
+    return {
+      r: clampColor(toByte(parts[0])),
+      g: clampColor(toByte(parts[1])),
+      b: clampColor(toByte(parts[2])),
+      a: isNaN(alpha) ? 1 : Math.max(0, Math.min(1, alpha))
+    };
+  }
+
+  function clampColor(n) { return Math.max(0, Math.min(255, Math.round(isNaN(n) ? 0 : n))); }
+  function colorToHex(c) { return '#' + [c.r,c.g,c.b].map(n => n.toString(16).padStart(2,'0')).join(''); }
+  function formatRgba(c) { return 'rgba(' + c.r + ', ' + c.g + ', ' + c.b + ', ' + Math.round(c.a * 100) / 100 + ')'; }
+  function relativeLuminance(c) {
+    const convert = v => {
+      const n = v / 255;
+      return n <= 0.03928 ? n / 12.92 : Math.pow((n + 0.055) / 1.055, 2.4);
+    };
+    return 0.2126 * convert(c.r) + 0.7152 * convert(c.g) + 0.0722 * convert(c.b);
+  }
+  function contrastRatio(a, b) {
+    const l1 = relativeLuminance(a);
+    const l2 = relativeLuminance(b);
+    return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
   }
 
   function updateBoxModel(el, skipCell) {
@@ -1516,6 +1758,25 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .sc-bm-vis-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
 .sc-bm-vis-btn{height:22px;padding:0 10px;border-radius:4px;background:rgba(203,166,247,0.06);border:1px solid rgba(203,166,247,0.1);color:#7f849c;font-size:9px;font-weight:600;cursor:pointer;transition:all 0.15s;}
 .sc-bm-vis-btn:hover{background:rgba(203,166,247,0.14);color:#cba6f7;}
+.sc-token-panel{padding:10px 14px;border-bottom:1px solid rgba(203,166,247,0.06);flex-shrink:0;}
+.sc-token-header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;}
+.sc-token-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#585b70;}
+.sc-token-contrast{font-size:9px;font-weight:700;border-radius:999px;padding:3px 7px;white-space:nowrap;background:rgba(249,226,175,0.08);border:1px solid rgba(249,226,175,0.14);color:#f9e2af;}
+.sc-token-contrast.ok{background:rgba(166,227,161,0.08);border-color:rgba(166,227,161,0.16);color:#a6e3a1;}
+.sc-token-contrast.warn{background:rgba(249,226,175,0.08);border-color:rgba(249,226,175,0.16);color:#f9e2af;}
+.sc-token-list{display:flex;flex-direction:column;gap:5px;}
+.sc-token-row{display:grid;grid-template-columns:18px minmax(0,1fr) 48px 52px;align-items:center;gap:6px;padding:6px;border:1px solid rgba(203,166,247,0.07);border-radius:6px;background:rgba(17,17,27,0.36);}
+.sc-token-swatch{width:18px;height:18px;border-radius:4px;border:1px solid rgba(203,166,247,0.16);box-shadow:inset 0 0 0 1px rgba(17,17,27,0.35);}
+.sc-token-swatch.empty{background:linear-gradient(135deg,rgba(69,71,90,0.35),rgba(17,17,27,0.18));}
+.sc-token-main{min-width:0;display:flex;flex-direction:column;gap:2px;}
+.sc-token-name{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:#7f849c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sc-token-value{font-family:'SFMono-Regular','Cascadia Code','Consolas','Liberation Mono','Menlo',monospace;font-size:10px;line-height:1.25;color:#cdd6f4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sc-token-note{font-size:9px;color:#f9e2af;}
+.sc-token-btn{height:24px;border-radius:5px;border:1px solid rgba(203,166,247,0.1);background:rgba(203,166,247,0.05);color:#bac2de;font-size:9px;font-weight:700;cursor:pointer;transition:all 0.15s;}
+.sc-token-btn:hover{background:rgba(203,166,247,0.14);color:#cba6f7;}
+.sc-token-btn.primary{border-color:rgba(166,227,161,0.13);background:rgba(166,227,161,0.06);color:#a6e3a1;}
+.sc-token-btn.primary:hover{background:rgba(166,227,161,0.14);}
+.sc-token-empty{padding:8px;border:1px dashed rgba(203,166,247,0.12);border-radius:6px;color:#7f849c;font-size:11px;line-height:1.35;}
 
 /* Presets tab */
 .sc-preset-section{padding:0 14px 8px;}
@@ -1644,6 +1905,13 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
     </div>
     <div class="sc-bm-vcell" data-bm="mb">-</div>
   </div>
+</div>
+</div>
+
+<div class="sc-token-panel" aria-label="Computed design tokens">
+<div class="sc-token-header"><span class="sc-token-title">Computed Tokens</span><span id="sc-token-contrast" class="sc-token-contrast warn">Pick an element</span></div>
+<div id="sc-token-list" class="sc-token-list">
+  <div class="sc-token-empty">Pick an element to inspect computed colors, type, and spacing.</div>
 </div>
 </div>
 

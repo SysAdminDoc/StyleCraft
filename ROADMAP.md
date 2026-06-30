@@ -81,13 +81,6 @@ Roadmap for StyleCraft, the Chrome MV3 CSS style manager with visual element pic
 
 ## Research-Driven Additions
 
-- [ ] P2 - Add computed-style and design-token extraction to the Visual panel
-  Why: CSS Peeper, VisBug, and Site Palette show demand for readable computed fonts/colors/spacing/assets without digging through DevTools.
-  Evidence: CSS Peeper, VisBug, Site Palette; existing ROADMAP CSS Peeper note; `content.js` visual editor.
-  Touches: `content.js`, `editor.js`, `popup.js`, `tests/`
-  Acceptance: Selecting an element shows computed color/font/spacing tokens with copy/insert actions, contrast warnings, and tests for token extraction on sample pages.
-  Complexity: L
-
 - [ ] P2 - Add optional external-file import/export workflow
   Why: Magic CSS and Stylus users value editing styles in their chosen editor and syncing through their own tools.
   Evidence: Magic CSS file save/reloader features; Stylus local-filesystem request; existing raw URL install roadmap item.

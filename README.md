@@ -1,6 +1,6 @@
 # StyleCraft
 
-![Version](https://img.shields.io/badge/version-1.22.0-blue)
+![Version](https://img.shields.io/badge/version-1.23.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Chrome%20%7C%20Edge%20%7C%20Brave-4285F4?logo=googlechrome&logoColor=white)
 ![Manifest](https://img.shields.io/badge/manifest-v3-orange)
@@ -30,6 +30,7 @@ Chrome, Edge, Brave, Vivaldi, Opera, Arc — any Chromium-based browser supporti
 | Stable Selectors | Prefers stable data/ARIA attributes and filters generated-looking classes |
 | Visual Properties | Edit colors, fonts, spacing, display, borders via dropdowns and inputs |
 | Box Model Visualizer | Interactive box model diagram with arrow-key editing |
+| Computed Tokens | Inspect computed colors, type, spacing, radius, and contrast with copy/insert actions |
 | 4-Tab Layout | Selector, Visual, Code, and Themes tabs in the side panel |
 | Live Preview | Changes apply in real-time as you type |
 | Keyboard Accessibility | Options, popup, editor dialogs, CodeMirror escape, and picker selection support labelled keyboard workflows |

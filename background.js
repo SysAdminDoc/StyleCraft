@@ -1,4 +1,4 @@
-/* StyleCraft v1.22.0 - Background Service Worker */
+/* StyleCraft v1.23.0 - Background Service Worker */
 importScripts('style-match.js', 'usercss.js', 'style-data.js', 'usw-adapter.js');
 
 const SC_MATCH = globalThis.StyleCraftMatcher;

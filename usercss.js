@@ -1,4 +1,4 @@
-/* StyleCraft v1.22.0 - shared UserCSS metadata, variables, and document resolver */
+/* StyleCraft v1.23.0 - shared UserCSS metadata, variables, and document resolver */
 (function(global) {
   if (global.StyleCraftUserCSS) return;
 
