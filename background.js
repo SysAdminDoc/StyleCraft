@@ -1,19 +1,112 @@
-/* StyleCraft v1.20.0 - Background Service Worker */
+/* StyleCraft v1.21.0 - Background Service Worker */
 importScripts('style-match.js', 'usercss.js', 'style-data.js', 'usw-adapter.js');
 
 const SC_MATCH = globalThis.StyleCraftMatcher;
 const SC_USERCSS = globalThis.StyleCraftUserCSS;
 const SC_DATA = globalThis.StyleCraftData;
 const SC_USW = globalThis.StyleCraftUSw;
+const STYLE_INJECTOR_FILES = ['style-match.js', 'usercss.js', 'inject-styles.js'];
+const EDITOR_INJECTOR_FILES = ['content.js'];
 
 async function injectAndSend(tabId, message) {
-  try { await chrome.scripting.executeScript({ target: { tabId }, files: ['content.js'] }); } catch {}
+  const access = await injectFiles(tabId, EDITOR_INJECTOR_FILES);
   setTimeout(() => { chrome.tabs.sendMessage(tabId, message).catch(() => {}); }, 100);
+  return { ok: true, siteAccess: access };
 }
 
 const getStorage = (k) => new Promise(r => chrome.storage.local.get(k, r));
 const setStorage = (d) => new Promise(r => chrome.storage.local.set(d, r));
 function extractDomain(url) { return SC_MATCH.extractDomain(url); }
+
+function sitePatternFromUrl(url) {
+  try {
+    const parsed = new URL(url || '');
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return '';
+    return parsed.protocol + '//' + parsed.hostname + '/*';
+  } catch {
+    return '';
+  }
+}
+
+function siteOriginFromUrl(url) {
+  try {
+    const parsed = new URL(url || '');
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return '';
+    return parsed.protocol + '//' + parsed.hostname;
+  } catch {
+    return '';
+  }
+}
+
+function permissionsContains(request) {
+  if (!chrome.permissions || typeof chrome.permissions.contains !== 'function') return Promise.resolve(true);
+  return new Promise(resolve => {
+    try {
+      chrome.permissions.contains(request, granted => {
+        void chrome.runtime.lastError;
+        resolve(!!granted);
+      });
+    } catch {
+      resolve(false);
+    }
+  });
+}
+
+async function getSiteAccessForUrl(url) {
+  const pattern = sitePatternFromUrl(url);
+  const origin = siteOriginFromUrl(url);
+  if (!pattern) {
+    return {
+      supported: false,
+      granted: false,
+      needsPermission: false,
+      origin: '',
+      pattern: '',
+      reason: 'unsupported-url',
+      message: 'StyleCraft can only inject into http and https pages.'
+    };
+  }
+  const granted = await permissionsContains({ origins: [pattern] });
+  return {
+    supported: true,
+    granted,
+    needsPermission: !granted,
+    origin,
+    pattern,
+    reason: granted ? '' : 'permission-required',
+    message: granted ? 'Site access granted.' : 'Site access is required before StyleCraft can inject styles on this site.'
+  };
+}
+
+async function getSiteAccessForTab(tab) {
+  return getSiteAccessForUrl(tab?.url || '');
+}
+
+async function getActiveTabAccess() {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab) return { supported: false, granted: false, needsPermission: false, reason: 'no-active-tab', message: 'No active tab.' };
+  const siteAccess = await getSiteAccessForTab(tab);
+  return { tabId: tab.id, url: tab.url || '', domain: extractDomain(tab.url || ''), ...siteAccess };
+}
+
+function siteAccessError(siteAccess) {
+  const error = new Error(siteAccess.message || 'Site access is required.');
+  error.siteAccess = siteAccess;
+  return error;
+}
+
+async function ensureTabAccess(tabId) {
+  const tab = await chrome.tabs.get(tabId);
+  const siteAccess = await getSiteAccessForTab(tab);
+  if (!siteAccess.granted) throw siteAccessError(siteAccess);
+  return siteAccess;
+}
+
+async function injectFiles(tabId, files) {
+  const siteAccess = await ensureTabAccess(tabId);
+  await chrome.scripting.executeScript({ target: { tabId }, files });
+  return siteAccess;
+}
 
 /* ═══════════════════════════════════════════════════════════
    Storage Model
@@ -204,11 +297,11 @@ async function broadcastUpdate(domain) {
 
 /* ─── Preview: fetch CSS and send to active tab ─── */
 async function previewTheme(id, tabId) {
+  await injectFiles(tabId, STYLE_INJECTOR_FILES);
   const fetched = await fetchUSwCSS(id);
   const tab = await chrome.tabs.get(tabId);
   SC_DATA.assertCssAllowed(fetched.rawCSS);
   const css = resolveUserCSS(fetched.rawCSS, tab.url);
-  try { await chrome.scripting.executeScript({ target: { tabId }, files: ['style-match.js', 'inject-styles.js'] }); } catch {}
   setTimeout(() => {
     chrome.tabs.sendMessage(tabId, { action: 'sc-apply-preview', css }).catch(() => {});
   }, 50);
@@ -287,16 +380,24 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       }
       case 'sc-get-settings': { const d = await getStorage('stylecraft_settings'); return d.stylecraft_settings || {}; }
       case 'sc-save-settings': { await setStorage({ stylecraft_settings: msg.settings }); return { ok: true }; }
+      case 'sc-get-site-access': return await getActiveTabAccess();
+      case 'sc-ensure-style-injector': {
+        const [tab] = msg.tabId ? [await chrome.tabs.get(msg.tabId)] : await chrome.tabs.query({ active: true, currentWindow: true });
+        if (!tab?.id) return { ok: false, error: 'No active tab' };
+        const siteAccess = await injectFiles(tab.id, STYLE_INJECTOR_FILES);
+        chrome.tabs.sendMessage(tab.id, { action: 'sc-styles-updated' }).catch(() => {});
+        return { ok: true, siteAccess };
+      }
 
       case 'sc-open-editor-from-popup': {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        if (tab) injectAndSend(tab.id, { action: 'sc-open-editor-pick' });
-        return { ok: true };
+        if (tab) return await injectAndSend(tab.id, { action: 'sc-open-editor-pick' });
+        return { ok: false, error: 'No active tab' };
       }
       case 'sc-toggle-readability': {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         if (tab) {
-          try { await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['content.js'] }); } catch {}
+          await injectFiles(tab.id, EDITOR_INJECTOR_FILES);
           return new Promise(r => setTimeout(() => chrome.tabs.sendMessage(tab.id, { action: 'sc-toggle-readability-get', readSettings: msg.readSettings }, res => { void chrome.runtime.lastError; r(res || {}); }), 100));
         }
         return {};
@@ -304,7 +405,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       case 'sc-toggle-grayscale': {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         if (tab) {
-          try { await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['content.js'] }); } catch {}
+          await injectFiles(tab.id, EDITOR_INJECTOR_FILES);
           return new Promise(r => setTimeout(() => chrome.tabs.sendMessage(tab.id, { action: 'sc-toggle-grayscale-get' }, res => { void chrome.runtime.lastError; r(res || {}); }), 100));
         }
         return {};
@@ -312,7 +413,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       case 'sc-get-toggle-state': {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         if (tab) {
-          try { await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['content.js'] }); } catch {}
+          const siteAccess = await getSiteAccessForTab(tab);
+          if (!siteAccess.granted) return { readability: false, grayscale: false, siteAccess, needsPermission: siteAccess.needsPermission };
+          await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: EDITOR_INJECTOR_FILES });
           return new Promise(r => setTimeout(() => chrome.tabs.sendMessage(tab.id, { action: 'sc-get-toggle-state' }, res => { void chrome.runtime.lastError; r(res || {}); }), 100));
         }
         return {};
@@ -373,7 +476,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     }
   })().then(r => sendResponse(r)).catch(e => {
     console.error('[SC]', msg.action, e);
-    sendResponse({ error: e.message || String(e) });
+    sendResponse({ error: e.message || String(e), siteAccess: e.siteAccess, needsPermission: !!e.siteAccess?.needsPermission });
   });
   return true;
 });
@@ -392,12 +495,12 @@ chrome.runtime.onInstalled.addListener(() => {
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (!tab?.id) return;
-  if (info.menuItemId === 'stylecraft-open') injectAndSend(tab.id, { action: 'sc-open-editor-pick' });
-  if (info.menuItemId === 'stylecraft-hide') injectAndSend(tab.id, { action: 'sc-hide-element' });
+  if (info.menuItemId === 'stylecraft-open') injectAndSend(tab.id, { action: 'sc-open-editor-pick' }).catch(() => {});
+  if (info.menuItemId === 'stylecraft-hide') injectAndSend(tab.id, { action: 'sc-hide-element' }).catch(() => {});
 });
 chrome.commands.onCommand.addListener(cmd => {
   chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
-    if (tab?.id && cmd === 'toggle_editor') injectAndSend(tab.id, { action: 'sc-toggle-editor' });
+    if (tab?.id && cmd === 'toggle_editor') injectAndSend(tab.id, { action: 'sc-toggle-editor' }).catch(() => {});
   });
 });
 

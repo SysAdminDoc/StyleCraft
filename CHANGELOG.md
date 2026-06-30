@@ -2,6 +2,12 @@
 
 All notable changes to StyleCraft are documented here.
 
+## [1.21.0] - 2026-06-30
+
+### Added
+- Optional per-site host access grants replace required broad host permissions while preserving document-start injection on granted sites.
+- Popup access prompt, service-worker permission guards, and Playwright coverage for manifest permission shape and grant flow.
+
 ## [1.20.0] - 2026-06-29
 
 ### Added

@@ -41,6 +41,20 @@ for (const [size, iconPath] of Object.entries(manifest.action?.default_icon || {
 const editorHtml = read('editor.html');
 const popupHtml = read('popup.html');
 const manifestContentScripts = (manifest.content_scripts || []).flatMap((entry) => entry.js || []);
+if ((manifest.host_permissions || []).length) {
+  fail('manifest.json must not require broad host permissions; use optional_host_permissions instead');
+}
+const optionalHosts = manifest.optional_host_permissions || [];
+if (!optionalHosts.includes('http://*/*') || !optionalHosts.includes('https://*/*')) {
+  fail('manifest.json must expose optional HTTP/HTTPS host permissions for per-site grants');
+}
+const contentScriptMatches = (manifest.content_scripts || []).flatMap((entry) => entry.matches || []);
+if (!contentScriptMatches.includes('http://*/*') || !contentScriptMatches.includes('https://*/*')) {
+  fail('manifest.json content script must remain registered for granted HTTP/HTTPS sites');
+}
+if (!(manifest.content_scripts || []).some((entry) => entry.run_at === 'document_start')) {
+  fail('manifest.json content script must keep document_start injection');
+}
 if (manifestContentScripts.indexOf('style-match.js') === -1) {
   fail('manifest.json does not inject style-match.js before style injection');
 }

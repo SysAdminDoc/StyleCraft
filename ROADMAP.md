@@ -81,13 +81,6 @@ Roadmap for StyleCraft, the Chrome MV3 CSS style manager with visual element pic
 
 ## Research-Driven Additions
 
-- [ ] P1 - Minimize broad host-permission trust friction
-  Why: `<all_urls>` and all-frame document-start injection support anti-FOUC but create review and trust friction; Chrome supports optional runtime permissions for clearer user intent.
-  Evidence: `manifest.json`; Chrome permission and `chrome.permissions` docs; Chrome Web Store policy guidance.
-  Touches: `manifest.json`, `background.js`, `popup.js`, `options.js`, `inject-styles.js`, `README.md`
-  Acceptance: A reviewed permission model documents why early injection needs broad access or offers a per-site grant mode that preserves no-flash behavior for enabled sites.
-  Complexity: L
-
 - [ ] P1 - Expand smoke tests into workflow regression tests
   Why: Current Playwright coverage exercises editor and picker happy paths only, leaving import/export, updates, backup/restore, popup search, packaging, and error states untested.
   Evidence: `tests/editor-smoke.spec.mjs`, `tests/content-picker-smoke.spec.mjs`, `tools/validate-extension.mjs`.

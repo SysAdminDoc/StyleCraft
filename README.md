@@ -1,6 +1,6 @@
 # StyleCraft
 
-![Version](https://img.shields.io/badge/version-1.20.0-blue)
+![Version](https://img.shields.io/badge/version-1.21.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Chrome%20%7C%20Edge%20%7C%20Brave-4285F4?logo=googlechrome&logoColor=white)
 ![Manifest](https://img.shields.io/badge/manifest-v3-orange)
@@ -100,6 +100,7 @@ The same matcher drives early injection, popup installed-style state, badge coun
 | Quota Protection | Catches and surfaces storage quota errors |
 | Import Guard | Validates imported data, quarantines invalid entries, blocks dangerous CSS schemes, and creates a pre-import backup before storage writes |
 | CSS Trust Checks | Flags remote CSS fetches and high-risk selectors with per-style trust metadata |
+| Per-Site Access Grants | Host access is optional; the popup requests the current site only when StyleCraft needs to inject styles |
 | Local Assist Settings | CSS assist endpoint/model stay in settings; optional key is stored separately from exports |
 | Full Export/Import | JSON export of all data, compatible cross-browser |
 | Context Menu | Right-click "Style this element" and "Hide this element" |
@@ -134,7 +135,7 @@ The popup includes a collapsible Quick CSS textarea for fast edits without openi
 └─────────────────┘                              └─────────────────┘
 ```
 
-**No background worker dependency for injection.** Styles are read directly from `chrome.storage.local` at `document_start`, ensuring instant application before page render. The service worker handles only USw API calls, context menus, and badge updates.
+**No background worker dependency for injection.** Styles are read directly from `chrome.storage.local` at `document_start`, ensuring instant application before page render. Host access is granted per HTTP/HTTPS site from the popup; once granted, the static document-start content script runs on future page loads for that site without requiring the service worker. The service worker handles only permission checks, USw API calls, context menus, badge updates, and backups.
 
 ## File Structure
 

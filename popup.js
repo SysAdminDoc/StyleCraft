@@ -1,4 +1,4 @@
-/* StyleCraft v1.20.0 - Popup */
+/* StyleCraft v1.21.0 - Popup */
 (async function() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const url = tab?.url || '';
@@ -15,8 +15,142 @@
   const searchResults = $('search-results');
   const resultCount = $('result-count');
   let installedSet = new Set();
+  let siteAccess = { supported: true, granted: true, needsPermission: false, origin: domain, pattern: '' };
 
   $('domain-text').textContent = domain || 'N/A';
+
+  function sitePatternFromUrl(value) {
+    try {
+      const parsed = new URL(value || '');
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return '';
+      return parsed.protocol + '//' + parsed.hostname + '/*';
+    } catch {
+      return '';
+    }
+  }
+
+  function siteOriginFromUrl(value) {
+    try {
+      const parsed = new URL(value || '');
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return '';
+      return parsed.protocol + '//' + parsed.hostname;
+    } catch {
+      return '';
+    }
+  }
+
+  function permissionsContains(request) {
+    if (!chrome.permissions || typeof chrome.permissions.contains !== 'function') return Promise.resolve(true);
+    return new Promise(resolve => {
+      try {
+        chrome.permissions.contains(request, granted => {
+          void chrome.runtime.lastError;
+          resolve(!!granted);
+        });
+      } catch {
+        resolve(false);
+      }
+    });
+  }
+
+  function permissionsRequest(request) {
+    if (!chrome.permissions || typeof chrome.permissions.request !== 'function') return Promise.resolve(true);
+    return new Promise(resolve => {
+      try {
+        chrome.permissions.request(request, granted => {
+          void chrome.runtime.lastError;
+          resolve(!!granted);
+        });
+      } catch {
+        resolve(false);
+      }
+    });
+  }
+
+  async function refreshSiteAccess() {
+    const pattern = sitePatternFromUrl(url);
+    const origin = siteOriginFromUrl(url);
+    if (!pattern) {
+      siteAccess = {
+        supported: false,
+        granted: false,
+        needsPermission: false,
+        origin: origin || domain || '',
+        pattern: '',
+        message: 'StyleCraft can only inject into http and https pages.'
+      };
+      updateAccessUI();
+      return siteAccess;
+    }
+    const granted = await permissionsContains({ origins: [pattern] });
+    siteAccess = {
+      supported: true,
+      granted,
+      needsPermission: !granted,
+      origin,
+      pattern,
+      message: granted ? 'Site access granted.' : 'Grant access once; future page loads keep document-start injection.'
+    };
+    updateAccessUI();
+    return siteAccess;
+  }
+
+  function updateAccessUI() {
+    const card = $('access-card');
+    if (!card) return;
+    const title = $('access-title');
+    const copy = $('access-copy');
+    const originEl = $('access-origin');
+    const grantBtn = $('access-grant');
+    const status = $('access-status');
+    const show = !siteAccess.granted || !siteAccess.supported;
+    card.style.display = show ? 'block' : 'none';
+    card.classList.toggle('unsupported', !siteAccess.supported);
+    if (title) title.textContent = siteAccess.supported ? 'Site access required' : 'Page cannot be styled';
+    if (originEl) originEl.textContent = siteAccess.origin || domain || 'this page';
+    if (copy) {
+      copy.firstChild.textContent = siteAccess.supported ? 'Grant access to ' : 'StyleCraft cannot inject into ';
+      copy.lastChild.textContent = siteAccess.supported ? ' so styles can run at document start.' : '.';
+    }
+    if (grantBtn) grantBtn.style.display = siteAccess.supported && !siteAccess.granted ? '' : 'none';
+    if (status) status.textContent = siteAccess.message || '';
+  }
+
+  async function applyInjectorToCurrentTab() {
+    return new Promise(resolve => {
+      chrome.runtime.sendMessage({ action: 'sc-ensure-style-injector', tabId: targetTabId }, res => {
+        void chrome.runtime.lastError;
+        resolve(res || {});
+      });
+    });
+  }
+
+  async function ensureSiteAccess() {
+    if (!siteAccess.pattern && sitePatternFromUrl(url)) await refreshSiteAccess();
+    if (siteAccess.granted) return true;
+    if (!siteAccess.supported) {
+      updateAccessUI();
+      return false;
+    }
+    $('access-status').textContent = 'Waiting for browser permission...';
+    const granted = await permissionsRequest({ origins: [siteAccess.pattern] });
+    if (!granted) {
+      siteAccess.granted = false;
+      siteAccess.needsPermission = true;
+      siteAccess.message = 'Access was not granted.';
+      updateAccessUI();
+      return false;
+    }
+    siteAccess.granted = true;
+    siteAccess.needsPermission = false;
+    siteAccess.message = 'Access granted.';
+    updateAccessUI();
+    await applyInjectorToCurrentTab();
+    return true;
+  }
+
+  $('access-grant').addEventListener('click', () => { ensureSiteAccess(); });
+  await refreshSiteAccess();
 
   /* ─── Direct storage read (bypass background worker) ─── */
   async function loadAllData() {
@@ -110,6 +244,10 @@
       const name = row.querySelector('.i-name')?.textContent || 'style';
       tog.setAttribute('aria-label', 'Enable ' + name + ' for this site');
       tog.addEventListener('change', async () => {
+        if (!(await ensureSiteAccess())) {
+          tog.checked = !tog.checked;
+          return;
+        }
         const d = row.dataset.domain;
         const nameEl = row.querySelector('.i-name');
         nameEl.classList.toggle('disabled', !tog.checked);
@@ -209,6 +347,10 @@
   });
 
   domainToggle.addEventListener('change', async () => {
+    if (!(await ensureSiteAccess())) {
+      domainToggle.checked = !domainToggle.checked;
+      return;
+    }
     const fresh = await loadAllData();
     // Toggle all styles for this domain
     for (const [pat, data] of Object.entries(fresh)) {
@@ -223,13 +365,16 @@
     $('installed-list').querySelectorAll('.i-name').forEach(n => { n.classList.toggle('disabled', !domainToggle.checked); });
   });
 
-  $('btn-open').addEventListener('click', () => {
+  $('btn-open').addEventListener('click', async () => {
+    if (!(await ensureSiteAccess())) return;
     chrome.runtime.sendMessage({ action: 'sc-open-editor-from-popup' }); window.close();
   });
-  $('btn-css-editor').addEventListener('click', () => {
+  $('btn-css-editor').addEventListener('click', async () => {
+    if (!(await ensureSiteAccess())) return;
     chrome.tabs.create({ url: chrome.runtime.getURL('editor.html#' + domain) }); window.close();
   });
-  readBtn.addEventListener('click', () => {
+  readBtn.addEventListener('click', async () => {
+    if (!(await ensureSiteAccess())) return;
     // If panel is hidden, show it and toggle readability if not active
     if (readPanel.style.display === 'none') {
       readPanel.style.display = '';
@@ -248,7 +393,8 @@
     }
     updateReadAria();
   });
-  grayBtn.addEventListener('click', () => {
+  grayBtn.addEventListener('click', async () => {
+    if (!(await ensureSiteAccess())) return;
     chrome.runtime.sendMessage({ action: 'sc-toggle-grayscale' }, (res) => {
       if (!chrome.runtime.lastError && res) {
         grayBtn.classList.toggle('active', !!res.grayscale);
@@ -262,7 +408,7 @@
   $('btn-export').addEventListener('click', async () => {
     const data = await loadAllData();
     const s = await chrome.storage.local.get('stylecraft_settings');
-    const exp = { data, settings: s.stylecraft_settings || {}, version: '1.20.0', exported: new Date().toISOString() };
+    const exp = { data, settings: s.stylecraft_settings || {}, version: '1.21.0', exported: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(exp, null, 2)], { type: 'application/json' });
     const u = URL.createObjectURL(blob); const a = document.createElement('a');
     a.href = u; a.download = 'stylecraft-export.json'; a.click(); URL.revokeObjectURL(u);
@@ -388,7 +534,8 @@
       const pvBtn = card.querySelector('[data-action="preview"]');
       if (pvBtn) {
         pvBtn.setAttribute('aria-label', 'Preview ' + s.name);
-        pvBtn.addEventListener('click', () => {
+        pvBtn.addEventListener('click', async () => {
+          if (!(await ensureSiteAccess())) return;
           if (pvBtn.classList.contains('active')) {
             // End preview
             chrome.runtime.sendMessage({ action: 'sc-end-preview' });
@@ -428,8 +575,9 @@
     });
   }
 
-  function doInstall(card, style, btn) {
+  async function doInstall(card, style, btn) {
     if (btn.classList.contains('done')) return;
+    if (!(await ensureSiteAccess())) return;
     // End any active preview first
     chrome.runtime.sendMessage({ action: 'sc-end-preview' });
     document.querySelectorAll('.s-btn.preview.active').forEach(b => { b.classList.remove('active'); b.textContent = 'Preview'; });
@@ -515,6 +663,7 @@
 
   qSave.addEventListener('click', async () => {
     if (!domain) return;
+    if (!(await ensureSiteAccess())) return;
     const css = qCode.value;
     let trust;
     try { trust = StyleCraftData.assertCssAllowed(css); }
@@ -541,7 +690,8 @@
     renderInstalled();
   });
 
-  qExpand.addEventListener('click', () => {
+  qExpand.addEventListener('click', async () => {
+    if (!(await ensureSiteAccess())) return;
     chrome.tabs.create({ url: chrome.runtime.getURL('editor.html#' + domain) });
     window.close();
   });

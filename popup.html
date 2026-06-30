@@ -107,6 +107,42 @@ body {
   font-size: 10px; color: var(--sc-green); margin-top: 2px; font-weight: 600;
   text-shadow: 0 0 8px color-mix(in srgb, var(--sc-green) 25%, transparent);
 }
+.access-card {
+  display: none;
+  margin: 8px 14px 4px;
+  padding: 10px;
+  border: 1px solid color-mix(in srgb, var(--sc-yellow) 22%, transparent);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--sc-yellow) 8%, var(--sc-surface));
+  color: var(--sc-subtext);
+}
+.access-title { font-size: 11px; font-weight: 800; color: var(--sc-yellow); margin-bottom: 3px; }
+.access-copy { font-size: 10px; line-height: 1.45; color: var(--sc-subtext); }
+.access-origin {
+  display: inline-block;
+  max-width: 100%;
+  color: var(--sc-accent);
+  font-family: 'SFMono-Regular','Cascadia Code','Consolas','Liberation Mono','Menlo',monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+  white-space: nowrap;
+}
+.access-actions { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.access-grant {
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid color-mix(in srgb, var(--sc-yellow) 28%, transparent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--sc-yellow) 12%, transparent);
+  color: var(--sc-yellow);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 800;
+}
+.access-status { flex: 1; font-size: 9px; color: var(--sc-muted); }
+.access-card.unsupported { border-color: color-mix(in srgb, var(--sc-red) 20%, transparent); background: color-mix(in srgb, var(--sc-red) 7%, var(--sc-surface)); }
+.access-card.unsupported .access-title { color: var(--sc-red); }
 
 .actions {
   padding: 6px 14px; display: flex; flex-wrap: wrap; gap: 4px;
@@ -373,7 +409,7 @@ body {
         <option value="dark">Dark</option>
         <option value="light">Light</option>
       </select>
-      <span class="version">v1.20.0</span>
+      <span class="version">v1.21.0</span>
     </div>
   </div>
   <div class="domain-row">
@@ -387,6 +423,14 @@ body {
     </div>
   </div>
   <div id="style-count" class="style-count"></div>
+</div>
+<div id="access-card" class="access-card">
+  <div class="access-title" id="access-title">Site access required</div>
+  <div class="access-copy" id="access-copy">Grant access to <span id="access-origin" class="access-origin"></span> so styles can run at document start.</div>
+  <div class="access-actions">
+    <button id="access-grant" class="access-grant" type="button">Grant Access</button>
+    <span id="access-status" class="access-status"></span>
+  </div>
 </div>
 <div class="actions">
   <button id="btn-open" class="btn primary">

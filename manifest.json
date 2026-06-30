@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "StyleCraft",
-  "version": "1.20.0",
+  "version": "1.21.0",
   "description": "Customize any website's appearance with custom CSS. Pick elements visually, write CSS directly, or install community styles from UserStyles.world.",
   "homepage_url": "https://github.com/SysAdminDoc/StyleCraft",
   "permissions": [
@@ -11,8 +11,9 @@
     "alarms",
     "tabs"
   ],
-  "host_permissions": [
-    "<all_urls>"
+  "optional_host_permissions": [
+    "http://*/*",
+    "https://*/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -35,7 +36,8 @@
   "content_scripts": [
     {
       "matches": [
-        "<all_urls>"
+        "http://*/*",
+        "https://*/*"
       ],
       "js": [
         "style-match.js",

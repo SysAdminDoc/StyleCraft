@@ -1,6 +1,6 @@
 # Privacy Policy for StyleCraft
 
-**Last updated:** February 14, 2026
+**Last updated:** June 30, 2026
 
 ## Overview
 
@@ -39,7 +39,7 @@ No analytics, tracking, telemetry, or advertising services are used.
 - **tabs:** Detect the active tab's URL to apply site-specific styles
 - **contextMenus:** Provide right-click options to style or hide elements
 - **alarms:** Schedule daily automatic backups of your styles
-- **host_permissions (\<all_urls\>):** Apply user-created CSS styles to any website the user chooses to customize
+- **optional_host_permissions (HTTP/HTTPS sites):** Apply user-created CSS styles only on sites where the user grants access from the popup
 
 ## Third-Party Services
 
