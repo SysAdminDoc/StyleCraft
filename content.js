@@ -1,4 +1,4 @@
-/* StyleCraft v1.13.0 — Content Script / Editor */
+/* StyleCraft v1.20.0 - Content Script / Editor */
 (function () {
   if (window.__stylecraft_editor_loaded) return;
   window.__stylecraft_editor_loaded = true;
@@ -61,6 +61,7 @@
     readability: false, grayscale: false,
     undoStack: [], redoStack: [], basicProps: {},
     pickedElement: null, pickerAncestors: [], pickerDepth: 0, pickerMultiElements: [],
+    pickerReturnFocus: null,
     pickerSpecificity: 0, pickerCandidates: [],
     hiddenElements: []
   };
@@ -150,6 +151,7 @@
       quickPickBtn: $('#sc-quick-pick-btn'), quickPickLabel: $('#sc-quick-pick-label'),
       toastEl: $('#sc-toast'), $$, $
     };
+    installGeneratedAccessibilityLabels();
     wireEvents();
     wireBoxModelEditing();
     loadStyles();
@@ -210,8 +212,26 @@
         if (refs.editorTheme) refs.editorTheme.value = msg.theme;
       }
     });
-    refs.pickBtn.addEventListener('click', togglePicker);
-    refs.quickPickBtn.addEventListener('click', togglePicker);
+    let suppressPickerTriggerClick = false;
+    function onPickerTriggerClick(btn) {
+      if (suppressPickerTriggerClick) {
+        suppressPickerTriggerClick = false;
+        return;
+      }
+      togglePicker(btn);
+    }
+    function onPickerTriggerKey(btn, e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        suppressPickerTriggerClick = true;
+        togglePicker(btn);
+        setTimeout(() => { suppressPickerTriggerClick = false; }, 0);
+      }
+    }
+    refs.pickBtn.addEventListener('click', () => onPickerTriggerClick(refs.pickBtn));
+    refs.quickPickBtn.addEventListener('click', () => onPickerTriggerClick(refs.quickPickBtn));
+    refs.pickBtn.addEventListener('keydown', (e) => onPickerTriggerKey(refs.pickBtn, e));
+    refs.quickPickBtn.addEventListener('keydown', (e) => onPickerTriggerKey(refs.quickPickBtn, e));
     refs.previewBtn.addEventListener('click', togglePreview);
     refs.createBtn.addEventListener('click', createFromSelector);
     refs.undoBtn.addEventListener('click', undo);
@@ -222,7 +242,21 @@
     });
     refs.domainInput.addEventListener('change', () => { state.domain=refs.domainInput.value.trim(); loadStyles(); });
 
-    refs.$$('.sc-main-tab').forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
+    refs.$$('.sc-main-tab').forEach((t, index) => {
+      t.addEventListener('click', () => switchTab(t.dataset.tab));
+      t.addEventListener('keydown', (e) => {
+        const tabs = Array.from(refs.$$('.sc-main-tab'));
+        let nextIndex = null;
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') nextIndex = (index + 1) % tabs.length;
+        else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') nextIndex = (index - 1 + tabs.length) % tabs.length;
+        else if (e.key === 'Home') nextIndex = 0;
+        else if (e.key === 'End') nextIndex = tabs.length - 1;
+        if (nextIndex !== null) {
+          e.preventDefault();
+          switchTab(tabs[nextIndex].dataset.tab, true);
+        }
+      });
+    });
 
     refs.selectorInput.addEventListener('input', onSelectorChange);
     refs.depthSlider.addEventListener('input', () => {
@@ -288,13 +322,51 @@
     });
   }
 
-  function switchTab(tab) {
+  function switchTab(tab, moveFocus = false) {
     state.activeTab = tab;
-    refs.$$('.sc-main-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
-    refs.$$('.sc-tab-panel').forEach(p => p.style.display = p.dataset.panel === tab ? 'flex' : 'none');
+    refs.$$('.sc-main-tab').forEach(t => {
+      const active = t.dataset.tab === tab;
+      t.classList.toggle('active', active);
+      t.setAttribute('aria-selected', active ? 'true' : 'false');
+      t.tabIndex = active ? 0 : -1;
+      if (moveFocus && active) t.focus();
+    });
+    refs.$$('.sc-tab-panel').forEach(p => {
+      const active = p.dataset.panel === tab;
+      p.style.display = active ? 'flex' : 'none';
+      p.hidden = !active;
+    });
     if (tab === 'code') { refs.codeEditor.value = state.customCSS; updateLineNumbers(); }
     if (tab === 'themes') renderThemeList();
     if (tab === 'presets') renderPresets();
+  }
+
+  function labelFromPropControl(control) {
+    const row = control.closest('.sc-prop-row,.sc-range-row');
+    const label = row ? row.querySelector('.sc-prop-label')?.textContent?.trim() : '';
+    const prop = control.dataset.prop || control.id || 'control';
+    return (label || prop).replace(/\s+/g, ' ') + ' ' + prop;
+  }
+
+  function installGeneratedAccessibilityLabels() {
+    const labelledControls = [
+      [refs.codeEditor, 'Custom CSS editor'],
+      [refs.resetBtn, 'Reset custom CSS'],
+      [refs.previewBtn, 'Preview custom CSS'],
+      [refs.hideBtn, 'Hide selected element'],
+      [refs.readBtn, 'Toggle readability mode'],
+      [refs.grayBtn, 'Toggle grayscale mode'],
+      [refs.createBtn, 'Create CSS rule']
+    ];
+    labelledControls.forEach(([el, label]) => { if (el && !el.getAttribute('aria-label')) el.setAttribute('aria-label', label); });
+    [refs.previewBtn, refs.hideBtn, refs.readBtn, refs.grayBtn].forEach(el => { if (el && !el.hasAttribute('aria-pressed')) el.setAttribute('aria-pressed', 'false'); });
+    refs.$$('.sc-prop-input,.sc-color-input,.sc-select-input,.sc-range-input,.sc-theme-textarea').forEach(control => {
+      if (!control.getAttribute('aria-label')) control.setAttribute('aria-label', labelFromPropControl(control));
+    });
+    refs.$$('.sc-bm-cell,.sc-bm-vcell,.sc-bm-content').forEach(cell => {
+      if (!cell.getAttribute('aria-label')) cell.setAttribute('aria-label', 'Box model ' + (cell.dataset.bm || 'value'));
+      cell.setAttribute('tabindex', '0');
+    });
   }
 
   /* ═══════ PRESETS ENGINE ═══════ */
@@ -599,9 +671,24 @@
   function toggleEditor() { state.open ? closeEditor() : openEditor(); }
 
   /* ═══════ PICKER ═══════ */
-  function togglePicker() { state.picking ? stopPicker() : startPicker(); }
-  function startPicker() { state.picking=true; refs.pickBtn.classList.add('active'); refs.quickPickBtn.classList.add('active'); document.addEventListener('mousemove',onPickerMove,true); document.addEventListener('click',onPickerClick,true); document.addEventListener('keydown',onPickerKey,true); document.body.style.cursor='crosshair'; }
-  function stopPicker() { state.picking=false; refs.pickBtn.classList.remove('active'); refs.quickPickBtn.classList.remove('active'); document.removeEventListener('mousemove',onPickerMove,true); document.removeEventListener('click',onPickerClick,true); document.removeEventListener('keydown',onPickerKey,true); document.body.style.cursor=''; highlightOverlay.style.display='none'; selectorLabel.style.display='none'; }
+  function togglePicker(trigger) { state.picking ? stopPicker() : startPicker(trigger); }
+  function startPicker(trigger) {
+    state.picking=true;
+    state.pickerReturnFocus = trigger || shadow.activeElement || refs.pickBtn;
+    refs.pickBtn.classList.add('active'); refs.quickPickBtn.classList.add('active');
+    refs.pickBtn.setAttribute('aria-pressed', 'true');
+    refs.quickPickBtn.setAttribute('aria-pressed', 'true');
+    document.addEventListener('mousemove',onPickerMove,true); document.addEventListener('click',onPickerClick,true); document.addEventListener('keydown',onPickerKey,true); document.body.style.cursor='crosshair';
+  }
+  function stopPicker(restoreFocus = true) {
+    state.picking=false; refs.pickBtn.classList.remove('active'); refs.quickPickBtn.classList.remove('active');
+    refs.pickBtn.setAttribute('aria-pressed', 'false');
+    refs.quickPickBtn.setAttribute('aria-pressed', 'false');
+    document.removeEventListener('mousemove',onPickerMove,true); document.removeEventListener('click',onPickerClick,true); document.removeEventListener('keydown',onPickerKey,true); document.body.style.cursor=''; highlightOverlay.style.display='none'; selectorLabel.style.display='none';
+    const focusTarget = state.pickerReturnFocus;
+    state.pickerReturnFocus = null;
+    if (restoreFocus && focusTarget && typeof focusTarget.focus === 'function' && focusTarget.isConnected) focusTarget.focus();
+  }
 
   function onPickerMove(e) {
     const el=document.elementFromPoint(e.clientX,e.clientY);
@@ -614,15 +701,18 @@
   function onPickerClick(e) {
     e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
     const el=document.elementFromPoint(e.clientX,e.clientY);
-    if(!el||el===panelHost||panelHost.contains(el)||el===persistentHighlight) return;
-    if(e.shiftKey||state.pickerMultiElements.length){
+    selectPickedElement(el, e);
+  }
+  function selectPickedElement(el, eventLike = {}) {
+    if(!el||el===panelHost||panelHost.contains(el)||el===persistentHighlight||el===highlightOverlay||el===selectorLabel||el===document.body||el===document.documentElement) return;
+    if(eventLike.shiftKey||state.pickerMultiElements.length){
       const added=addMultiPickerElement(el);
       rebuildMultiSelection();
       showPersistentHighlight();
       updateHideBtn();
       populateVisualFromElement(getCurrentDepthElement());
       if (state.activeTab !== 'selector') switchTab('selector');
-      if(e.shiftKey){toast(added?'Added '+state.pickerMultiElements.length+' elements':'Already selected');}
+      if(eventLike.shiftKey){toast(added?'Added '+state.pickerMultiElements.length+' elements':'Already selected');}
       else{toast('Selected '+state.pickerMultiElements.length+' elements');stopPicker();}
       return;
     }
@@ -640,7 +730,15 @@
     populateVisualFromElement(getCurrentDepthElement());
     if (state.activeTab !== 'selector') switchTab('selector');
   }
-  function onPickerKey(e) { if(e.key==='Escape'){e.preventDefault();stopPicker();} }
+  function onPickerKey(e) {
+    if(e.key==='Escape'){e.preventDefault();stopPicker();return;}
+    if(e.key==='Enter'||e.key===' '){
+      const el=document.activeElement;
+      if(!el||el===document.body||el===document.documentElement||el===panelHost||panelHost.contains(el)) return;
+      e.preventDefault();
+      selectPickedElement(el,{shiftKey:e.shiftKey});
+    }
+  }
 
   function buildAncestorChain(el) { const c=[]; let cur=el; while(cur&&cur!==document.documentElement&&cur!==document){c.push(cur);cur=cur.parentElement;} return c; }
 
@@ -752,6 +850,7 @@
   function updateHideBtn() {
     const isHidden = state.hiddenElements.some(h=>h.selector===state.selector);
     refs.hideBtn.textContent = isHidden ? 'Unhide' : 'Hide';
+    refs.hideBtn.setAttribute('aria-pressed', isHidden ? 'true' : 'false');
   }
   function renderFilterList() {
     refs.filterList.innerHTML='';
@@ -770,8 +869,8 @@
   function countMatches(sel){try{return document.querySelectorAll(sel).length;}catch{return 0;}}
 
   /* ═══════ PREVIEW ═══════ */
-  function togglePreview(){state.previewing=!state.previewing;refs.previewBtn.classList.toggle('active',state.previewing);if(state.previewing){applyLiveCSS();}else{removeLiveCSS();}}
-  function stopPreview(){if(state.previewing){state.previewing=false;refs.previewBtn.classList.remove('active');removeLiveCSS();}}
+  function togglePreview(){state.previewing=!state.previewing;refs.previewBtn.classList.toggle('active',state.previewing);refs.previewBtn.setAttribute('aria-pressed',state.previewing?'true':'false');if(state.previewing){applyLiveCSS();}else{removeLiveCSS();}}
+  function stopPreview(){if(state.previewing){state.previewing=false;refs.previewBtn.classList.remove('active');refs.previewBtn.setAttribute('aria-pressed','false');removeLiveCSS();}}
 
   /* ═══════ CREATE RULE ═══════ */
   function createFromSelector(){
@@ -1041,6 +1140,7 @@
     if (newSettings) Object.assign(readSettings, newSettings);
     state.readability = !state.readability;
     refs.readBtn.classList.toggle('active', state.readability);
+    refs.readBtn.setAttribute('aria-pressed', state.readability ? 'true' : 'false');
     applyReadability();
     toast(state.readability ? 'Readability ON' : 'Readability OFF');
   }
@@ -1050,7 +1150,7 @@
     if (state.readability) applyReadability();
   }
 
-  function toggleGrayscale(){state.grayscale=!state.grayscale;refs.grayBtn.classList.toggle('active',state.grayscale);let el=document.getElementById('sc-grayscale-style');if(state.grayscale){if(!el){el=document.createElement('style');el.id='sc-grayscale-style';document.head.appendChild(el);}el.textContent='html{filter:grayscale(100%)!important}';}else if(el)el.remove();toast(state.grayscale?'Grayscale ON':'Grayscale OFF');}
+  function toggleGrayscale(){state.grayscale=!state.grayscale;refs.grayBtn.classList.toggle('active',state.grayscale);refs.grayBtn.setAttribute('aria-pressed',state.grayscale?'true':'false');let el=document.getElementById('sc-grayscale-style');if(state.grayscale){if(!el){el=document.createElement('style');el.id='sc-grayscale-style';document.head.appendChild(el);}el.textContent='html{filter:grayscale(100%)!important}';}else if(el)el.remove();toast(state.grayscale?'Grayscale ON':'Grayscale OFF');}
 
   /* ═══════ CODE EDITOR ═══════ */
   function onCodeChange(){pushUndo();state.customCSS=refs.codeEditor.value;applyLiveCSS();parseCSStoBasic(state.customCSS);saveCustomCSS();updateLineNumbers();}
@@ -1081,17 +1181,17 @@
       item.innerHTML = `
         <div class="sc-theme-row">
           <span class="sc-theme-name">${escHTML(t.name||'Theme #'+id)}</span>
-          <label class="sc-toggle sc-theme-toggle"><input type="checkbox" ${t.enabled!==false?'checked':''}/><span class="sc-toggle-sl"></span></label>
+          <label class="sc-toggle sc-theme-toggle"><input type="checkbox" aria-label="Enable theme ${escHTML(t.name||id)}" ${t.enabled!==false?'checked':''}/><span class="sc-toggle-sl"></span></label>
         </div>
         <div class="sc-theme-actions">
-          <button class="sc-theme-btn edit">Edit CSS</button>
-          <button class="sc-theme-btn uninstall">Uninstall</button>
+          <button class="sc-theme-btn edit" aria-label="Edit theme CSS for ${escHTML(t.name||id)}">Edit CSS</button>
+          <button class="sc-theme-btn uninstall" aria-label="Uninstall theme ${escHTML(t.name||id)}">Uninstall</button>
         </div>
         <div class="sc-theme-editor" style="display:none">
-          <textarea class="sc-theme-textarea" spellcheck="false"></textarea>
+          <textarea class="sc-theme-textarea" spellcheck="false" aria-label="Theme CSS for ${escHTML(t.name||id)}"></textarea>
           <div class="sc-theme-editor-actions">
-            <button class="sc-theme-btn save">Save</button>
-            <button class="sc-theme-btn cancel">Cancel</button>
+            <button class="sc-theme-btn save" aria-label="Save theme CSS for ${escHTML(t.name||id)}">Save</button>
+            <button class="sc-theme-btn cancel" aria-label="Cancel theme CSS edit for ${escHTML(t.name||id)}">Cancel</button>
           </div>
         </div>`;
       item.querySelector('input[type="checkbox"]').addEventListener('change', (e) => {
@@ -1294,9 +1394,10 @@
 .sc-util-btn{flex:1;height:26px;border-radius:5px;background:rgba(203,166,247,0.04);border:1px solid rgba(203,166,247,0.08);color:#7f849c;cursor:pointer;font-size:9px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:3px;transition:all 0.15s;}
 .sc-util-btn:hover{background:rgba(203,166,247,0.12);color:#cba6f7;}
 .sc-util-btn.active{background:rgba(203,166,247,0.18);color:#cba6f7;border-color:#cba6f7;}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[role="tab"]:focus-visible{outline:2px solid #cba6f7;outline-offset:2px;box-shadow:0 0 0 4px rgba(203,166,247,0.18);}
 
 .sc-main-tabs{display:flex;border-bottom:1px solid rgba(203,166,247,0.06);flex-shrink:0;}
-.sc-main-tab{flex:1;padding:8px 0;text-align:center;font-size:10px;font-weight:700;cursor:pointer;color:#585b70;border-bottom:2px solid transparent;transition:all 0.15s;letter-spacing:0.5px;text-transform:uppercase;}
+.sc-main-tab{flex:1;padding:8px 0;text-align:center;font-size:10px;font-weight:700;cursor:pointer;color:#585b70;border:0;border-bottom:2px solid transparent;background:transparent;transition:all 0.15s;letter-spacing:0.5px;text-transform:uppercase;font-family:inherit;}
 .sc-main-tab:hover{color:#bac2de;}
 .sc-main-tab.active{color:#cba6f7;border-bottom-color:#cba6f7;}
 .sc-quick-pick{display:flex;align-items:center;gap:8px;padding:5px 14px;background:rgba(17,17,27,0.5);border-bottom:1px solid rgba(203,166,247,0.06);flex-shrink:0;}
@@ -1452,12 +1553,12 @@
 <div class="sc-header-row"><div class="sc-logo">StyleCraft</div><div class="sc-header-actions">
 <button id="sc-undo-btn" class="sc-ibtn" title="Undo"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"/></svg></button>
 <button id="sc-redo-btn" class="sc-ibtn" title="Redo"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 019-9 9 9 0 016 2.3L21 13"/></svg></button>
-<button id="sc-search-btn" class="sc-ibtn" title="Browse Themes"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
-<select id="sc-editor-theme" class="sc-theme-dd" title="Theme"><option value="catppuccin">Catppuccin</option><option value="dark">Dark</option><option value="light">Light</option></select>
-<button id="sc-settings-btn" class="sc-ibtn" title="Settings"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></button>
-<button id="sc-close-btn" class="sc-ibtn" title="Close"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+<button id="sc-search-btn" class="sc-ibtn" title="Browse Themes" aria-label="Browse themes"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
+<select id="sc-editor-theme" class="sc-theme-dd" title="Theme" aria-label="Editor theme"><option value="catppuccin">Catppuccin</option><option value="dark">Dark</option><option value="light">Light</option></select>
+<button id="sc-settings-btn" class="sc-ibtn" title="Settings" aria-label="Open settings"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></button>
+<button id="sc-close-btn" class="sc-ibtn" title="Close" aria-label="Close visual editor"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
 </div></div>
-<div class="sc-domain-row"><input id="sc-domain" class="sc-domain-input" type="text" spellcheck="false"/></div>
+<div class="sc-domain-row"><input id="sc-domain" class="sc-domain-input" type="text" spellcheck="false" aria-label="Style domain"/></div>
 </div>
 
 <div class="sc-utils-row">
@@ -1466,31 +1567,31 @@
 <button id="sc-grayscale-btn" class="sc-util-btn"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10"/></svg>Gray</button>
 </div>
 
-<div class="sc-main-tabs">
-<div class="sc-main-tab active" data-tab="selector">Selector</div>
-<div class="sc-main-tab" data-tab="visual">Visual</div>
-<div class="sc-main-tab" data-tab="presets">Presets</div>
-<div class="sc-main-tab" data-tab="code">Code</div>
-<div class="sc-main-tab" data-tab="themes">Themes</div>
+<div class="sc-main-tabs" role="tablist" aria-label="Editor sections">
+<button type="button" class="sc-main-tab active" id="sc-tab-selector" data-tab="selector" role="tab" aria-selected="true" aria-controls="sc-panel-selector" tabindex="0">Selector</button>
+<button type="button" class="sc-main-tab" id="sc-tab-visual" data-tab="visual" role="tab" aria-selected="false" aria-controls="sc-panel-visual" tabindex="-1">Visual</button>
+<button type="button" class="sc-main-tab" id="sc-tab-presets" data-tab="presets" role="tab" aria-selected="false" aria-controls="sc-panel-presets" tabindex="-1">Presets</button>
+<button type="button" class="sc-main-tab" id="sc-tab-code" data-tab="code" role="tab" aria-selected="false" aria-controls="sc-panel-code" tabindex="-1">Code</button>
+<button type="button" class="sc-main-tab" id="sc-tab-themes" data-tab="themes" role="tab" aria-selected="false" aria-controls="sc-panel-themes" tabindex="-1">Themes</button>
 </div>
 
 <div id="sc-quick-pick" class="sc-quick-pick">
-<button id="sc-quick-pick-btn" class="sc-quick-pick-btn" title="Pick an element"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="M13 13l6 6"/></svg></button>
+<button id="sc-quick-pick-btn" class="sc-quick-pick-btn" title="Pick an element" aria-label="Pick an element" aria-pressed="false"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="M13 13l6 6"/></svg></button>
 <span id="sc-quick-pick-label" class="sc-quick-pick-label">No element selected</span>
 </div>
 
 <div class="sc-tab-content">
 
 <!-- SELECTOR TAB -->
-<div class="sc-tab-panel" data-panel="selector" style="display:flex">
+<div class="sc-tab-panel" id="sc-panel-selector" data-panel="selector" role="tabpanel" aria-labelledby="sc-tab-selector" style="display:flex">
 <div class="sc-selector-section">
 <div class="sc-section-label">Element Selector</div>
-<input id="sc-selector-input" class="sc-selector-input" type="text" placeholder="Pick an element or type a selector..." spellcheck="false"/>
-<div class="sc-slider-row"><span class="sc-slider-label">Depth</span><input id="sc-depth-slider" class="sc-slider" type="range" min="0" max="0" value="0"/><span id="sc-depth-val" class="sc-slider-val">0</span></div>
-<div class="sc-slider-row"><span class="sc-slider-label">Specificity</span><input id="sc-spec-slider" class="sc-slider" type="range" min="0" max="0" value="0"/><span id="sc-spec-val" class="sc-slider-val">0</span></div>
+<input id="sc-selector-input" class="sc-selector-input" type="text" placeholder="Pick an element or type a selector..." spellcheck="false" aria-label="CSS selector"/>
+<div class="sc-slider-row"><span class="sc-slider-label">Depth</span><input id="sc-depth-slider" class="sc-slider" type="range" min="0" max="0" value="0" aria-label="Selector depth"/><span id="sc-depth-val" class="sc-slider-val">0</span></div>
+<div class="sc-slider-row"><span class="sc-slider-label">Specificity</span><input id="sc-spec-slider" class="sc-slider" type="range" min="0" max="0" value="0" aria-label="Selector specificity"/><span id="sc-spec-val" class="sc-slider-val">0</span></div>
 <div class="sc-picker-actions">
-<button id="sc-pick-btn" class="sc-action-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="M13 13l6 6"/></svg>Pick</button>
-<button id="sc-preview-btn" class="sc-action-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Preview</button>
+<button id="sc-pick-btn" class="sc-action-btn" aria-pressed="false"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="M13 13l6 6"/></svg>Pick</button>
+<button id="sc-preview-btn" class="sc-action-btn" aria-pressed="false"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Preview</button>
 <button id="sc-create-btn" class="sc-action-btn primary">Create</button>
 </div>
 <div id="sc-match-count" class="sc-match-count">0 matches</div>
@@ -1499,7 +1600,7 @@
 </div>
 
 <!-- VISUAL TAB -->
-<div class="sc-tab-panel" data-panel="visual" style="display:none">
+<div class="sc-tab-panel" id="sc-panel-visual" data-panel="visual" role="tabpanel" aria-labelledby="sc-tab-visual" style="display:none" hidden>
 
 <!-- Box Model Visualizer -->
 <div class="sc-boxmodel">
@@ -1643,24 +1744,24 @@
 </div>
 
 <!-- PRESETS TAB -->
-<div class="sc-tab-panel" data-panel="presets" style="display:none">
+<div class="sc-tab-panel" id="sc-panel-presets" data-panel="presets" role="tabpanel" aria-labelledby="sc-tab-presets" style="display:none" hidden>
 <div id="sc-presets-content"></div>
 </div>
 
 <!-- CODE TAB -->
-<div class="sc-tab-panel" data-panel="code" style="display:none">
+<div class="sc-tab-panel" id="sc-panel-code" data-panel="code" role="tabpanel" aria-labelledby="sc-tab-code" style="display:none" hidden>
 <div class="sc-code-header">
   <span class="sc-code-label">Custom CSS</span>
   <div class="sc-custom-row">
     <span class="sc-custom-label">Enable</span>
-    <label class="sc-toggle"><input id="sc-custom-toggle" type="checkbox" checked/><span class="sc-toggle-sl"></span></label>
+    <label class="sc-toggle"><input id="sc-custom-toggle" type="checkbox" checked aria-label="Enable custom CSS"/><span class="sc-toggle-sl"></span></label>
   </div>
 </div>
 <div class="sc-code-wrap"><div id="sc-line-numbers"></div><textarea id="sc-code-editor" placeholder="/* Custom CSS — always applied on top of themes */" spellcheck="false"></textarea></div>
 </div>
 
 <!-- THEMES TAB -->
-<div class="sc-tab-panel" data-panel="themes" style="display:none">
+<div class="sc-tab-panel" id="sc-panel-themes" data-panel="themes" role="tabpanel" aria-labelledby="sc-tab-themes" style="display:none" hidden>
 <div id="sc-theme-list"></div>
 </div>
 

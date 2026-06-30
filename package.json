@@ -1,6 +1,6 @@
 {
   "name": "stylecraft",
-  "version": "1.19.0",
+  "version": "1.20.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,7 +9,7 @@
     "build:postcss": "esbuild tools/postcss-entry.js --bundle --format=iife --global-name=StyleCraftPostCSSBundle --outfile=vendor/postcss/stylecraft-postcss.js --legal-comments=none --minify --inject:tools/browser-process-shim.js && node tools/clean-generated.mjs vendor/postcss/stylecraft-postcss.js",
     "build": "npm run build:codemirror && npm run build:sass && npm run build:postcss",
     "build:zip": "node tools/build-extension.mjs",
-    "test": "node tools/validate-extension.mjs && playwright test tests/matcher-smoke.spec.mjs tests/css-trust-smoke.spec.mjs tests/usw-adapter-smoke.spec.mjs tests/usercss-smoke.spec.mjs tests/options-import-smoke.spec.mjs tests/backup-restore-smoke.spec.mjs tests/editor-smoke.spec.mjs tests/content-picker-smoke.spec.mjs --browser=chromium"
+    "test": "node tools/validate-extension.mjs && playwright test tests/matcher-smoke.spec.mjs tests/css-trust-smoke.spec.mjs tests/usw-adapter-smoke.spec.mjs tests/usercss-smoke.spec.mjs tests/options-import-smoke.spec.mjs tests/backup-restore-smoke.spec.mjs tests/editor-smoke.spec.mjs tests/content-picker-smoke.spec.mjs tests/accessibility-smoke.spec.mjs --browser=chromium"
   },
   "devDependencies": {
     "@codemirror/autocomplete": "^6.20.3",

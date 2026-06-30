@@ -1,6 +1,6 @@
 # StyleCraft
 
-![Version](https://img.shields.io/badge/version-1.19.0-blue)
+![Version](https://img.shields.io/badge/version-1.20.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Chrome%20%7C%20Edge%20%7C%20Brave-4285F4?logo=googlechrome&logoColor=white)
 ![Manifest](https://img.shields.io/badge/manifest-v3-orange)
@@ -32,6 +32,7 @@ Chrome, Edge, Brave, Vivaldi, Opera, Arc — any Chromium-based browser supporti
 | Box Model Visualizer | Interactive box model diagram with arrow-key editing |
 | 4-Tab Layout | Selector, Visual, Code, and Themes tabs in the side panel |
 | Live Preview | Changes apply in real-time as you type |
+| Keyboard Accessibility | Options, popup, editor dialogs, CodeMirror escape, and picker selection support labelled keyboard workflows |
 
 ### Full CSS Editor (`editor.html`)
 | Feature | Description |

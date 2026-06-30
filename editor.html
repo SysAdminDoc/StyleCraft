@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <title>StyleCraft Editor</title>
@@ -55,6 +55,8 @@ html.sc-light {
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;overflow:hidden;}
 body{background:var(--sc-bg);color:var(--sc-text);font-family:'SFMono-Regular','Cascadia Code','Consolas','Liberation Mono','Menlo',monospace;}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,.ap-toggle-bar:focus-visible,.lint-toggle:focus-visible{outline:2px solid var(--sc-accent);outline-offset:2px;box-shadow:0 0 0 4px color-mix(in srgb,var(--sc-accent) 18%,transparent);}
+.cm-editor:focus-within{outline:2px solid var(--sc-accent);outline-offset:-2px;}
 ::-webkit-scrollbar{width:8px;height:8px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--sc-scrollbar-thumb);border-radius:4px;}
@@ -293,7 +295,7 @@ body{background:var(--sc-bg);color:var(--sc-text);font-family:'SFMono-Regular','
     <div class="tb-sep"></div>
     <div class="tb-domain" id="tb-domain">No domain selected</div>
     <div class="tb-sep"></div>
-    <select class="sc-source-select" id="source-mode" title="Source syntax">
+    <select class="sc-source-select" id="source-mode" title="Source syntax" aria-label="Source syntax">
       <option value="css">CSS</option>
       <option value="scss">SCSS</option>
       <option value="sass">Sass</option>
@@ -312,7 +314,7 @@ body{background:var(--sc-bg);color:var(--sc-text);font-family:'SFMono-Regular','
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-5.64-11.36L23 10"/></svg>
       Redo
     </button>
-    <button class="tb-btn" id="btn-live" title="Toggle live preview on active tab">
+    <button class="tb-btn" id="btn-live" title="Toggle live preview on active tab" aria-pressed="false">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
       Live
     </button>
@@ -320,7 +322,7 @@ body{background:var(--sc-bg);color:var(--sc-text);font-family:'SFMono-Regular','
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></svg>
       Format
     </button>
-    <select class="sc-template-select" id="template-select" title="Style template">
+    <select class="sc-template-select" id="template-select" title="Style template" aria-label="Style template">
       <option value="">Template...</option>
       <option value="tokens:surface">Tokens: Surface</option>
       <option value="button:primary">Button: Primary</option>
@@ -329,27 +331,27 @@ body{background:var(--sc-bg);color:var(--sc-text);font-family:'SFMono-Regular','
       <option value="form:focus">Form: Focus</option>
     </select>
     <button class="tb-btn" id="btn-insert-template" title="Insert selected style template">Insert</button>
-    <button class="tb-btn" id="btn-ai-assist" title="Draft CSS inline">
+    <button class="tb-btn" id="btn-ai-assist" title="Draft CSS inline" aria-expanded="false" aria-controls="ai-panel">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l1.6 5.1L19 9l-5.4 1.9L12 16l-1.6-5.1L5 9l5.4-1.9L12 2z"/><path d="M19 14l.8 2.5L22 17l-2.2.5L19 20l-.8-2.5L16 17l2.2-.5L19 14z"/></svg>
       AI
     </button>
     <div class="tb-spacer"></div>
-    <select class="sc-theme-select" id="editor-theme">
+    <select class="sc-theme-select" id="editor-theme" aria-label="Editor theme">
       <option value="catppuccin">Catppuccin</option>
       <option value="dark">Dark</option>
       <option value="light">Light</option>
     </select>
-    <button class="tb-btn" id="btn-options" title="Open Options">
+    <button class="tb-btn" id="btn-options" title="Open Options" aria-label="Open Options">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
     </button>
-    <button class="tb-btn" id="btn-help" title="Keyboard Shortcuts">
+    <button class="tb-btn" id="btn-help" title="Keyboard Shortcuts" aria-label="Keyboard shortcuts" aria-expanded="false" aria-controls="shortcuts-overlay">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
     </button>
   </div>
   <!-- Keyboard shortcuts overlay -->
-  <div class="shortcuts-overlay" id="shortcuts-overlay" style="display:none">
+  <div class="shortcuts-overlay" id="shortcuts-overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="shortcuts-title">
     <div class="shortcuts-panel">
-      <div class="shortcuts-title">Keyboard Shortcuts <button class="shortcuts-close" id="shortcuts-close">&times;</button></div>
+      <div class="shortcuts-title" id="shortcuts-title">Keyboard Shortcuts <button class="shortcuts-close" id="shortcuts-close" aria-label="Close keyboard shortcuts">&times;</button></div>
       <div class="shortcuts-grid">
         <div class="sc-key">Ctrl+S</div><div>Save</div>
         <div class="sc-key">Ctrl+Z</div><div>Undo</div>
@@ -372,10 +374,10 @@ body{background:var(--sc-bg);color:var(--sc-text);font-family:'SFMono-Regular','
     <div class="sidebar">
       <div class="sb-header">
         <span>Domains</span>
-        <button class="sb-add" id="btn-add-domain" title="Add domain">+</button>
+        <button class="sb-add" id="btn-add-domain" title="Add domain" aria-label="Add domain">+</button>
       </div>
       <div class="sb-new" id="new-domain-wrap">
-        <input id="new-domain-input" placeholder="e.g. github.com" spellcheck="false"/>
+        <input id="new-domain-input" placeholder="e.g. github.com" spellcheck="false" aria-label="New domain"/>
       </div>
       <div class="sb-list" id="domain-list"></div>
     </div>
@@ -394,8 +396,8 @@ body{background:var(--sc-bg);color:var(--sc-text);font-family:'SFMono-Regular','
         <div class="ap-section ap-meta">
           <div class="ap-label">Metadata</div>
           <div class="ap-meta-row">
-            <input id="meta-name" class="ap-input" placeholder="Style name (optional)" spellcheck="false"/>
-            <input id="meta-desc" class="ap-input ap-input-wide" placeholder="Description (optional)" spellcheck="false"/>
+            <input id="meta-name" class="ap-input" placeholder="Style name (optional)" spellcheck="false" aria-label="Style name"/>
+            <input id="meta-desc" class="ap-input ap-input-wide" placeholder="Description (optional)" spellcheck="false" aria-label="Style description"/>
           </div>
           <div class="ap-meta-info" id="meta-info"></div>
         </div>
@@ -405,21 +407,21 @@ body{background:var(--sc-bg);color:var(--sc-text);font-family:'SFMono-Regular','
         </div>
       </div>
       <!-- Toggle bar -->
-      <div class="ap-toggle-bar" id="ap-toggle-bar" title="Toggle Applies To &amp; Metadata panel">
+      <div class="ap-toggle-bar" id="ap-toggle-bar" title="Toggle Applies To &amp; Metadata panel" role="button" tabindex="0" aria-expanded="false" aria-controls="applies-panel">
         <svg class="ap-toggle-chevron" id="ap-toggle-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
         <span class="ap-toggle-label" id="ap-toggle-label">Applies To: domain</span>
       </div>
       <div class="ai-panel" id="ai-panel">
         <div class="ai-grid">
-          <select class="ai-field" id="ai-provider" title="Provider">
+          <select class="ai-field" id="ai-provider" title="Provider" aria-label="CSS assist provider">
             <option value="local">Local</option>
             <option value="openai">OpenAI-compatible</option>
           </select>
-          <input class="ai-field" id="ai-endpoint" placeholder="Endpoint URL" spellcheck="false" autocomplete="off"/>
-          <input class="ai-field" id="ai-model" placeholder="Model" spellcheck="false" autocomplete="off"/>
-          <input class="ai-field" id="ai-key" type="password" placeholder="API key" spellcheck="false" autocomplete="off"/>
+          <input class="ai-field" id="ai-endpoint" placeholder="Endpoint URL" spellcheck="false" autocomplete="off" aria-label="CSS assist endpoint URL"/>
+          <input class="ai-field" id="ai-model" placeholder="Model" spellcheck="false" autocomplete="off" aria-label="CSS assist model"/>
+          <input class="ai-field" id="ai-key" type="password" placeholder="API key" spellcheck="false" autocomplete="off" aria-label="CSS assist API key"/>
         </div>
-        <textarea class="ai-prompt" id="ai-prompt" placeholder="Describe the CSS change" spellcheck="true"></textarea>
+        <textarea class="ai-prompt" id="ai-prompt" placeholder="Describe the CSS change" spellcheck="true" aria-label="CSS assist prompt"></textarea>
         <div class="ai-actions">
           <button class="tb-btn" id="btn-ai-save" title="Save assist settings">Save Settings</button>
           <button class="tb-btn primary" id="btn-ai-draft" title="Draft CSS inline">Draft Inline</button>
@@ -430,12 +432,12 @@ body{background:var(--sc-bg);color:var(--sc-text);font-family:'SFMono-Regular','
         <div class="gutter" id="gutter"><div class="gutter-inner" id="gutter-inner"></div></div>
         <div class="code-wrap legacy-code-wrap">
           <pre class="code-highlight" id="highlight"></pre>
-          <textarea class="code-input" id="code" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+          <textarea class="code-input" id="code" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" aria-label="CSS source editor"></textarea>
         </div>
         <div class="cm-host" id="codemirror-host"></div>
       </div>
       <!-- Lint panel -->
-      <div class="lint-toggle" id="lint-toggle">
+      <div class="lint-toggle" id="lint-toggle" role="button" tabindex="0" aria-expanded="false" aria-controls="lint-panel">
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         <span id="lint-summary">Lint: checking...</span>
       </div>
@@ -457,17 +459,17 @@ body{background:var(--sc-bg);color:var(--sc-text);font-family:'SFMono-Regular','
 <!-- Find & Replace Bar -->
 <div class="find-bar" id="find-bar">
   <div class="find-row">
-    <input id="find-input" placeholder="Find" spellcheck="false" autocomplete="off"/>
+    <input id="find-input" placeholder="Find" spellcheck="false" autocomplete="off" aria-label="Find text"/>
     <span class="find-count" id="find-count">0 results</span>
-    <button class="find-btn" id="find-prev" title="Previous match">&#x25B2;</button>
-    <button class="find-btn" id="find-next" title="Next match">&#x25BC;</button>
+    <button class="find-btn" id="find-prev" title="Previous match" aria-label="Previous match">&#x25B2;</button>
+    <button class="find-btn" id="find-next" title="Next match" aria-label="Next match">&#x25BC;</button>
     <label class="find-toggle" title="Match case"><input type="checkbox" id="find-case"/><span>Aa</span></label>
     <label class="find-toggle" title="Regex"><input type="checkbox" id="find-regex"/><span>.*</span></label>
-    <button class="find-btn" id="find-replace-toggle" title="Toggle replace">&#x21C5;</button>
-    <button class="find-btn find-close" id="find-close" title="Close">&times;</button>
+    <button class="find-btn" id="find-replace-toggle" title="Toggle replace" aria-label="Toggle replace">&#x21C5;</button>
+    <button class="find-btn find-close" id="find-close" title="Close" aria-label="Close find">&times;</button>
   </div>
   <div class="find-row replace-row" id="replace-row" style="display:none">
-    <input id="replace-input" placeholder="Replace" spellcheck="false" autocomplete="off"/>
+    <input id="replace-input" placeholder="Replace" spellcheck="false" autocomplete="off" aria-label="Replace text"/>
     <button class="find-btn" id="replace-one" title="Replace">Replace</button>
     <button class="find-btn" id="replace-all" title="Replace All">All</button>
   </div>
@@ -475,9 +477,9 @@ body{background:var(--sc-bg);color:var(--sc-text);font-family:'SFMono-Regular','
 
 <!-- Color Picker -->
 <div class="color-picker" id="color-picker" style="display:none">
-  <input type="color" id="color-picker-input"/>
-  <input class="color-picker-text" id="color-picker-text" spellcheck="false"/>
-  <button class="find-btn" id="color-picker-ok">OK</button>
+  <input type="color" id="color-picker-input" aria-label="Selected color"/>
+  <input class="color-picker-text" id="color-picker-text" spellcheck="false" aria-label="Color value"/>
+  <button class="find-btn" id="color-picker-ok" aria-label="Apply color">OK</button>
 </div>
 
 <script src="theme.js"></script>

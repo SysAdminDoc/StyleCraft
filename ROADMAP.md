@@ -81,13 +81,6 @@ Roadmap for StyleCraft, the Chrome MV3 CSS style manager with visual element pic
 
 ## Research-Driven Additions
 
-- [ ] P1 - Add options/popup accessibility and focus coverage
-  Why: The extension uses custom tabs, icon buttons, inline SVG buttons, CodeMirror, and Shadow DOM controls, but tests do not verify accessible names, tab order, or focus recovery.
-  Evidence: WAI-ARIA APG tabs/focus guidance; WebAIM form-control guidance; CodeMirror accessibility docs; `popup.html`, `options.html`, `editor.html`, `content.js`.
-  Touches: `popup.html`, `options.html`, `editor.html`, `content.js`, `tests/`
-  Acceptance: Playwright verifies labels/names, tablist semantics, visible focus, dialog/panel focus return, CodeMirror escape path, and picker operation without pointer input.
-  Complexity: M
-
 - [ ] P1 - Minimize broad host-permission trust friction
   Why: `<all_urls>` and all-frame document-start injection support anti-FOUC but create review and trust friction; Chrome supports optional runtime permissions for clearer user intent.
   Evidence: `manifest.json`; Chrome permission and `chrome.permissions` docs; Chrome Web Store policy guidance.

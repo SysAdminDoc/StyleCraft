@@ -1,4 +1,4 @@
-/* StyleCraft v1.19.0 - Popup */
+/* StyleCraft v1.20.0 - Popup */
 (async function() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const url = tab?.url || '';
@@ -93,6 +93,8 @@
 
     // Wire edit buttons
     list.querySelectorAll('.i-edit').forEach(btn => {
+      const label = btn.dataset.editType === 'theme' ? 'Edit installed theme in CSS Editor' : 'Edit custom CSS in CSS Editor';
+      btn.setAttribute('aria-label', label);
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const d = btn.dataset.editDomain;
@@ -105,6 +107,8 @@
     // Wire toggles
     list.querySelectorAll('.i-row').forEach(row => {
       const tog = row.querySelector('.i-toggle');
+      const name = row.querySelector('.i-name')?.textContent || 'style';
+      tog.setAttribute('aria-label', 'Enable ' + name + ' for this site');
       tog.addEventListener('change', async () => {
         const d = row.dataset.domain;
         const nameEl = row.querySelector('.i-name');
@@ -137,11 +141,16 @@
       readSettings = Object.assign(readSettings, res.readSettings);
       syncReadUI();
     }
+    updateReadAria();
   });
 
   function syncReadUI() {
     // Sync UI elements to readSettings
-    document.querySelectorAll('.read-theme-btn').forEach(b => b.classList.toggle('active', b.dataset.rtheme === readSettings.theme));
+    document.querySelectorAll('.read-theme-btn').forEach(b => {
+      const active = b.dataset.rtheme === readSettings.theme;
+      b.classList.toggle('active', active);
+      b.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
     const fontSel = $('read-font');
     if (fontSel) fontSel.value = readSettings.fontFamily;
     const sizeSlider = $('read-size');
@@ -152,6 +161,13 @@
     if (wSlider) { wSlider.value = readSettings.maxWidth; $('read-w-val').textContent = readSettings.maxWidth; }
   }
 
+  function updateReadAria() {
+    const panelOpen = readPanel.style.display !== 'none';
+    readBtn.setAttribute('aria-expanded', panelOpen ? 'true' : 'false');
+    readBtn.setAttribute('aria-pressed', readActive ? 'true' : 'false');
+    grayBtn.setAttribute('aria-pressed', grayBtn.classList.contains('active') ? 'true' : 'false');
+  }
+
   function sendReadUpdate() {
     if (targetTabId) chrome.tabs.sendMessage(targetTabId, { action: 'sc-update-read-settings', readSettings }).catch(() => {});
   }
@@ -160,8 +176,7 @@
   document.querySelectorAll('.read-theme-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       readSettings.theme = btn.dataset.rtheme;
-      document.querySelectorAll('.read-theme-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+      syncReadUI();
       if (readActive) sendReadUpdate();
     });
   });
@@ -221,20 +236,24 @@
       syncReadUI();
       if (!readActive) {
         chrome.runtime.sendMessage({ action: 'sc-toggle-readability', readSettings }, (res) => {
-          if (!chrome.runtime.lastError && res) { readActive = !!res.readability; readBtn.classList.toggle('active', readActive); }
+          if (!chrome.runtime.lastError && res) { readActive = !!res.readability; readBtn.classList.toggle('active', readActive); updateReadAria(); }
         });
       }
     } else {
       // Toggle readability off and hide panel
       chrome.runtime.sendMessage({ action: 'sc-toggle-readability', readSettings }, (res) => {
-        if (!chrome.runtime.lastError && res) { readActive = !!res.readability; readBtn.classList.toggle('active', readActive); }
+        if (!chrome.runtime.lastError && res) { readActive = !!res.readability; readBtn.classList.toggle('active', readActive); updateReadAria(); }
       });
       readPanel.style.display = 'none';
     }
+    updateReadAria();
   });
   grayBtn.addEventListener('click', () => {
     chrome.runtime.sendMessage({ action: 'sc-toggle-grayscale' }, (res) => {
-      if (!chrome.runtime.lastError && res) grayBtn.classList.toggle('active', !!res.grayscale);
+      if (!chrome.runtime.lastError && res) {
+        grayBtn.classList.toggle('active', !!res.grayscale);
+        updateReadAria();
+      }
     });
   });
   $('btn-options').addEventListener('click', () => {
@@ -243,7 +262,7 @@
   $('btn-export').addEventListener('click', async () => {
     const data = await loadAllData();
     const s = await chrome.storage.local.get('stylecraft_settings');
-    const exp = { data, settings: s.stylecraft_settings || {}, version: '1.19.0', exported: new Date().toISOString() };
+    const exp = { data, settings: s.stylecraft_settings || {}, version: '1.20.0', exported: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(exp, null, 2)], { type: 'application/json' });
     const u = URL.createObjectURL(blob); const a = document.createElement('a');
     a.href = u; a.download = 'stylecraft-export.json'; a.click(); URL.revokeObjectURL(u);
@@ -368,6 +387,7 @@
       // Preview button: toggle live CSS on the page
       const pvBtn = card.querySelector('[data-action="preview"]');
       if (pvBtn) {
+        pvBtn.setAttribute('aria-label', 'Preview ' + s.name);
         pvBtn.addEventListener('click', () => {
           if (pvBtn.classList.contains('active')) {
             // End preview
@@ -396,10 +416,12 @@
 
       // Install button
       const installBtn = card.querySelector('[data-action="install"]');
+      installBtn.setAttribute('aria-label', (isInstalled ? 'Installed ' : 'Install ') + s.name);
       installBtn.addEventListener('click', () => doInstall(card, s, installBtn));
 
       // Uninstall button
       const uninstallBtn = card.querySelector('[data-action="uninstall"]');
+      uninstallBtn.setAttribute('aria-label', 'Uninstall ' + s.name);
       uninstallBtn.addEventListener('click', () => doUninstall(card, s, installBtn, uninstallBtn));
 
       searchResults.appendChild(card);
@@ -477,6 +499,7 @@
     const open = qBody.style.display !== 'none';
     qBody.style.display = open ? 'none' : 'block';
     qToggle.classList.toggle('open', !open);
+    qToggle.setAttribute('aria-expanded', !open ? 'true' : 'false');
     if (!open) qCode.focus();
   });
 

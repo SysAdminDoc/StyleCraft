@@ -1,4 +1,4 @@
-/* StyleCraft v1.19.0 - Options Page */
+/* StyleCraft v1.20.0 - Options Page */
 (async function(){
   const $=id=>document.getElementById(id);
   const send=msg=>new Promise(r=>chrome.runtime.sendMessage(msg,r));
@@ -75,7 +75,7 @@
   function exportSingleDomain(domain) {
     const data = allData[domain];
     if (!data) { toast('No data for ' + domain); return; }
-    const exp = { domain, data, version: '1.19.0', exported: new Date().toISOString() };
+    const exp = { domain, data, version: '1.20.0', exported: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(exp, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -92,14 +92,47 @@
   }
 
   /* Tabs */
-  document.querySelectorAll('.tab-btn').forEach(btn=>{
-    btn.addEventListener('click',()=>{
-      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
-      btn.classList.add('active');
-      $('tab-'+btn.dataset.tab).classList.add('active');
+  const tabButtons = Array.from(document.querySelectorAll('.tab-btn'));
+  function activateTab(tabName, moveFocus = false) {
+    const selected = tabButtons.find(btn => btn.dataset.tab === tabName);
+    if (!selected) return;
+    tabButtons.forEach(btn => {
+      const active = btn === selected;
+      const panel = $('tab-' + btn.dataset.tab);
+      btn.classList.toggle('active', active);
+      btn.setAttribute('aria-selected', active ? 'true' : 'false');
+      btn.tabIndex = active ? 0 : -1;
+      if (panel) {
+        panel.classList.toggle('active', active);
+        panel.hidden = !active;
+      }
+    });
+    if (moveFocus) selected.focus();
+  }
+  tabButtons.forEach((btn, index) => {
+    btn.addEventListener('click', () => activateTab(btn.dataset.tab));
+    btn.addEventListener('keydown', (e) => {
+      const keyMap = {
+        ArrowRight: 1,
+        ArrowDown: 1,
+        ArrowLeft: -1,
+        ArrowUp: -1
+      };
+      let nextIndex = null;
+      if (Object.prototype.hasOwnProperty.call(keyMap, e.key)) {
+        nextIndex = (index + keyMap[e.key] + tabButtons.length) % tabButtons.length;
+      } else if (e.key === 'Home') {
+        nextIndex = 0;
+      } else if (e.key === 'End') {
+        nextIndex = tabButtons.length - 1;
+      }
+      if (nextIndex !== null) {
+        e.preventDefault();
+        activateTab(tabButtons[nextIndex].dataset.tab, true);
+      }
     });
   });
+  activateTab('styles');
 
   /* Load */
   let allData = await loadAllData();
@@ -198,7 +231,17 @@
   function wireStyleCards() {
     $('styles-list').querySelectorAll('.card').forEach(card => {
       const domain = card.dataset.domain;
-      card.querySelector('.style-check').addEventListener('change', e => {
+      const styleCheck = card.querySelector('.style-check');
+      const customToggle = card.querySelector('.toggle-custom');
+      const cssEditor = card.querySelector('.css-ed');
+      styleCheck.setAttribute('aria-label', 'Select custom CSS for ' + domain);
+      customToggle.setAttribute('aria-label', 'Enable custom CSS for ' + domain);
+      if (cssEditor) cssEditor.setAttribute('aria-label', 'Custom CSS for ' + domain);
+      card.querySelector('.export-single-btn').setAttribute('aria-label', 'Export custom CSS for ' + domain);
+      card.querySelector('.clone-btn').setAttribute('aria-label', 'Clone custom CSS for ' + domain);
+      card.querySelector('.edit-btn').setAttribute('aria-label', 'Edit custom CSS for ' + domain);
+      card.querySelector('.delete-btn').setAttribute('aria-label', 'Delete custom CSS for ' + domain);
+      styleCheck.addEventListener('change', e => {
         if (e.target.checked) stylesSelected.add(domain); else stylesSelected.delete(domain);
         updateStylesBulkCount();
       });
@@ -341,7 +384,19 @@
   function wireThemeCards() {
     $('themes-list').querySelectorAll('.card').forEach(card => {
       const domain = card.dataset.domain, id = card.dataset.id, key = card.dataset.key;
-      card.querySelector('.theme-check').addEventListener('change', e => {
+      const themeName = (allData[domain] && allData[domain].themes && allData[domain].themes[id] && allData[domain].themes[id].name) || id;
+      const themeCheck = card.querySelector('.theme-check');
+      const themeToggle = card.querySelector('.toggle-theme');
+      const themeEditor = card.querySelector('.theme-ed');
+      themeCheck.setAttribute('aria-label', 'Select theme ' + themeName + ' for ' + domain);
+      themeToggle.setAttribute('aria-label', 'Enable theme ' + themeName + ' for ' + domain);
+      if (themeEditor) themeEditor.setAttribute('aria-label', 'Theme CSS for ' + themeName);
+      card.querySelector('.clone-btn').setAttribute('aria-label', 'Clone theme ' + themeName + ' for ' + domain);
+      card.querySelector('.edit-btn').setAttribute('aria-label', 'Edit theme ' + themeName + ' for ' + domain);
+      card.querySelector('.delete-btn').setAttribute('aria-label', 'Uninstall theme ' + themeName + ' for ' + domain);
+      const updateBtn = card.querySelector('.update-btn');
+      if (updateBtn) updateBtn.setAttribute('aria-label', 'Apply update for theme ' + themeName);
+      themeCheck.addEventListener('change', e => {
         if (e.target.checked) themesSelected.add(key); else themesSelected.delete(key);
         updateThemesBulkCount();
       });
@@ -622,24 +677,17 @@
   /* ─── TAB SELECTION VIA MESSAGE (from editor nav buttons) ─── */
   chrome.runtime.onMessage.addListener((msg)=>{
     if(msg.action==='sc-select-options-tab'&&msg.tab){
-      const tabName=msg.tab;
-      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
-      const btn=document.querySelector('.tab-btn[data-tab="'+tabName+'"]');
-      if(btn)btn.classList.add('active');
-      const content=$('tab-'+tabName);
-      if(content)content.classList.add('active');
+      activateTab(msg.tab);
     }
   });
   const hashTab=location.hash.replace('#','');
   if(hashTab){
-    const btn=document.querySelector('.tab-btn[data-tab="'+hashTab+'"]');
-    if(btn)btn.click();
+    activateTab(hashTab);
   }
 
   /* ─── IMPORT/EXPORT ─── */
   $('btn-export').addEventListener('click',()=>{
-  const exp={data:allData,settings,version:'1.19.0',exported:new Date().toISOString()};
+  const exp={data:allData,settings,version:'1.20.0',exported:new Date().toISOString()};
     const blob=new Blob([JSON.stringify(exp,null,2)],{type:'application/json'});
     const url=URL.createObjectURL(blob);const a=document.createElement('a');
     a.href=url;a.download='stylecraft-export-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(url);
@@ -929,14 +977,28 @@
     preview.textContent = parts.join('; ');
   }
 
+  function showRestorePanel() {
+    const panel = $('backup-restore-panel');
+    panel.hidden = false;
+    panel.classList.add('show');
+    $('backup-select').focus();
+  }
+
+  function closeRestorePanel(returnFocus = true) {
+    const panel = $('backup-restore-panel');
+    panel.classList.remove('show');
+    panel.hidden = true;
+    if (returnFocus) $('btn-restore-backup').focus();
+  }
+
   $('btn-restore-backup').addEventListener('click', async () => {
     const result = await chrome.storage.local.get(['sc_backups', 'sc_backup_status']);
     renderBackupStatus(result.sc_backups || [], result.sc_backup_status || null);
     if (!cachedBackups.length) { toast('No backups available'); return; }
-    $('backup-restore-panel').classList.add('show');
+    showRestorePanel();
   });
   $('backup-select').addEventListener('change', renderBackupPreview);
-  $('backup-restore-cancel').addEventListener('click', () => $('backup-restore-panel').classList.remove('show'));
+  $('backup-restore-cancel').addEventListener('click', () => closeRestorePanel());
   $('backup-restore-apply').addEventListener('click', async () => {
     const idx = parseInt($('backup-select').value, 10);
     const backup = cachedBackups[idx];
@@ -961,7 +1023,7 @@
     }
     notifyTabs('*');
     renderStyles(); renderThemes(); updateStats(); updateBrowseInstalled();
-    $('backup-restore-panel').classList.remove('show');
+    closeRestorePanel();
     refreshBackupStatus();
     showUndoToast('Restored backup from ' + new Date(backup.timestamp).toLocaleString());
   });

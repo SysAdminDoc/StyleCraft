@@ -12,6 +12,7 @@ html.sc-light{--sc-bg:#eff1f5;--sc-surface:rgba(255,255,255,0.7);--sc-overlay:#d
 ::-webkit-scrollbar{width:8px;}::-webkit-scrollbar-track{background:rgba(17,17,27,0.3);}::-webkit-scrollbar-thumb{background:rgba(203,166,247,0.2);border-radius:4px;}::-webkit-scrollbar-thumb:hover{background:rgba(203,166,247,0.35);}
 body{background:var(--sc-bg);color:var(--sc-text);font-family:system-ui,-apple-system,sans-serif;font-size:14px;min-height:100vh;}
 a{color:var(--sc-blue);text-decoration:none;}a:hover{text-decoration:underline;}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[role="tab"]:focus-visible{outline:2px solid var(--sc-accent);outline-offset:2px;box-shadow:0 0 0 4px color-mix(in srgb,var(--sc-accent) 18%,transparent);}
 
 .header{padding:24px 40px;background:linear-gradient(180deg,var(--sc-grad-start) 0%,rgba(0,0,0,0) 100%);border-bottom:1px solid var(--sc-border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;backdrop-filter:blur(20px);}
 .header-left{display:flex;align-items:center;gap:14px;}
@@ -28,7 +29,7 @@ a{color:var(--sc-blue);text-decoration:none;}a:hover{text-decoration:underline;}
 .tab-btn{padding:10px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--sc-muted);font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;}
 .tab-btn:hover{color:var(--sc-subtext);}
 .tab-btn.active{color:var(--sc-accent);border-bottom-color:var(--sc-accent);}
-.tab-content{display:none;}.tab-content.active{display:block;}
+.tab-content{display:none;}.tab-content.active{display:block;}.tab-content[hidden]{display:none!important;}
 
 /* Stats */
 .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;}
@@ -142,7 +143,7 @@ a{color:var(--sc-blue);text-decoration:none;}a:hover{text-decoration:underline;}
 <div class="header">
   <div class="header-left">
     <div class="header-logo">StyleCraft</div>
-    <div class="header-sub">v1.19.0 &middot; Options</div>
+    <div class="header-sub">v1.20.0 &middot; Options</div>
   </div>
   <div class="header-actions">
     <button class="h-btn" id="btn-import" title="Import from StyleCraft, Stylus, or Stylebot"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Import</button>
@@ -159,21 +160,21 @@ a{color:var(--sc-blue);text-decoration:none;}a:hover{text-decoration:underline;}
     <div class="stat-card"><div class="stat-val" id="stat-css">0</div><div class="stat-label">Lines of Custom CSS</div></div>
   </div>
 
-  <div class="tabs">
-    <button class="tab-btn active" data-tab="styles">Custom CSS</button>
-    <button class="tab-btn" data-tab="themes">Installed Themes</button>
-    <button class="tab-btn" data-tab="browse">Browse Themes</button>
-    <button class="tab-btn" data-tab="global">Global CSS</button>
-    <button class="tab-btn" data-tab="shortcuts">Shortcuts</button>
-    <button class="tab-btn" data-tab="settings">Settings</button>
+  <div class="tabs" role="tablist" aria-label="Options sections">
+    <button class="tab-btn active" id="tab-btn-styles" data-tab="styles" role="tab" aria-selected="true" aria-controls="tab-styles" tabindex="0">Custom CSS</button>
+    <button class="tab-btn" id="tab-btn-themes" data-tab="themes" role="tab" aria-selected="false" aria-controls="tab-themes" tabindex="-1">Installed Themes</button>
+    <button class="tab-btn" id="tab-btn-browse" data-tab="browse" role="tab" aria-selected="false" aria-controls="tab-browse" tabindex="-1">Browse Themes</button>
+    <button class="tab-btn" id="tab-btn-global" data-tab="global" role="tab" aria-selected="false" aria-controls="tab-global" tabindex="-1">Global CSS</button>
+    <button class="tab-btn" id="tab-btn-shortcuts" data-tab="shortcuts" role="tab" aria-selected="false" aria-controls="tab-shortcuts" tabindex="-1">Shortcuts</button>
+    <button class="tab-btn" id="tab-btn-settings" data-tab="settings" role="tab" aria-selected="false" aria-controls="tab-settings" tabindex="-1">Settings</button>
   </div>
 
   <!-- CUSTOM CSS -->
-  <div class="tab-content active" id="tab-styles">
-    <div class="search-row"><input class="search-input" id="search-styles" type="text" placeholder="Search domains..." spellcheck="false"/></div>
+  <div class="tab-content active" id="tab-styles" role="tabpanel" aria-labelledby="tab-btn-styles">
+    <div class="search-row"><input class="search-input" id="search-styles" type="text" placeholder="Search domains..." spellcheck="false" aria-label="Search custom CSS domains"/></div>
     <div class="mgmt-bar" id="styles-mgmt">
       <div class="bulk-bar">
-        <input type="checkbox" class="bulk-check" id="styles-select-all" title="Select all"/>
+        <input type="checkbox" class="bulk-check" id="styles-select-all" title="Select all" aria-label="Select all custom CSS styles"/>
         <span class="bulk-label">Select</span>
         <span class="bulk-count" id="styles-sel-count">0</span>
       </div>
@@ -182,14 +183,14 @@ a{color:var(--sc-blue);text-decoration:none;}a:hover{text-decoration:underline;}
       <button class="bulk-btn" id="styles-bulk-disable">Disable</button>
       <button class="bulk-btn danger" id="styles-bulk-delete">Delete</button>
       <div class="mgmt-sep"></div>
-      <select id="styles-sort">
+      <select id="styles-sort" aria-label="Sort custom CSS styles">
         <option value="domain-asc">Domain A-Z</option>
         <option value="domain-desc">Domain Z-A</option>
         <option value="lines-desc">Most Lines</option>
         <option value="lines-asc">Fewest Lines</option>
         <option value="modified-desc">Recently Modified</option>
       </select>
-      <select id="styles-filter">
+      <select id="styles-filter" aria-label="Filter custom CSS styles">
         <option value="all">All</option>
         <option value="enabled">Enabled</option>
         <option value="disabled">Disabled</option>
@@ -199,11 +200,11 @@ a{color:var(--sc-blue);text-decoration:none;}a:hover{text-decoration:underline;}
   </div>
 
   <!-- THEMES -->
-  <div class="tab-content" id="tab-themes">
-    <div class="search-row"><input class="search-input" id="search-themes" type="text" placeholder="Search installed themes..." spellcheck="false"/></div>
+  <div class="tab-content" id="tab-themes" role="tabpanel" aria-labelledby="tab-btn-themes" hidden>
+    <div class="search-row"><input class="search-input" id="search-themes" type="text" placeholder="Search installed themes..." spellcheck="false" aria-label="Search installed themes"/></div>
     <div class="mgmt-bar" id="themes-mgmt">
       <div class="bulk-bar">
-        <input type="checkbox" class="bulk-check" id="themes-select-all" title="Select all"/>
+        <input type="checkbox" class="bulk-check" id="themes-select-all" title="Select all" aria-label="Select all installed themes"/>
         <span class="bulk-label">Select</span>
         <span class="bulk-count" id="themes-sel-count">0</span>
       </div>
@@ -212,14 +213,14 @@ a{color:var(--sc-blue);text-decoration:none;}a:hover{text-decoration:underline;}
       <button class="bulk-btn" id="themes-bulk-disable">Disable</button>
       <button class="bulk-btn danger" id="themes-bulk-delete">Delete</button>
       <div class="mgmt-sep"></div>
-      <select id="themes-sort">
+      <select id="themes-sort" aria-label="Sort installed themes">
         <option value="name-asc">Name A-Z</option>
         <option value="name-desc">Name Z-A</option>
         <option value="domain-asc">Domain A-Z</option>
         <option value="lines-desc">Most Lines</option>
         <option value="installed-desc">Recently Installed</option>
       </select>
-      <select id="themes-filter">
+      <select id="themes-filter" aria-label="Filter installed themes">
         <option value="all">All</option>
         <option value="enabled">Enabled</option>
         <option value="disabled">Disabled</option>
@@ -232,10 +233,10 @@ a{color:var(--sc-blue);text-decoration:none;}a:hover{text-decoration:underline;}
   </div>
 
   <!-- BROWSE THEMES -->
-  <div class="tab-content" id="tab-browse">
+  <div class="tab-content" id="tab-browse" role="tabpanel" aria-labelledby="tab-btn-browse" hidden>
     <p style="font-size:12px;color:var(--sc-muted);margin-bottom:12px">Search UserStyles.world for themes to install. Enter a domain name or keyword.</p>
     <div class="search-row" style="display:flex;gap:8px">
-      <input class="search-input" id="browse-query" type="text" placeholder="Search UserStyles.world... (e.g. github, youtube dark)" spellcheck="false" style="flex:1"/>
+      <input class="search-input" id="browse-query" type="text" placeholder="Search UserStyles.world... (e.g. github, youtube dark)" spellcheck="false" style="flex:1" aria-label="Search UserStyles.world themes"/>
       <button class="save-btn" id="browse-go" style="height:40px;padding:0 20px">Search</button>
     </div>
     <div id="browse-status" style="text-align:center;padding:12px;color:var(--sc-muted);font-size:12px;display:none"></div>
@@ -243,14 +244,14 @@ a{color:var(--sc-blue);text-decoration:none;}a:hover{text-decoration:underline;}
   </div>
 
   <!-- GLOBAL CSS -->
-  <div class="tab-content" id="tab-global">
+  <div class="tab-content" id="tab-global" role="tabpanel" aria-labelledby="tab-btn-global" hidden>
     <p style="font-size:12px;color:var(--sc-muted);margin-bottom:12px">CSS applied to every page you visit. Useful for scrollbar styling, font overrides, etc.</p>
-    <textarea class="editor-area" id="global-css" placeholder="/* CSS applied to ALL websites */&#10;&#10;/* Example: dark scrollbars everywhere */&#10;::-webkit-scrollbar { width: 8px; }&#10;::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }" spellcheck="false" style="min-height:300px"></textarea>
+    <textarea class="editor-area" id="global-css" placeholder="/* CSS applied to ALL websites */&#10;&#10;/* Example: dark scrollbars everywhere */&#10;::-webkit-scrollbar { width: 8px; }&#10;::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }" spellcheck="false" style="min-height:300px" aria-label="Global CSS editor"></textarea>
     <div class="editor-row"><button class="save-btn" id="save-global">Save Global CSS</button></div>
   </div>
 
   <!-- SHORTCUTS -->
-  <div class="tab-content" id="tab-shortcuts">
+  <div class="tab-content" id="tab-shortcuts" role="tabpanel" aria-labelledby="tab-btn-shortcuts" hidden>
     <div class="setting-group">
       <div class="setting-group-title">Keyboard Shortcuts</div>
       <div class="shortcut-row"><span class="shortcut-label">Open Popup</span><span class="shortcut-key">Alt + S</span></div>
@@ -271,54 +272,54 @@ a{color:var(--sc-blue);text-decoration:none;}a:hover{text-decoration:underline;}
   </div>
 
   <!-- SETTINGS -->
-  <div class="tab-content" id="tab-settings">
+  <div class="tab-content" id="tab-settings" role="tabpanel" aria-labelledby="tab-btn-settings" hidden>
     <div class="setting-group">
       <div class="setting-group-title">Editor</div>
       <div class="setting-row">
         <div><div class="setting-label">Editor Width</div><div class="setting-desc">Side panel width in pixels (default: 420)</div></div>
-        <input class="setting-input" id="set-panel-width" type="number" min="300" max="800" value="420"/>
+        <input class="setting-input" id="set-panel-width" type="number" min="300" max="800" value="420" aria-label="Editor width in pixels"/>
       </div>
       <div class="setting-row">
         <div><div class="setting-label">Code Font Size</div><div class="setting-desc">Font size for CSS code editors (px)</div></div>
-        <input class="setting-input" id="set-font-size" type="number" min="10" max="24" value="12"/>
+        <input class="setting-input" id="set-font-size" type="number" min="10" max="24" value="12" aria-label="Code font size in pixels"/>
       </div>
       <div class="setting-row">
         <div><div class="setting-label">Auto-open Picker</div><div class="setting-desc">Automatically start element picker when editor opens</div></div>
-        <label class="toggle"><input type="checkbox" id="set-auto-picker" checked/><span class="toggle-sl"></span></label>
+        <label class="toggle"><input type="checkbox" id="set-auto-picker" checked aria-label="Auto-open picker"/><span class="toggle-sl"></span></label>
       </div>
       <div class="setting-row">
         <div><div class="setting-label">Default Tab</div><div class="setting-desc">Tab shown when editor opens</div></div>
-        <select class="setting-select" id="set-default-tab"><option value="selector">Selector</option><option value="visual">Visual</option><option value="code">Code</option><option value="themes">Themes</option></select>
+        <select class="setting-select" id="set-default-tab" aria-label="Default editor tab"><option value="selector">Selector</option><option value="visual">Visual</option><option value="code">Code</option><option value="themes">Themes</option></select>
       </div>
     </div>
     <div class="setting-group">
       <div class="setting-group-title">Injection</div>
       <div class="setting-row">
         <div><div class="setting-label">Custom CSS on Top</div><div class="setting-desc">Custom CSS always layers above installed themes (recommended)</div></div>
-        <label class="toggle"><input type="checkbox" id="set-custom-on-top" checked/><span class="toggle-sl"></span></label>
+        <label class="toggle"><input type="checkbox" id="set-custom-on-top" checked aria-label="Custom CSS on top"/><span class="toggle-sl"></span></label>
       </div>
       <div class="setting-row">
         <div><div class="setting-label">Add !important</div><div class="setting-desc">Append !important to all custom CSS declarations for higher specificity</div></div>
-        <label class="toggle"><input type="checkbox" id="set-important"/><span class="toggle-sl"></span></label>
+        <label class="toggle"><input type="checkbox" id="set-important" aria-label="Add important to custom CSS"/><span class="toggle-sl"></span></label>
       </div>
       <div class="setting-row">
         <div><div class="setting-label">Live Preview</div><div class="setting-desc">Apply CSS changes in real-time as you type</div></div>
-        <label class="toggle"><input type="checkbox" id="set-live-preview" checked/><span class="toggle-sl"></span></label>
+        <label class="toggle"><input type="checkbox" id="set-live-preview" checked aria-label="Live preview"/><span class="toggle-sl"></span></label>
       </div>
     </div>
     <div class="setting-group">
       <div class="setting-group-title">Appearance</div>
       <div class="setting-row">
         <div><div class="setting-label">UI Theme</div><div class="setting-desc">Visual theme for all StyleCraft interfaces</div></div>
-        <select class="setting-select sc-theme-select" id="set-theme"><option value="catppuccin">Catppuccin (Default)</option><option value="dark">Dark (OLED)</option><option value="light">Light</option></select>
+        <select class="setting-select sc-theme-select" id="set-theme" aria-label="Options UI theme"><option value="catppuccin">Catppuccin (Default)</option><option value="dark">Dark (OLED)</option><option value="light">Light</option></select>
       </div>
       <div class="setting-row">
         <div><div class="setting-label">Accent Color</div><div class="setting-desc">Primary accent color for the editor UI</div></div>
-        <input class="setting-input" id="set-accent" type="color" value="#cba6f7" style="width:48px;height:32px;padding:2px;cursor:pointer;"/>
+        <input class="setting-input" id="set-accent" type="color" value="#cba6f7" style="width:48px;height:32px;padding:2px;cursor:pointer;" aria-label="Accent color"/>
       </div>
       <div class="setting-row">
         <div><div class="setting-label">Highlight Color</div><div class="setting-desc">Color used for element highlighting in picker mode</div></div>
-        <input class="setting-input" id="set-highlight" type="color" value="#89b4fa" style="width:48px;height:32px;padding:2px;cursor:pointer;"/>
+        <input class="setting-input" id="set-highlight" type="color" value="#89b4fa" style="width:48px;height:32px;padding:2px;cursor:pointer;" aria-label="Picker highlight color"/>
       </div>
     </div>
     <div class="setting-group">
@@ -329,15 +330,15 @@ a{color:var(--sc-blue);text-decoration:none;}a:hover{text-decoration:underline;}
       </div>
       <div class="setting-row">
         <div><div class="setting-label">Sync Storage</div><div class="setting-desc">Use Chrome sync storage (limited to 100KB, syncs across devices)</div></div>
-        <label class="toggle"><input type="checkbox" id="set-sync" disabled/><span class="toggle-sl"></span></label>
+        <label class="toggle"><input type="checkbox" id="set-sync" disabled aria-label="Sync storage"/><span class="toggle-sl"></span></label>
       </div>
       <div class="setting-row">
         <div><div class="setting-label">Auto-Backup</div><div class="setting-desc">Daily automatic backup (keeps last 3). <span id="backup-status" style="color:var(--sc-muted)">Checking...</span></div></div>
         <button class="h-btn" id="btn-restore-backup" style="font-size:11px">Restore Backup</button>
       </div>
-      <div class="restore-panel" id="backup-restore-panel">
+      <div class="restore-panel" id="backup-restore-panel" hidden>
         <div class="restore-row">
-          <select class="setting-select" id="backup-select" style="flex:1;width:auto"></select>
+          <select class="setting-select" id="backup-select" style="flex:1;width:auto" aria-label="Backup to restore"></select>
           <button class="h-btn" id="backup-restore-apply" style="font-size:11px">Restore Selected</button>
           <button class="h-btn" id="backup-restore-cancel" style="font-size:11px">Cancel</button>
         </div>

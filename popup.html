@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <link rel="icon" href="icon.png">
 <meta charset="utf-8">
@@ -44,6 +44,11 @@ html.sc-light {
   --sc-scrollbar-thumb:rgba(136,57,239,0.15);--sc-scrollbar-thumb-h:rgba(136,57,239,0.25);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,.quick-edit-header:focus-visible {
+  outline: 2px solid var(--sc-accent);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--sc-accent) 18%, transparent);
+}
 body {
   width: 420px; min-height: 200px; max-height: 600px; margin: 0;
   background: linear-gradient(168deg, var(--sc-surface) 0%, var(--sc-bg) 40%, color-mix(in srgb, var(--sc-accent) 3%, var(--sc-bg)) 100%);
@@ -333,8 +338,10 @@ body {
 .quick-edit-section { border-bottom: 1px solid var(--sc-border); }
 .quick-edit-header {
   display: flex; align-items: center; gap: 6px; padding: 5px 14px;
+  width: 100%; border: 0; background: transparent;
   cursor: pointer; transition: all 0.2s; font-size: 8px;
   font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; color: var(--sc-muted);
+  font-family: inherit;
 }
 .quick-edit-header:hover { background: var(--sc-accent-dim); color: var(--sc-accent); }
 .quick-chevron { flex-shrink: 0; transition: transform 0.25s cubic-bezier(0.22,1,0.36,1); color: var(--sc-muted); }
@@ -361,17 +368,17 @@ body {
   <div class="header-row">
     <div class="logo">StyleCraft</div>
     <div style="display:flex;align-items:center;gap:8px">
-      <select class="sc-theme-select" id="popup-theme">
+      <select class="sc-theme-select" id="popup-theme" aria-label="Popup theme">
         <option value="catppuccin">Catppuccin</option>
         <option value="dark">Dark</option>
         <option value="light">Light</option>
       </select>
-      <span class="version">v1.19.0</span>
+      <span class="version">v1.20.0</span>
     </div>
   </div>
   <div class="domain-row">
     <span id="domain-text" class="domain-text"></span>
-    <label class="toggle"><input id="domain-toggle" type="checkbox"/><span class="toggle-sl"></span></label>
+    <label class="toggle"><input id="domain-toggle" type="checkbox" aria-label="Enable styles for this site"/><span class="toggle-sl"></span></label>
   </div>
   <div id="no-styles" class="no-styles">
     <div style="font-size:11px;font-weight:600;color:var(--sc-subtext);margin-bottom:4px">No styles for this site</div>
@@ -390,7 +397,7 @@ body {
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
     CSS Editor
   </button>
-  <button id="btn-readability" class="btn">
+  <button id="btn-readability" class="btn" aria-expanded="false" aria-pressed="false" aria-controls="read-panel">
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
     Read
   </button>
@@ -399,15 +406,15 @@ body {
     <div class="read-row">
       <span class="read-label">Theme</span>
       <div class="read-themes">
-        <button class="read-theme-btn active" data-rtheme="dark" style="background:#1a1a2e;color:#e0e0e0" title="Dark">Dk</button>
-        <button class="read-theme-btn" data-rtheme="sepia" style="background:#f4ecd8;color:#5b4636" title="Sepia">Se</button>
-        <button class="read-theme-btn" data-rtheme="light" style="background:#ffffff;color:#333" title="Light">Lt</button>
-        <button class="read-theme-btn" data-rtheme="oled" style="background:#000;color:#ccc" title="OLED">OL</button>
+        <button class="read-theme-btn active" data-rtheme="dark" style="background:#1a1a2e;color:#e0e0e0" title="Dark" aria-label="Dark reading theme" aria-pressed="true">Dk</button>
+        <button class="read-theme-btn" data-rtheme="sepia" style="background:#f4ecd8;color:#5b4636" title="Sepia" aria-label="Sepia reading theme" aria-pressed="false">Se</button>
+        <button class="read-theme-btn" data-rtheme="light" style="background:#ffffff;color:#333" title="Light" aria-label="Light reading theme" aria-pressed="false">Lt</button>
+        <button class="read-theme-btn" data-rtheme="oled" style="background:#000;color:#ccc" title="OLED" aria-label="OLED reading theme" aria-pressed="false">OL</button>
       </div>
     </div>
     <div class="read-row">
       <span class="read-label">Font</span>
-      <select id="read-font" class="read-select">
+      <select id="read-font" class="read-select" aria-label="Reading font">
         <option value="Georgia, serif">Georgia</option>
         <option value="'Times New Roman', serif">Times New Roman</option>
         <option value="system-ui, sans-serif">System Sans</option>
@@ -418,18 +425,18 @@ body {
     </div>
     <div class="read-row">
       <span class="read-label">Size <span id="read-size-val">18</span>px</span>
-      <input type="range" id="read-size" class="read-slider" min="12" max="28" value="18"/>
+      <input type="range" id="read-size" class="read-slider" min="12" max="28" value="18" aria-label="Reading font size"/>
     </div>
     <div class="read-row">
       <span class="read-label">Spacing <span id="read-lh-val">1.7</span></span>
-      <input type="range" id="read-lh" class="read-slider" min="12" max="24" value="17" step="1"/>
+      <input type="range" id="read-lh" class="read-slider" min="12" max="24" value="17" step="1" aria-label="Reading line height"/>
     </div>
     <div class="read-row">
       <span class="read-label">Width <span id="read-w-val">720</span>px</span>
-      <input type="range" id="read-w" class="read-slider" min="400" max="1000" value="720" step="20"/>
+      <input type="range" id="read-w" class="read-slider" min="400" max="1000" value="720" step="20" aria-label="Reading content width"/>
     </div>
   </div>
-  <button id="btn-grayscale" class="btn">
+  <button id="btn-grayscale" class="btn" aria-pressed="false">
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10"/></svg>
     Gray
   </button>
@@ -447,16 +454,16 @@ body {
   <div id="installed-list" class="installed-list"></div>
 </div>
 <div id="quick-edit-section" class="quick-edit-section">
-  <div class="quick-edit-header" id="quick-edit-toggle">
+  <button type="button" class="quick-edit-header" id="quick-edit-toggle" aria-expanded="false" aria-controls="quick-edit-body">
     <svg class="quick-chevron" id="quick-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
     <span>Quick CSS</span>
     <span class="quick-edit-domain" id="quick-edit-domain"></span>
-  </div>
+  </button>
   <div class="quick-edit-body" id="quick-edit-body" style="display:none">
-    <textarea id="quick-edit-code" class="quick-edit-code" spellcheck="false" placeholder="/* Type CSS here... */"></textarea>
+    <textarea id="quick-edit-code" class="quick-edit-code" spellcheck="false" placeholder="/* Type CSS here... */" aria-label="Quick CSS editor"></textarea>
     <div class="quick-edit-actions">
       <button id="quick-edit-save" class="btn primary" style="flex:1;justify-content:center;">Save &amp; Apply</button>
-      <button id="quick-edit-expand" class="btn" title="Open in CSS Editor">
+      <button id="quick-edit-expand" class="btn" title="Open in CSS Editor" aria-label="Open Quick CSS in full CSS Editor">
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
       </button>
     </div>
@@ -465,7 +472,7 @@ body {
 <div class="search-section">
   <div class="search-label">Community Styles</div>
   <div class="search-bar">
-    <input id="search-input" class="search-input" type="text" placeholder="Search UserStyles.world..." spellcheck="false"/>
+    <input id="search-input" class="search-input" type="text" placeholder="Search UserStyles.world..." spellcheck="false" aria-label="Search UserStyles.world"/>
     <button id="search-btn" class="search-go">Search</button>
   </div>
 </div>

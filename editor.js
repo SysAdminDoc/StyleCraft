@@ -111,12 +111,35 @@
     }
   }
 
+  function wireCodeMirrorAccessibility() {
+    if (!cmHost) return;
+    const cmContent = cmHost.querySelector('.cm-content');
+    if (!cmContent) return;
+    cmContent.setAttribute('aria-label', 'CSS source editor');
+    cmContent.setAttribute('role', 'textbox');
+    cmContent.setAttribute('aria-multiline', 'true');
+    cmContent.addEventListener('keydown', (e) => {
+      const isOpen = (id) => {
+        const el = document.getElementById(id);
+        return !!el && getComputedStyle(el).display !== 'none';
+      };
+      const findOpen = isOpen('find-bar');
+      const colorOpen = isOpen('color-picker');
+      const helpOpen = isOpen('shortcuts-overlay');
+      if (e.key === 'Escape' && !findOpen && !colorOpen && !helpOpen) {
+        e.preventDefault();
+        document.getElementById('btn-save').focus();
+      }
+    }, true);
+  }
+
   if (!shouldUseLegacyEditor() && window.StyleCraftCodeMirror && cmHost) {
     cmEditor = window.StyleCraftCodeMirror.create({ host: cmHost, textarea: code });
     if (cmEditor && installCodeMirrorProxy(cmEditor)) {
       usingCodeMirror = true;
       editorContainer.classList.add('cm-active');
       code.dataset.editorEngine = 'codemirror';
+      wireCodeMirrorAccessibility();
     } else if (cmEditor && cmEditor.destroy) {
       cmEditor.destroy();
       cmEditor = null;
@@ -228,7 +251,7 @@
       html += '<div class="name">' + esc(d) + '</div>';
       const total = (hasCustom ? 1 : 0) + themes.length;
       html += '<div class="count">' + total + '</div>';
-      html += '<button class="sb-del" data-del-domain="' + esc(d) + '" data-del-type="domain" title="Delete domain and all styles">&times;</button>';
+      html += '<button class="sb-del" data-del-domain="' + esc(d) + '" data-del-type="domain" title="Delete domain and all styles" aria-label="Delete domain ' + esc(d) + ' and all styles">&times;</button>';
       html += '</div>';
 
       // Children (shown when domain is active)
@@ -242,7 +265,7 @@
       if (hasCustom) {
         const lines = data.customCSS.split('\n').length;
         html += '<div class="count">' + lines + 'L</div>';
-        html += '<button class="sb-del" data-del-domain="' + esc(d) + '" data-del-type="custom" title="Clear custom CSS">&times;</button>';
+        html += '<button class="sb-del" data-del-domain="' + esc(d) + '" data-del-type="custom" title="Clear custom CSS" aria-label="Clear custom CSS for ' + esc(d) + '">&times;</button>';
       }
       html += '</div>';
 
@@ -254,7 +277,7 @@
         html += '<div class="dot ' + (theme.enabled !== false ? 'on' : 'off') + '"></div>';
         html += '<div class="name">' + esc(theme.name || id) + '</div>';
         html += '<div class="type">' + src + '</div>';
-        html += '<button class="sb-del" data-del-domain="' + esc(d) + '" data-del-type="theme" data-del-id="' + esc(id) + '" title="Delete theme">&times;</button>';
+        html += '<button class="sb-del" data-del-domain="' + esc(d) + '" data-del-type="theme" data-del-id="' + esc(id) + '" title="Delete theme" aria-label="Delete theme ' + esc(theme.name || id) + ' for ' + esc(d) + '">&times;</button>';
         html += '</div>';
       }
       html += '</div></div>';
@@ -691,6 +714,7 @@
   liveBtn.addEventListener('click', () => {
     livePreview = !livePreview;
     liveBtn.classList.toggle('active', livePreview);
+    liveBtn.setAttribute('aria-pressed', livePreview ? 'true' : 'false');
     if (!livePreview) {
       chrome.tabs.query({}, tabs => tabs.forEach(t => {
         if (t.url && !t.url.startsWith('chrome'))
@@ -1130,6 +1154,7 @@
     const open = !aiPanel.classList.contains('active');
     aiPanel.classList.toggle('active', open);
     aiAssistBtn.classList.toggle('active', open);
+    aiAssistBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
     if (open) {
       const activeFindBar = document.getElementById('find-bar');
       if (activeFindBar) activeFindBar.style.display = 'none';
@@ -1714,10 +1739,21 @@
   let apPanelOpen = false;
 
   // Toggle panel
-  apToggleBar.addEventListener('click', () => {
-    apPanelOpen = !apPanelOpen;
+  function setApPanelOpen(open) {
+    apPanelOpen = open;
     apPanel.style.display = apPanelOpen ? '' : 'none';
     apToggleBar.classList.toggle('open', apPanelOpen);
+    apToggleBar.setAttribute('aria-expanded', apPanelOpen ? 'true' : 'false');
+  }
+  function toggleApPanel() {
+    setApPanelOpen(!apPanelOpen);
+  }
+  apToggleBar.addEventListener('click', toggleApPanel);
+  apToggleBar.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      toggleApPanel();
+    }
   });
 
   function getAppliesTo() {
@@ -1781,21 +1817,21 @@
       const type = esc(variable.type || 'text');
       let control = '';
       if (variable.type === 'checkbox') {
-        control = '<input class="uc-var-control" type="checkbox" ' + (value ? 'checked' : '') + '/>';
+        control = '<input class="uc-var-control" type="checkbox" aria-label="' + label + '" ' + (value ? 'checked' : '') + '/>';
       } else if ((variable.type === 'select' || variable.type === 'dropdown') && variable.options && variable.options.length) {
-        control = '<select class="uc-var-control">' + variable.options.map(option => {
+        control = '<select class="uc-var-control" aria-label="' + label + '">' + variable.options.map(option => {
           const selected = String(option.value) === String(value) ? ' selected' : '';
           return '<option value="' + esc(option.value) + '"' + selected + '>' + esc(option.label || option.value) + '</option>';
         }).join('') + '</select>';
       } else if (variable.type === 'color' && /^#[0-9a-f]{3,8}$/i.test(String(value))) {
-        control = '<input class="uc-var-control" type="color" value="' + esc(value) + '"/>';
+        control = '<input class="uc-var-control" type="color" aria-label="' + label + '" value="' + esc(value) + '"/>';
       } else if (variable.type === 'number' || variable.type === 'range') {
         const min = variable.min !== undefined ? ' min="' + esc(variable.min) + '"' : '';
         const max = variable.max !== undefined ? ' max="' + esc(variable.max) + '"' : '';
         const step = variable.step !== undefined ? ' step="' + esc(variable.step) + '"' : '';
-        control = '<input class="uc-var-control" type="number" value="' + esc(value) + '"' + min + max + step + '/>';
+        control = '<input class="uc-var-control" type="number" aria-label="' + label + '" value="' + esc(value) + '"' + min + max + step + '/>';
       } else {
-        control = '<input class="uc-var-control" type="text" value="' + esc(value) + '" spellcheck="false"/>';
+        control = '<input class="uc-var-control" type="text" aria-label="' + label + '" value="' + esc(value) + '" spellcheck="false"/>';
       }
       return '<div class="uc-var" data-name="' + name + '" data-type="' + type + '"><div class="uc-var-label" title="' + label + '">' + label + '</div>' + control + '</div>';
     }).join('');
@@ -1853,18 +1889,18 @@
       for (let i = 0; i < patterns.length; i++) {
         const p = patterns[i];
         html += '<div class="ap-rule" data-idx="' + i + '">';
-        html += '<select class="ap-type">';
+        html += '<select class="ap-type" aria-label="Pattern type">';
         for (const t of types) html += '<option value="' + t + '"' + (p.type === t ? ' selected' : '') + '>' + t + '</option>';
         html += '</select>';
-        html += '<input class="ap-input ap-value" value="' + esc(p.value) + '" spellcheck="false" placeholder="e.g. github.com"/>';
-        html += '<button class="ap-del" title="Remove">&times;</button>';
+        html += '<input class="ap-input ap-value" value="' + esc(p.value) + '" spellcheck="false" placeholder="e.g. github.com" aria-label="Pattern value"/>';
+        html += '<button class="ap-del" title="Remove" aria-label="Remove pattern">&times;</button>';
         html += '</div>';
       }
     } else {
       // Show implicit domain match as placeholder
       html += '<div class="ap-rule" data-idx="-1">';
-      html += '<select class="ap-type" disabled><option>domain</option></select>';
-      html += '<input class="ap-input ap-value" value="' + esc(activeDomain) + '" disabled style="opacity:0.5"/>';
+      html += '<select class="ap-type" disabled aria-label="Implicit pattern type"><option>domain</option></select>';
+      html += '<input class="ap-input ap-value" value="' + esc(activeDomain) + '" disabled style="opacity:0.5" aria-label="Implicit pattern value"/>';
       html += '<span style="font-size:9px;color:var(--sc-faint);white-space:nowrap">implicit</span>';
       html += '</div>';
     }
@@ -2248,8 +2284,18 @@
   }
 
   // Toggle lint panel
-  lintToggle.addEventListener('click', () => {
-    lintPanel.classList.toggle('active');
+  function toggleLintPanel() {
+    const open = !lintPanel.classList.contains('active');
+    lintPanel.classList.toggle('active', open);
+    lintToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+
+  lintToggle.addEventListener('click', toggleLintPanel);
+  lintToggle.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      toggleLintPanel();
+    }
   });
 
   // Run lint on content changes with debounce
@@ -2265,19 +2311,35 @@
 
   /* ─── Help / Shortcuts overlay ─── */
   const helpOverlay = document.getElementById('shortcuts-overlay');
-  document.getElementById('btn-help').addEventListener('click', () => {
-    helpOverlay.style.display = helpOverlay.style.display === 'none' ? '' : 'none';
-  });
-  document.getElementById('shortcuts-close').addEventListener('click', () => {
+  const helpBtn = document.getElementById('btn-help');
+  const helpClose = document.getElementById('shortcuts-close');
+  let helpReturnFocus = null;
+  function openHelpOverlay() {
+    helpReturnFocus = document.activeElement;
+    helpOverlay.style.display = '';
+    helpBtn.setAttribute('aria-expanded', 'true');
+    helpClose.focus();
+  }
+  function closeHelpOverlay() {
+    if (helpOverlay.style.display === 'none') return;
     helpOverlay.style.display = 'none';
+    helpBtn.setAttribute('aria-expanded', 'false');
+    const target = helpReturnFocus && typeof helpReturnFocus.focus === 'function' ? helpReturnFocus : helpBtn;
+    helpReturnFocus = null;
+    target.focus();
+  }
+  helpBtn.addEventListener('click', () => {
+    if (helpOverlay.style.display === 'none') openHelpOverlay();
+    else closeHelpOverlay();
   });
+  helpClose.addEventListener('click', closeHelpOverlay);
   helpOverlay.addEventListener('click', (e) => {
-    if (e.target === helpOverlay) helpOverlay.style.display = 'none';
+    if (e.target === helpOverlay) closeHelpOverlay();
   });
-  code.addEventListener('keydown', (e) => {
+  document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && helpOverlay.style.display !== 'none') {
-      helpOverlay.style.display = 'none';
       e.preventDefault();
+      closeHelpOverlay();
     }
   });
 })();

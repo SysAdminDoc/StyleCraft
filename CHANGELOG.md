@@ -2,6 +2,12 @@
 
 All notable changes to StyleCraft are documented here.
 
+## [1.20.0] - 2026-06-29
+
+### Added
+- Accessibility and focus coverage for options tabs, popup Quick CSS, editor dialog/CodeMirror focus recovery, and keyboard-driven Shadow DOM picker selection.
+- Playwright accessibility smoke coverage for labels, tablist semantics, visible focus, dialog/panel focus return, and pointer-free picker operation.
+
 ## [1.19.0] - 2026-06-28
 
 ### Added
