@@ -81,13 +81,6 @@ Roadmap for StyleCraft, the Chrome MV3 CSS style manager with visual element pic
 
 ## Research-Driven Additions
 
-- [ ] P1 - Expand smoke tests into workflow regression tests
-  Why: Current Playwright coverage exercises editor and picker happy paths only, leaving import/export, updates, backup/restore, popup search, packaging, and error states untested.
-  Evidence: `tests/editor-smoke.spec.mjs`, `tests/content-picker-smoke.spec.mjs`, `tools/validate-extension.mjs`.
-  Touches: `tests/`, `tools/`, `background.js`, `options.js`, `popup.js`
-  Acceptance: `npm test` covers import/export schemas, USw adapter failures, backup restore, popup install/update, matcher parity, and build artifact validation.
-  Complexity: M
-
 - [ ] P2 - Add computed-style and design-token extraction to the Visual panel
   Why: CSS Peeper, VisBug, and Site Palette show demand for readable computed fonts/colors/spacing/assets without digging through DevTools.
   Evidence: CSS Peeper, VisBug, Site Palette; existing ROADMAP CSS Peeper note; `content.js` visual editor.

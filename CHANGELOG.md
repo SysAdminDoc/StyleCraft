@@ -2,6 +2,11 @@
 
 All notable changes to StyleCraft are documented here.
 
+## [1.22.0] - 2026-06-30
+
+### Added
+- Workflow regression coverage for export schemas, theme update application, popup community-style install/uninstall, and ZIP artifact validation.
+
 ## [1.21.0] - 2026-06-30
 
 ### Added
