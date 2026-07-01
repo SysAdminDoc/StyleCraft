@@ -1,4 +1,4 @@
-/* StyleCraft v1.25.0 - UserStyles.world catalog adapter */
+/* StyleCraft v1.26.0 - UserStyles.world catalog adapter */
 (function(global) {
   if (global.StyleCraftUSw) return;
 

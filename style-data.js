@@ -1,4 +1,4 @@
-/* StyleCraft v1.25.0 - shared import and storage data guard */
+/* StyleCraft v1.26.0 - shared import and storage data guard */
 (function(global) {
   if (global.StyleCraftData) return;
 

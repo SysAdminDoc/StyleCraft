@@ -2,6 +2,18 @@
 
 All notable changes to StyleCraft are documented here.
 
+## [1.26.0] - 2026-07-01
+
+### Added
+- Configurable "Block Remote CSS" setting that rejects styles containing remote `url()` or `@import` fetches, preventing third-party tracking via community themes.
+
+### Fixed
+- Content script overlay elements (highlight, selector label, persistent highlight, multi-element boxes) now derive colors from the active editor theme instead of hardcoded Catppuccin values.
+- ~130 hardcoded color literals in the content script Shadow DOM panel CSS replaced with CSS custom property references; `:host` block provides Catppuccin defaults to eliminate flash-of-wrong-theme.
+- Preset section inline styles now use theme-aware colors via `getThemeColors()`.
+- `injectAndSend` and `previewTheme` replaced fixed `setTimeout` with a retry loop (up to 5 attempts with backoff), preventing silently dropped messages when content script injection is slow.
+- UserCSS `parseBracketOptions` no longer naively replaces all single quotes with double quotes. Now tries raw JSON first, then converts single-quoted strings individually (preserving apostrophes in values).
+
 ## [1.25.0] - 2026-07-01
 
 ### Fixed

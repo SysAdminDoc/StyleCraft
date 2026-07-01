@@ -1,4 +1,4 @@
-/* StyleCraft v1.25.0 - Options Page */
+/* StyleCraft v1.26.0 - Options Page */
 (async function(){
   const $=id=>document.getElementById(id);
   const send=msg=>new Promise(r=>chrome.runtime.sendMessage(msg,r));

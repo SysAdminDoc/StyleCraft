@@ -16,7 +16,7 @@ function contentScriptChromeMock() {
       getURL(resourcePath) {
         return new URL(resourcePath, window.location.href).href;
       },
-      getManifest() { return { version: '1.25.0' }; },
+      getManifest() { return { version: '1.26.0' }; },
       onMessage: {
         addListener(listener) {
           messageListeners.push(listener);
