@@ -5,7 +5,6 @@ Roadmap for StyleCraft, the Chrome MV3 CSS style manager with visual element pic
 ## Planned Features
 
 ### Element picker
-- XPath fallback for sites with no stable class/id
 - Before/after live diff preview
 - Recording mode - every edit becomes a named step for replay
 
@@ -27,7 +26,6 @@ Roadmap for StyleCraft, the Chrome MV3 CSS style manager with visual element pic
 ### Readability mode
 - Per-site reading themes + custom CSS
 - Reading-list save (with reader-view rehydration later)
-- TTS button (uses browser SpeechSynthesis)
 - Highlighter + notes saved per URL
 
 ## Competitive Research
@@ -44,7 +42,6 @@ Roadmap for StyleCraft, the Chrome MV3 CSS style manager with visual element pic
 - Auto-generated "dark-mode for this site" via heuristic color inversion fallback
 - Keyboard-driven command palette (`Ctrl+K` everywhere)
 - Per-style usage analytics (local only: "how often did this style match a page?")
-- Safer import: refuse `url(javascript:)` and nuke at-import chains
 - Style-pack gallery hosted on GitHub Pages, installable via URL
 - Publish-to-USw button directly from the editor with metadata prefilled
 

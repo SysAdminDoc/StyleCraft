@@ -139,7 +139,7 @@
     refs = {
       closeBtn: $('#sc-close-btn'), pickBtn: $('#sc-pick-btn'), previewBtn: $('#sc-preview-btn'),
       createBtn: $('#sc-create-btn'), undoBtn: $('#sc-undo-btn'), redoBtn: $('#sc-redo-btn'),
-      resetBtn: $('#sc-reset-btn'), hideBtn: $('#sc-hide-btn'), readBtn: $('#sc-readability-btn'), grayBtn: $('#sc-grayscale-btn'),
+      resetBtn: $('#sc-reset-btn'), hideBtn: $('#sc-hide-btn'), readBtn: $('#sc-readability-btn'), grayBtn: $('#sc-grayscale-btn'), ttsBtn: $('#sc-tts-btn'),
       searchBtn: $('#sc-search-btn'), settingsBtn: $('#sc-settings-btn'),
       editorTheme: $('#sc-editor-theme'),
       domainInput: $('#sc-domain'), selectorInput: $('#sc-selector-input'),
@@ -285,6 +285,7 @@
     });
     refs.readBtn.addEventListener('click', toggleReadability);
     refs.grayBtn.addEventListener('click', toggleGrayscale);
+    refs.ttsBtn.addEventListener('click', toggleTTS);
 
     // Box model visibility button
     const bmVisBtn = shadow.querySelector('#sc-bm-vis-btn');
@@ -358,10 +359,11 @@
       [refs.hideBtn, 'Hide selected element'],
       [refs.readBtn, 'Toggle readability mode'],
       [refs.grayBtn, 'Toggle grayscale mode'],
+      [refs.ttsBtn, 'Read page aloud'],
       [refs.createBtn, 'Create CSS rule']
     ];
     labelledControls.forEach(([el, label]) => { if (el && !el.getAttribute('aria-label')) el.setAttribute('aria-label', label); });
-    [refs.previewBtn, refs.hideBtn, refs.readBtn, refs.grayBtn].forEach(el => { if (el && !el.hasAttribute('aria-pressed')) el.setAttribute('aria-pressed', 'false'); });
+    [refs.previewBtn, refs.hideBtn, refs.readBtn, refs.grayBtn, refs.ttsBtn].forEach(el => { if (el && !el.hasAttribute('aria-pressed')) el.setAttribute('aria-pressed', 'false'); });
     refs.$$('.sc-prop-input,.sc-color-input,.sc-select-input,.sc-range-input,.sc-theme-textarea').forEach(control => {
       if (!control.getAttribute('aria-label')) control.setAttribute('aria-label', labelFromPropControl(control));
     });
@@ -796,7 +798,28 @@
     if(attrSelector) return attrSelector;
     const classes=stableClassList(el);
     if(classes.length) return el.tagName.toLowerCase()+'.'+classes.map(CSS.escape).join('.');
-    return el.tagName.toLowerCase();
+    return generateNthChildPath(el);
+  }
+
+  function generateNthChildPath(el) {
+    const parts = [];
+    let node = el;
+    while (node && node !== document.documentElement && node !== document.body) {
+      const tag = node.tagName.toLowerCase();
+      const parent = node.parentElement;
+      if (!parent) break;
+      const siblings = [...parent.children];
+      const idx = siblings.indexOf(node) + 1;
+      parts.unshift(tag + ':nth-child(' + idx + ')');
+      if (parent.id) { parts.unshift('#' + CSS.escape(parent.id)); break; }
+      const parentAttr = stableAttributeSelectors(parent)[0];
+      if (parentAttr) { parts.unshift(parentAttr); break; }
+      const parentClasses = stableClassList(parent);
+      if (parentClasses.length) { parts.unshift(parent.tagName.toLowerCase() + '.' + parentClasses.map(CSS.escape).join('.')); break; }
+      node = parent;
+    }
+    if (!parts.length) return el.tagName.toLowerCase();
+    return parts.join(' > ');
   }
 
   const STABLE_SELECTOR_ATTRS = ['data-testid','data-test','data-qa','data-cy','data-id','data-role','aria-label','role','name','type'];
@@ -847,6 +870,8 @@
       const idx=[...parent.children].filter(ch=>ch.tagName===el.tagName).indexOf(el);
       if(idx>=0) c.add(psel+' > '+tag+':nth-of-type('+(idx+1)+')');
     }
+    const nthPath = generateNthChildPath(el);
+    if (nthPath && nthPath !== tag) c.add(nthPath);
     return [...c];
   }
 
@@ -1394,6 +1419,40 @@
 
   function toggleGrayscale(){state.grayscale=!state.grayscale;refs.grayBtn.classList.toggle('active',state.grayscale);refs.grayBtn.setAttribute('aria-pressed',state.grayscale?'true':'false');let el=document.getElementById('sc-grayscale-style');if(state.grayscale){if(!el){el=document.createElement('style');el.id='sc-grayscale-style';document.head.appendChild(el);}el.textContent='html{filter:grayscale(100%)!important}';}else if(el)el.remove();toast(state.grayscale?'Grayscale ON':'Grayscale OFF');}
 
+  let ttsSpeaking = false;
+  function toggleTTS() {
+    if (ttsSpeaking) {
+      speechSynthesis.cancel();
+      ttsSpeaking = false;
+      refs.ttsBtn.classList.remove('active');
+      refs.ttsBtn.setAttribute('aria-pressed', 'false');
+      toast('Speech stopped');
+      return;
+    }
+    const mainContent = document.querySelector('main, article, [role="main"], .content, .post, .entry-content, .article-body');
+    const source = mainContent || document.body;
+    const text = source.innerText.trim().slice(0, 10000);
+    if (!text) { toast('No text to read'); return; }
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1.0;
+    utterance.onend = () => {
+      ttsSpeaking = false;
+      refs.ttsBtn.classList.remove('active');
+      refs.ttsBtn.setAttribute('aria-pressed', 'false');
+    };
+    utterance.onerror = () => {
+      ttsSpeaking = false;
+      refs.ttsBtn.classList.remove('active');
+      refs.ttsBtn.setAttribute('aria-pressed', 'false');
+    };
+    speechSynthesis.cancel();
+    speechSynthesis.speak(utterance);
+    ttsSpeaking = true;
+    refs.ttsBtn.classList.add('active');
+    refs.ttsBtn.setAttribute('aria-pressed', 'true');
+    toast('Speaking...');
+  }
+
   /* ═══════ CODE EDITOR ═══════ */
   function onCodeChange(){pushUndo();state.customCSS=refs.codeEditor.value;applyLiveCSS();parseCSStoBasic(state.customCSS);saveCustomCSS();updateLineNumbers();}
   const pairs={'(':')','[':']','{':'}','"':'"',"'":"'"};
@@ -1826,6 +1885,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 <button id="sc-hide-btn" class="sc-util-btn"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>Hide</button>
 <button id="sc-readability-btn" class="sc-util-btn"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>Read</button>
 <button id="sc-grayscale-btn" class="sc-util-btn"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10"/></svg>Gray</button>
+<button id="sc-tts-btn" class="sc-util-btn"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>Speak</button>
 </div>
 
 <div class="sc-main-tabs" role="tablist" aria-label="Editor sections">

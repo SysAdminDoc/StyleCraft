@@ -28,6 +28,7 @@ Chrome, Edge, Brave, Vivaldi, Opera, Arc — any Chromium-based browser supporti
 | Element Picker | uBlock-style point-and-click selector with live highlighting |
 | Multi-Select Picker | Shift-click multiple elements to build combined selectors like `h1, h2, h3` |
 | Stable Selectors | Prefers stable data/ARIA attributes and filters generated-looking classes |
+| nth-child Fallback | When no stable selector exists, generates a precise `:nth-child` chain instead of a bare tag name |
 | Visual Properties | Edit colors, fonts, spacing, display, borders via dropdowns and inputs |
 | Box Model Visualizer | Interactive box model diagram with arrow-key editing |
 | Computed Tokens | Inspect computed colors, type, spacing, radius, and contrast with copy/insert actions |
@@ -101,6 +102,7 @@ Enable per-style in the editor's "Applies To" panel. Injected CSS is wrapped in 
 | Line Height | Adjustable 1.2-2.4 with live slider |
 | Content Width | Adjustable 400-1000px with live slider |
 | Element Stripping | Hides sidebars, ads, navigation, comments, related posts |
+| Text-to-Speech | Speak button reads page content aloud using browser SpeechSynthesis with start/stop toggle |
 
 ### Data & Safety
 | Feature | Description |

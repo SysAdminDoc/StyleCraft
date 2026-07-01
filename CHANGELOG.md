@@ -10,6 +10,8 @@ All notable changes to StyleCraft are documented here.
 - Regex URL pattern tester in the editor's Applies To panel: enter a URL to check whether it matches the current style's patterns.
 - CSS layer wrapping setting: wrap injected styles in `@layer stylecraft` for cascade control over host page `@layer` declarations.
 - Per-style conditional triggers: checkboxes for `prefers-color-scheme: dark/light`, `prefers-reduced-motion: reduce`, and `prefers-contrast: more` that wrap injected CSS in `@media` queries.
+- Element picker nth-child path fallback: when no stable class, ID, or data attribute is available, the picker generates a precise `nth-child` chain instead of a bare tag name.
+- Text-to-speech button in the side-panel editor: reads page content aloud using browser SpeechSynthesis with start/stop toggle.
 
 ## [1.23.0] - 2026-06-30
 

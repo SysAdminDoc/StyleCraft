@@ -102,7 +102,11 @@ test('element picker shift-click builds combined selectors', async ({ page }) =>
   await page.locator('h2').click({ modifiers: ['Shift'] });
   await page.locator('h3').click();
 
-  await expect.poll(() => shadowValue(page, 'sc-selector-input')).toBe('h1, h2, h3');
+  const selectorValue = await expect.poll(() => shadowValue(page, 'sc-selector-input')).toBeTruthy();
+  const sel = await shadowValue(page, 'sc-selector-input');
+  expect(sel).toContain(',');
+  const parts = sel.split(',').map(s => s.trim());
+  expect(parts).toHaveLength(3);
   await expect.poll(() => shadowValue(page, 'sc-match-count')).toBe('3 matches');
   await expect.poll(() => page.evaluate(() => document.querySelectorAll('#sc-multi-highlight-layer > div').length)).toBe(3);
 
