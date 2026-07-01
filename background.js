@@ -507,8 +507,10 @@ function guardDomainData(domain, data) {
 
 chrome.runtime.onInstalled.addListener(() => {
   migrateIfNeeded();
-  chrome.contextMenus.create({ id: 'stylecraft-open', title: 'Style this element', contexts: ['all'] });
-  chrome.contextMenus.create({ id: 'stylecraft-hide', title: 'Hide this element', contexts: ['all'] });
+  chrome.contextMenus.removeAll(() => {
+    chrome.contextMenus.create({ id: 'stylecraft-open', title: 'Style this element', contexts: ['all'] });
+    chrome.contextMenus.create({ id: 'stylecraft-hide', title: 'Hide this element', contexts: ['all'] });
+  });
 });
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
