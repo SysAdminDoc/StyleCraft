@@ -15,6 +15,7 @@ All notable changes to StyleCraft are documented here.
 - Per-style usage analytics: local-only match counter shown per domain in the options page, throttled to avoid storage contention.
 - Per-site reading preferences: readability mode settings (theme, font, size, width) are saved per-domain and restored on future visits.
 - Keyboard-driven command palette: `Ctrl+K` opens a searchable list of editor actions (save, format, templates, source modes, exports, toggles).
+- Auto dark mode: heuristic color inversion toggle in the side-panel editor that applies `filter: invert` + `hue-rotate` with image correction for sites without native dark mode.
 
 ## [1.23.0] - 2026-06-30
 

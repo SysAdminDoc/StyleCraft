@@ -15,4 +15,3 @@ Roadmap for StyleCraft, the Chrome MV3 CSS style manager with visual element pic
 
 ## Nice-to-Haves
 
-- Auto-generated "dark-mode for this site" via heuristic color inversion fallback

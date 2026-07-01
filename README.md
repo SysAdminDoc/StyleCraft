@@ -102,6 +102,7 @@ Enable per-style in the editor's "Applies To" panel. Injected CSS is wrapped in 
 | Line Height | Adjustable 1.2-2.4 with live slider |
 | Content Width | Adjustable 400-1000px with live slider |
 | Element Stripping | Hides sidebars, ads, navigation, comments, related posts |
+| Auto Dark Mode | Heuristic color inversion for sites without native dark mode, with image/video correction |
 | Text-to-Speech | Speak button reads page content aloud using browser SpeechSynthesis with start/stop toggle |
 
 ### Data & Safety
