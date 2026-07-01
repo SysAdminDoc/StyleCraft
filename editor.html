@@ -246,6 +246,17 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .lint-count.has-warnings{background:rgba(249,226,175,0.12);color:var(--sc-yellow);}
 .lint-count.clean{background:rgba(166,227,161,0.08);color:var(--sc-green);}
 
+/* Command Palette */
+.cmd-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding-top:80px;}
+.cmd-panel{background:var(--sc-surface);border:1px solid var(--sc-border-h);border-radius:12px;width:420px;max-height:360px;box-shadow:0 16px 48px rgba(0,0,0,0.5);display:flex;flex-direction:column;overflow:hidden;}
+.cmd-input{width:100%;height:44px;padding:0 16px;background:transparent;border:none;border-bottom:1px solid var(--sc-border);color:var(--sc-text);font-size:14px;font-family:inherit;outline:none;}
+.cmd-input::placeholder{color:var(--sc-muted);}
+.cmd-list{flex:1;overflow-y:auto;padding:4px 0;}
+.cmd-item{display:flex;align-items:center;gap:10px;padding:8px 16px;cursor:pointer;transition:background .1s;font-size:12px;color:var(--sc-subtext);}
+.cmd-item:hover,.cmd-item.active{background:var(--sc-accent-dim);color:var(--sc-accent);}
+.cmd-item .cmd-label{flex:1;}
+.cmd-item .cmd-key{font-size:10px;color:var(--sc-muted);font-family:'SFMono-Regular','Cascadia Code','Consolas','Liberation Mono','Menlo',monospace;}
+
 /* Readability panel */
 .reader-panel{position:fixed;z-index:9999999;top:60px;right:16px;width:260px;background:var(--sc-surface);border:1px solid var(--sc-border-h);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.4);padding:14px;display:none;font-family:system-ui,-apple-system,sans-serif;}
 .reader-panel.active{display:block;}
@@ -381,8 +392,16 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
         <div class="sc-key">Shift+Tab</div><div>Outdent</div>
         <div class="sc-key">{  (  [</div><div>Auto-close brackets</div>
         <div class="sc-key">Click gutter -/+</div><div>Fold/Unfold block</div>
+        <div class="sc-key">Ctrl+K</div><div>Command Palette</div>
         <div class="sc-key">Click color swatch</div><div>Open color picker</div>
       </div>
+    </div>
+  </div>
+  <!-- Command Palette -->
+  <div class="cmd-overlay" id="cmd-overlay" style="display:none" role="dialog" aria-modal="true" aria-label="Command palette">
+    <div class="cmd-panel">
+      <input class="cmd-input" id="cmd-input" type="text" placeholder="Type a command..." spellcheck="false" aria-label="Search commands" autocomplete="off"/>
+      <div class="cmd-list" id="cmd-list"></div>
     </div>
   </div>
   <!-- Main -->

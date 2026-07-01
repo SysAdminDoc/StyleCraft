@@ -13,9 +13,6 @@ Roadmap for StyleCraft, the Chrome MV3 CSS style manager with visual element pic
 ### Sync & library
 - Stylus backup full-import with `@-moz-document` parsing improvements
 
-### Readability mode
-
 ## Nice-to-Haves
 
 - Auto-generated "dark-mode for this site" via heuristic color inversion fallback
-- Keyboard-driven command palette (`Ctrl+K` everywhere)

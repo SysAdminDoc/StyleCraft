@@ -199,6 +199,7 @@ All settings are accessible via the Options page (right-click extension icon > O
 | `Ctrl+H` | Find & Replace |
 | `Tab` | Indent |
 | `Shift+Tab` | Outdent |
+| `Ctrl+K` | Command Palette |
 | `Escape` | Close overlay / Find bar |
 
 The global toggle shortcut can be configured at `chrome://extensions/shortcuts`.

@@ -14,6 +14,7 @@ All notable changes to StyleCraft are documented here.
 - Text-to-speech button in the side-panel editor: reads page content aloud using browser SpeechSynthesis with start/stop toggle.
 - Per-style usage analytics: local-only match counter shown per domain in the options page, throttled to avoid storage contention.
 - Per-site reading preferences: readability mode settings (theme, font, size, width) are saved per-domain and restored on future visits.
+- Keyboard-driven command palette: `Ctrl+K` opens a searchable list of editor actions (save, format, templates, source modes, exports, toggles).
 
 ## [1.23.0] - 2026-06-30
 

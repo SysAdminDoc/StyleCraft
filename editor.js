@@ -1321,6 +1321,117 @@
     chrome.runtime.sendMessage({ action: 'sc-theme-changed', theme: themeSelect.value }).catch(() => {});
   });
 
+  /* ─── Command Palette ─── */
+  const cmdOverlay = document.getElementById('cmd-overlay');
+  const cmdInput = document.getElementById('cmd-input');
+  const cmdList = document.getElementById('cmd-list');
+  let cmdOpen = false;
+  let cmdIndex = 0;
+
+  const cmdCommands = [
+    { label: 'Save', key: 'Ctrl+S', action: () => doSave() },
+    { label: 'Undo', key: 'Ctrl+Z', action: () => doUndo() },
+    { label: 'Redo', key: 'Ctrl+Shift+Z', action: () => doRedo() },
+    { label: 'Find', key: 'Ctrl+F', action: () => { closeCmdPalette(); openFind(false); } },
+    { label: 'Find & Replace', key: 'Ctrl+H', action: () => { closeCmdPalette(); openFind(true); } },
+    { label: 'Format / Beautify', action: () => document.getElementById('btn-beautify').click() },
+    { label: 'Toggle Live Preview', action: () => liveBtn.click() },
+    { label: 'Export as .user.css', action: () => document.getElementById('btn-export-usercss').click() },
+    { label: 'Insert Template: Surface', action: () => { templateSelect.value = 'tokens:surface'; insertTemplate(); } },
+    { label: 'Insert Template: Button', action: () => { templateSelect.value = 'button:primary'; insertTemplate(); } },
+    { label: 'Insert Template: Card', action: () => { templateSelect.value = 'card:elevated'; insertTemplate(); } },
+    { label: 'Insert Template: Form', action: () => { templateSelect.value = 'form:focus'; insertTemplate(); } },
+    { label: 'Source Mode: CSS', action: () => { sourceModeSelect.value = 'css'; sourceModeSelect.dispatchEvent(new Event('change')); } },
+    { label: 'Source Mode: SCSS', action: () => { sourceModeSelect.value = 'scss'; sourceModeSelect.dispatchEvent(new Event('change')); } },
+    { label: 'Source Mode: Sass', action: () => { sourceModeSelect.value = 'sass'; sourceModeSelect.dispatchEvent(new Event('change')); } },
+    { label: 'Open Options', action: () => chrome.tabs.create({ url: chrome.runtime.getURL('options.html') }) },
+    { label: 'Toggle Applies To Panel', action: () => document.getElementById('ap-toggle-bar').click() },
+    { label: 'Toggle AI Assist', action: () => aiAssistBtn.click() }
+  ];
+
+  function openCmdPalette() {
+    cmdOpen = true;
+    cmdOverlay.style.display = '';
+    cmdInput.value = '';
+    cmdIndex = 0;
+    renderCmdList('');
+    cmdInput.focus();
+  }
+
+  function closeCmdPalette() {
+    cmdOpen = false;
+    cmdOverlay.style.display = 'none';
+    code.focus();
+  }
+
+  function renderCmdList(query) {
+    const q = query.toLowerCase();
+    const filtered = q ? cmdCommands.filter(c => c.label.toLowerCase().includes(q)) : cmdCommands;
+    cmdIndex = Math.min(cmdIndex, Math.max(filtered.length - 1, 0));
+    cmdList.innerHTML = filtered.map((c, i) =>
+      '<div class="cmd-item' + (i === cmdIndex ? ' active' : '') + '" data-i="' + i + '">' +
+      '<span class="cmd-label">' + esc(c.label) + '</span>' +
+      (c.key ? '<span class="cmd-key">' + esc(c.key) + '</span>' : '') +
+      '</div>'
+    ).join('');
+    cmdList.querySelectorAll('.cmd-item').forEach(el => {
+      el.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        const idx = parseInt(el.dataset.i);
+        closeCmdPalette();
+        filtered[idx].action();
+      });
+      el.addEventListener('mouseenter', () => {
+        cmdIndex = parseInt(el.dataset.i);
+        cmdList.querySelectorAll('.cmd-item').forEach((item, j) => item.classList.toggle('active', j === cmdIndex));
+      });
+    });
+  }
+
+  cmdInput.addEventListener('input', () => {
+    cmdIndex = 0;
+    renderCmdList(cmdInput.value);
+  });
+
+  cmdInput.addEventListener('keydown', (e) => {
+    const items = cmdList.querySelectorAll('.cmd-item');
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      cmdIndex = (cmdIndex + 1) % items.length;
+      items.forEach((el, i) => el.classList.toggle('active', i === cmdIndex));
+      const active = items[cmdIndex];
+      if (active) active.scrollIntoView({ block: 'nearest' });
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      cmdIndex = (cmdIndex - 1 + items.length) % items.length;
+      items.forEach((el, i) => el.classList.toggle('active', i === cmdIndex));
+      const active = items[cmdIndex];
+      if (active) active.scrollIntoView({ block: 'nearest' });
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      const q = cmdInput.value.toLowerCase();
+      const filtered = q ? cmdCommands.filter(c => c.label.toLowerCase().includes(q)) : cmdCommands;
+      if (filtered[cmdIndex]) {
+        closeCmdPalette();
+        filtered[cmdIndex].action();
+      }
+    } else if (e.key === 'Escape') {
+      closeCmdPalette();
+    }
+  });
+
+  cmdOverlay.addEventListener('click', (e) => {
+    if (e.target === cmdOverlay) closeCmdPalette();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'k' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      if (cmdOpen) closeCmdPalette();
+      else openCmdPalette();
+    }
+  });
+
   /* ─── Utils ─── */
   function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
   function toast(msg) {
