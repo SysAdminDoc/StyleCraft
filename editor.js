@@ -1262,6 +1262,41 @@
     hideAC(); updateHighlight(); updateGutter(); updateStatus(); setModified(true); pushUndo();
   }
 
+  /* ─── Export .user.css ─── */
+  document.getElementById('btn-export-usercss').addEventListener('click', () => {
+    if (!activeDomain) { toast('No domain selected'); return; }
+    const record = getActiveRecord();
+    const css = code.value || (record ? (record.rawCSS || record.customCSS || record.css || '') : '');
+    if (!css.trim()) { toast('Nothing to export'); return; }
+    const meta = (record && record.meta) || {};
+    const name = meta.name || (activeThemeId && record && record.name) || activeDomain;
+    const version = meta.version || '1.0.0';
+    const namespace = meta.namespace || 'stylecraft/' + activeDomain;
+    let header = '/* ==UserStyle==\n';
+    header += '@name        ' + name + '\n';
+    header += '@namespace   ' + namespace + '\n';
+    header += '@version     ' + version + '\n';
+    if (meta.author) header += '@author      ' + meta.author + '\n';
+    if (meta.description) header += '@description ' + meta.description + '\n';
+    if (meta.license) header += '@license     ' + meta.license + '\n';
+    const updateUrl = (record && record.sourceUrl) || meta.updateURL;
+    if (updateUrl) header += '@updateURL   ' + updateUrl + '\n';
+    header += '==/UserStyle== */\n\n';
+    let body = css;
+    if (activeDomain !== '*' && !/@-?moz-?document/i.test(css)) {
+      body = '@-moz-document domain("' + activeDomain + '") {\n' + css + '\n}';
+    }
+    const output = header + body + '\n';
+    const blob = new Blob([output], { type: 'text/css' });
+    const u = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = u;
+    a.download = activeDomain.replace(/[^a-zA-Z0-9.-]/g, '_') + '.user.css';
+    a.click();
+    URL.revokeObjectURL(u);
+    toast('Exported .user.css');
+  });
+
   /* ─── Options ─── */
   document.getElementById('btn-options').addEventListener('click', () => {
     chrome.tabs.create({ url: chrome.runtime.getURL('options.html') });

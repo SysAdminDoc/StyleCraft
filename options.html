@@ -143,13 +143,13 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 <div class="header">
   <div class="header-left">
     <div class="header-logo">StyleCraft</div>
-    <div class="header-sub">v1.23.0 &middot; Options</div>
+    <div class="header-sub">v1.24.0 &middot; Options</div>
   </div>
   <div class="header-actions">
     <button class="h-btn" id="btn-import" title="Import from StyleCraft, Stylus, or Stylebot"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Import</button>
     <button class="h-btn" id="btn-export"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export</button>
     <button class="h-btn danger" id="btn-reset"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>Reset All</button>
-    <input type="file" id="import-file" accept=".json,application/json,*/*" style="display:none"/>
+    <input type="file" id="import-file" accept=".json,.css,.user.css,application/json,text/css,*/*" style="display:none"/>
   </div>
 </div>
 
@@ -344,6 +344,14 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
         </div>
         <div class="restore-preview" id="backup-preview"></div>
       </div>
+    </div>
+    <div class="setting-group">
+      <div class="setting-group-title">Diagnostics</div>
+      <div class="setting-row">
+        <div><div class="setting-label">Export Diagnostics</div><div class="setting-desc">Generate a local diagnostic report with redacted URLs. No data is transmitted.</div></div>
+        <button class="h-btn" id="btn-diagnostics" style="font-size:11px">Generate Report</button>
+      </div>
+      <pre id="diagnostics-output" style="display:none;max-height:200px;overflow:auto;padding:12px;margin-top:8px;background:var(--sc-input-bg);border:1px solid var(--sc-input-border);border-radius:8px;font-size:11px;color:var(--sc-muted);white-space:pre-wrap;word-break:break-all;"></pre>
     </div>
     <div class="editor-row" style="margin-top:16px"><button class="save-btn" id="save-settings">Save All Settings</button></div>
   </div>

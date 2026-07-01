@@ -1,4 +1,4 @@
-/* StyleCraft v1.23.0 - Content Script / Editor */
+/* StyleCraft v1.24.0 - Content Script / Editor */
 (function () {
   if (window.__stylecraft_editor_loaded) return;
   window.__stylecraft_editor_loaded = true;

@@ -2,6 +2,12 @@
 
 All notable changes to StyleCraft are documented here.
 
+## [1.24.0] - 2026-07-01
+
+### Added
+- External-file import/export: export styles as `.user.css` files from the editor and options page; import `.user.css` files with full UserCSS metadata preservation.
+- Privacy-safe diagnostics export: options page generates a local diagnostic report with redacted URLs, storage metrics, backup status, and adapter state. No data is transmitted.
+
 ## [1.23.0] - 2026-06-30
 
 ### Added

@@ -32,6 +32,19 @@ StyleCraft makes network requests only in the following situations:
 
 No analytics, tracking, telemetry, or advertising services are used.
 
+## Local Diagnostics Export
+
+The Options page includes a "Generate Report" button that produces a local diagnostic JSON file. This report contains:
+
+- Extension version and browser language
+- Storage usage (bytes, CSS line counts)
+- Style counts by source (USw, Stylus, UserCSS, custom) with domain names redacted
+- Backup status (timestamps, success/failure)
+- UserStyles.world catalog status with URLs redacted
+- Import quarantine summary (rejection reasons only, no style content)
+
+The diagnostic report is generated entirely on your device. **It is never transmitted over the network.** The report is saved as a local JSON file that you can share with support if you choose to. URLs and domain names are redacted by default to protect browsing privacy.
+
 ## Permissions Justification
 
 - **storage:** Save your custom styles and settings locally

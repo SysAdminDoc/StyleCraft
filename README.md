@@ -1,6 +1,6 @@
 # StyleCraft
 
-![Version](https://img.shields.io/badge/version-1.23.0-blue)
+![Version](https://img.shields.io/badge/version-1.24.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Chrome%20%7C%20Edge%20%7C%20Brave-4285F4?logo=googlechrome&logoColor=white)
 ![Manifest](https://img.shields.io/badge/manifest-v3-orange)
@@ -100,6 +100,9 @@ The same matcher drives early injection, popup installed-style state, badge coun
 | Undo for Deletes | 8-second undo window on all destructive operations |
 | Quota Protection | Catches and surfaces storage quota errors |
 | Import Guard | Validates imported data, quarantines invalid entries, blocks dangerous CSS schemes, and creates a pre-import backup before storage writes |
+| UserCSS Export | Export any style as a `.user.css` file with metadata header for use in other style managers |
+| UserCSS Import | Import `.user.css` files directly with metadata, variables, and match rules preserved |
+| Diagnostics Export | Generate a local diagnostic report with redacted URLs for troubleshooting — no data leaves your device |
 | CSS Trust Checks | Flags remote CSS fetches and high-risk selectors with per-style trust metadata |
 | Per-Site Access Grants | Host access is optional; the popup requests the current site only when StyleCraft needs to inject styles |
 | Local Assist Settings | CSS assist endpoint/model stay in settings; optional key is stored separately from exports |
@@ -205,6 +208,7 @@ The CodeMirror, Sass, and PostCSS bundles are generated into `vendor/` and shipp
 | StyleCraft | JSON | Full backup/restore |
 | Stylus | JSON array | Parses @-moz-document sections, extracts domains, aggregates multi-domain styles |
 | Stylebot | JSON object | Maps domain keys to custom CSS entries |
+| UserCSS | `.user.css` | Single-file import with `==UserStyle==` metadata, variables, and match rules preserved |
 
 ## FAQ
 

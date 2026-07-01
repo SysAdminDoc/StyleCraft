@@ -1,4 +1,4 @@
-/* StyleCraft v1.23.0 - Options Page */
+/* StyleCraft v1.24.0 - Options Page */
 (async function(){
   const $=id=>document.getElementById(id);
   const send=msg=>new Promise(r=>chrome.runtime.sendMessage(msg,r));
@@ -71,11 +71,41 @@
     });
   }
 
+  /* ─── Single domain .user.css export ─── */
+  function exportSingleDomainUserCSS(domain) {
+    const data = allData[domain];
+    if (!data) { toast('No data for ' + domain); return; }
+    const css = data.customCSS || '';
+    const meta = (data.meta && data.meta.name) || domain;
+    const version = (data.meta && data.meta.version) || '1.0.0';
+    const namespace = (data.meta && data.meta.namespace) || 'stylecraft/' + domain;
+    let header = '/* ==UserStyle==\n';
+    header += '@name        ' + meta + '\n';
+    header += '@namespace   ' + namespace + '\n';
+    header += '@version     ' + version + '\n';
+    if (data.meta && data.meta.author) header += '@author      ' + data.meta.author + '\n';
+    if (data.meta && data.meta.description) header += '@description ' + data.meta.description + '\n';
+    if (data.meta && data.meta.license) header += '@license     ' + data.meta.license + '\n';
+    if (data.sourceUrl || (data.meta && data.meta.updateURL)) header += '@updateURL   ' + (data.sourceUrl || data.meta.updateURL) + '\n';
+    header += '==/UserStyle== */\n\n';
+    let body = css;
+    if (domain !== '*' && !/@-?moz-?document/i.test(css)) {
+      body = '@-moz-document domain("' + domain + '") {\n' + css + '\n}';
+    }
+    const output = header + body + '\n';
+    const blob = new Blob([output], { type: 'text/css' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = domain.replace(/[^a-zA-Z0-9.-]/g, '_') + '.user.css';
+    a.click(); URL.revokeObjectURL(url);
+    toast('Exported .user.css for ' + domain);
+  }
+
   /* ─── Single domain export ─── */
   function exportSingleDomain(domain) {
     const data = allData[domain];
     if (!data) { toast('No data for ' + domain); return; }
-    const exp = { domain, data, version: '1.23.0', exported: new Date().toISOString() };
+    const exp = { domain, data, version: '1.24.0', exported: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(exp, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -222,7 +252,7 @@
       const lines = (data.customCSS || '').split('\n').length;
       const checked = stylesSelected.has(domain) ? ' checked' : '';
       const metaName = (data.meta && data.meta.name) ? ' (' + esc(data.meta.name) + ')' : '';
-      return '<div class="card" data-domain="' + esc(domain) + '"><div class="card-header"><div class="card-header-left"><input type="checkbox" class="card-check style-check"' + checked + '/><div><div class="card-domain">' + esc(domain) + metaName + '</div><div class="card-meta">' + lines + ' lines &middot; Custom CSS ' + (data.customEnabled !== false ? 'enabled' : 'disabled') + '</div></div></div><div class="card-actions"><label class="toggle"><input type="checkbox" class="toggle-custom" ' + (data.customEnabled !== false ? 'checked' : '') + '/><span class="toggle-sl"></span></label><button class="card-btn export-single-btn" title="Export this style"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></button><button class="card-btn clone-btn" title="Clone to another domain"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button><button class="card-btn edit-btn" title="Edit"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button><button class="card-btn danger delete-btn" title="Delete"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button></div></div><div class="card-body"><textarea class="editor-area css-ed" spellcheck="false">' + esc(data.customCSS || '') + '</textarea><div class="editor-row"><button class="save-btn save-css">Save</button></div></div></div>';
+      return '<div class="card" data-domain="' + esc(domain) + '"><div class="card-header"><div class="card-header-left"><input type="checkbox" class="card-check style-check"' + checked + '/><div><div class="card-domain">' + esc(domain) + metaName + '</div><div class="card-meta">' + lines + ' lines &middot; Custom CSS ' + (data.customEnabled !== false ? 'enabled' : 'disabled') + '</div></div></div><div class="card-actions"><label class="toggle"><input type="checkbox" class="toggle-custom" ' + (data.customEnabled !== false ? 'checked' : '') + '/><span class="toggle-sl"></span></label><button class="card-btn export-single-btn" title="Export as JSON"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></button><button class="card-btn export-usercss-btn" title="Export as .user.css"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></button><button class="card-btn clone-btn" title="Clone to another domain"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button><button class="card-btn edit-btn" title="Edit"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button><button class="card-btn danger delete-btn" title="Delete"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button></div></div><div class="card-body"><textarea class="editor-area css-ed" spellcheck="false">' + esc(data.customCSS || '') + '</textarea><div class="editor-row"><button class="save-btn save-css">Save</button></div></div></div>';
     }).join('');
     wireStyleCards();
     updateStylesBulkCount();
@@ -237,7 +267,8 @@
       styleCheck.setAttribute('aria-label', 'Select custom CSS for ' + domain);
       customToggle.setAttribute('aria-label', 'Enable custom CSS for ' + domain);
       if (cssEditor) cssEditor.setAttribute('aria-label', 'Custom CSS for ' + domain);
-      card.querySelector('.export-single-btn').setAttribute('aria-label', 'Export custom CSS for ' + domain);
+      card.querySelector('.export-single-btn').setAttribute('aria-label', 'Export custom CSS as JSON for ' + domain);
+      card.querySelector('.export-usercss-btn').setAttribute('aria-label', 'Export custom CSS as .user.css for ' + domain);
       card.querySelector('.clone-btn').setAttribute('aria-label', 'Clone custom CSS for ' + domain);
       card.querySelector('.edit-btn').setAttribute('aria-label', 'Edit custom CSS for ' + domain);
       card.querySelector('.delete-btn').setAttribute('aria-label', 'Delete custom CSS for ' + domain);
@@ -247,6 +278,7 @@
       });
       card.querySelector('.edit-btn').addEventListener('click', () => chrome.tabs.create({ url: chrome.runtime.getURL('editor.html#' + encodeURIComponent(domain)) }));
       card.querySelector('.export-single-btn').addEventListener('click', () => exportSingleDomain(domain));
+      card.querySelector('.export-usercss-btn').addEventListener('click', () => exportSingleDomainUserCSS(domain));
       card.querySelector('.toggle-custom').addEventListener('change', async e => {
         allData[domain].customEnabled = e.target.checked;
         await saveDomainData(domain, allData[domain]);
@@ -687,7 +719,7 @@
 
   /* ─── IMPORT/EXPORT ─── */
   $('btn-export').addEventListener('click',()=>{
-  const exp={data:allData,settings,version:'1.23.0',exported:new Date().toISOString()};
+  const exp={data:allData,settings,version:'1.24.0',exported:new Date().toISOString()};
     const blob=new Blob([JSON.stringify(exp,null,2)],{type:'application/json'});
     const url=URL.createObjectURL(blob);const a=document.createElement('a');
     a.href=url;a.download='stylecraft-export-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(url);
@@ -700,11 +732,21 @@
     const reader=new FileReader();
     reader.onload=async()=>{
       try{
-        const raw=JSON.parse(reader.result);
-
         if (StyleCraftData.MAX_IMPORT_BYTES && reader.result.length > StyleCraftData.MAX_IMPORT_BYTES) {
           throw new Error('Import file is too large for local storage safety limit');
         }
+
+        if (isUserCssImport(file.name, reader.result)) {
+          const result = convertUserCssImport(reader.result, {});
+          const plan = StyleCraftData.planStyleDataImport(result.data, allData, { mode: 'merge', source: '.user.css file' });
+          plan.converted = result;
+          await commitImportPlan(plan, null);
+          importFile.value = '';
+          return;
+        }
+
+        const raw=JSON.parse(reader.result);
+
         let plan;
         let settingsPatch = null;
         if (isStylusExport(raw)) {
@@ -752,6 +794,57 @@
     const counts = summary.added + ' added, ' + summary.replaced + ' replaced';
     const quarantine = summary.rejected ? ', ' + summary.rejected + ' quarantined' : '';
     return action + ' ' + domains + ' (' + counts + quarantine + '); pre-import backup created';
+  }
+
+  /* ─── UserCSS (.user.css) Import Detection & Conversion ─── */
+  function isUserCssImport(filename, content) {
+    if (typeof filename === 'string' && /\.user\.css$/i.test(filename)) return true;
+    if (typeof content === 'string' && /\/\*\s*==UserStyle==/i.test(content)) return true;
+    return false;
+  }
+
+  function convertUserCssImport(content, existingData) {
+    const parsed = window.StyleCraftUserCSS ? window.StyleCraftUserCSS.parse(content) : { meta: {}, variables: [], values: {}, appliesTo: [] };
+    const name = (parsed.meta && parsed.meta.name) || 'Imported Style';
+    const id = 'usercss-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+    const domains = new Set();
+    (parsed.appliesTo || []).forEach(rule => {
+      if (rule.type === 'domain') domains.add(rule.value);
+      else if (rule.type === 'url' || rule.type === 'url-prefix') {
+        try { domains.add(new URL(rule.value).hostname); } catch {}
+      } else if (rule.type === 'regexp') domains.add('*');
+    });
+    const domainRe = /@-?moz-?document[^{]*domain\s*\(\s*["']?([^"')]+)["']?\s*\)/g;
+    let dm;
+    while ((dm = domainRe.exec(content)) !== null) domains.add(dm[1]);
+    const urlRe = /@-?moz-?document[^{]*(?:url|url-prefix)\s*\(\s*["']?(https?:\/\/[^/"')]+)/g;
+    while ((dm = urlRe.exec(content)) !== null) {
+      try { domains.add(new URL(dm[1]).hostname); } catch {}
+    }
+    if (domains.size === 0) domains.add('*');
+    const merged = JSON.parse(JSON.stringify(existingData || {}));
+    for (const domain of domains) {
+      const key = domain === '*' ? '*' : domain;
+      if (!merged[key]) merged[key] = { themes: {}, customCSS: '', customEnabled: true };
+      if (!merged[key].themes) merged[key].themes = {};
+      const themeRecord = {
+        name,
+        css: content,
+        rawCSS: content,
+        enabled: true,
+        source: 'usercss-import',
+        meta: parsed.meta || {},
+        usercss: parsed.hasMeta || parsed.variables.length || parsed.appliesTo.length ? {
+          meta: parsed.meta,
+          variables: parsed.variables,
+          values: window.StyleCraftUserCSS ? window.StyleCraftUserCSS.mergeValues(parsed.variables) : parsed.values,
+          appliesTo: parsed.appliesTo
+        } : null
+      };
+      if (parsed.meta && parsed.meta.updateURL) themeRecord.sourceUrl = parsed.meta.updateURL;
+      merged[key].themes[id] = themeRecord;
+    }
+    return { data: merged, count: 1, domains: domains.size };
   }
 
   /* ─── Stylus Import Detection & Conversion ─── */
@@ -1032,6 +1125,114 @@
     if(!confirm('Delete ALL styles, themes, and settings? This cannot be undone.'))return;
     await chrome.storage.local.clear();
     allData={};renderStyles();renderThemes();updateStats();$('global-css').value='';toast('All data cleared');
+  });
+
+  /* ─── Diagnostics export ─── */
+  $('btn-diagnostics').addEventListener('click', async () => {
+    const btn = $('btn-diagnostics');
+    btn.disabled = true; btn.textContent = 'Generating...';
+    try {
+      const stored = await chrome.storage.local.get([
+        'stylecraft_data', 'stylecraft_settings', 'sc_backups',
+        'sc_backup_status', 'sc_usw_search_cache', 'sc_usw_catalog_status',
+        'stylecraft_import_quarantine'
+      ]);
+      const data = stored.stylecraft_data || {};
+      const domains = Object.keys(data);
+      let totalThemes = 0;
+      let totalCSSLines = 0;
+      let totalCSSBytes = 0;
+      const sourceBreakdown = { usw: 0, stylus: 0, usercss: 0, custom: 0 };
+      for (const d of domains) {
+        const entry = data[d];
+        const css = entry.customCSS || '';
+        if (css.trim()) {
+          sourceBreakdown.custom++;
+          totalCSSLines += css.split('\n').filter(l => l.trim()).length;
+          totalCSSBytes += new Blob([css]).size;
+        }
+        for (const theme of Object.values(entry.themes || {})) {
+          totalThemes++;
+          const src = theme.source || '';
+          if (src === 'stylus-import') sourceBreakdown.stylus++;
+          else if (src === 'usercss-import') sourceBreakdown.usercss++;
+          else sourceBreakdown.usw++;
+          const themeCSS = theme.rawCSS || theme.css || '';
+          totalCSSLines += themeCSS.split('\n').filter(l => l.trim()).length;
+          totalCSSBytes += new Blob([themeCSS]).size;
+        }
+      }
+      const backups = stored.sc_backups || [];
+      const backupStatus = stored.sc_backup_status || {};
+      const catalogStatus = stored.sc_usw_catalog_status || {};
+      const quarantine = stored.stylecraft_import_quarantine || {};
+      const settingsKeys = Object.keys(stored.stylecraft_settings || {});
+      let storageBytes = 0;
+      try {
+        storageBytes = await new Promise(r => chrome.storage.local.getBytesInUse(null, r));
+      } catch {}
+      const report = {
+        generated: new Date().toISOString(),
+        version: '1.24.0',
+        platform: {
+          userAgent: navigator.userAgent.replace(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g, '[redacted-ip]'),
+          language: navigator.language
+        },
+        storage: {
+          bytesUsed: storageBytes,
+          bytesUsedKB: (storageBytes / 1024).toFixed(1) + ' KB',
+          totalCSSBytes,
+          totalCSSLines
+        },
+        styles: {
+          domainCount: domains.length,
+          themeCount: totalThemes,
+          customCSSCount: sourceBreakdown.custom,
+          sources: sourceBreakdown,
+          domainsRedacted: domains.map(d => d.replace(/[^.*]/g, '*'))
+        },
+        settings: {
+          keysPresent: settingsKeys.filter(k => k !== 'aiAssist'),
+          theme: (stored.stylecraft_settings || {}).theme || 'catppuccin'
+        },
+        backups: {
+          count: backups.length,
+          timestamps: backups.map(b => b.timestamp),
+          lastStatus: {
+            ok: backupStatus.ok,
+            message: backupStatus.message || '',
+            timestamp: backupStatus.timestamp || ''
+          }
+        },
+        catalog: {
+          lastStatus: {
+            ok: catalogStatus.ok,
+            stale: catalogStatus.stale,
+            message: (catalogStatus.message || '').replace(/https?:\/\/[^\s"]+/g, '[redacted-url]'),
+            timestamp: catalogStatus.timestamp || ''
+          }
+        },
+        quarantine: {
+          source: quarantine.source || '',
+          timestamp: quarantine.timestamp || '',
+          rejectedCount: Array.isArray(quarantine.rejected) ? quarantine.rejected.length : 0,
+          rejectedReasons: Array.isArray(quarantine.rejected) ? quarantine.rejected.map(r => r.reason) : []
+        }
+      };
+      const json = JSON.stringify(report, null, 2);
+      $('diagnostics-output').textContent = json;
+      $('diagnostics-output').style.display = 'block';
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'stylecraft-diagnostics-' + new Date().toISOString().slice(0, 10) + '.json';
+      a.click(); URL.revokeObjectURL(url);
+      toast('Diagnostics report exported');
+    } catch (err) {
+      toast('Diagnostics failed: ' + (err.message || String(err)));
+    } finally {
+      btn.disabled = false; btn.textContent = 'Generate Report';
+    }
   });
 
   function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
