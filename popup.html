@@ -213,7 +213,7 @@ body {
   border-color: var(--sc-accent);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--sc-accent) 12%, transparent), 0 0 12px color-mix(in srgb, var(--sc-accent) 8%, transparent);
 }
-.search-input::placeholder { color: rgba(127,132,156,0.4); }
+.search-input::placeholder { color: color-mix(in srgb, var(--sc-muted) 60%, transparent); }
 .search-go {
   height: 28px; padding: 0 12px; border-radius: 6px;
   background: linear-gradient(135deg, color-mix(in srgb, var(--sc-accent) 12%, transparent), color-mix(in srgb, var(--sc-blue) 8%, transparent));
@@ -326,6 +326,9 @@ body {
 @keyframes fadeSlideIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
 @keyframes pulseGlow { 0%,100%{box-shadow:0 0 4px color-mix(in srgb, var(--sc-accent) 10%, transparent)} 50%{box-shadow:0 0 12px color-mix(in srgb, var(--sc-accent) 25%, transparent)} }
 @keyframes gradientShift { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
 .powered {
   text-align: center; padding: 3px 16px 5px; font-size: 8px; color: var(--sc-faint); flex-shrink: 0;
   border-top: 1px solid var(--sc-border);
