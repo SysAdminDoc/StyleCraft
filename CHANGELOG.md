@@ -13,6 +13,18 @@ All notable changes to StyleCraft are documented here.
 - Preset section inline styles now use theme-aware colors via `getThemeColors()`.
 - `injectAndSend` and `previewTheme` replaced fixed `setTimeout` with a retry loop (up to 5 attempts with backoff), preventing silently dropped messages when content script injection is slow.
 - UserCSS `parseBracketOptions` no longer naively replaces all single quotes with double quotes. Now tries raw JSON first, then converts single-quoted strings individually (preserving apostrophes in values).
+- `sc-toggle-readability`, `sc-toggle-grayscale`, `sc-get-toggle-state` handlers replaced setTimeout(100) race with the same sendWithRetry pattern used by all other message senders.
+- `safeRegexTest` now checks pattern length before compiling regex to avoid unnecessary RegExp construction.
+- Content script panel: remaining hardcoded Catppuccin colors in visibility label, color input defaults, and border placeholder replaced with theme tokens.
+- Popup and options search input placeholder colors now use theme-aware `color-mix(var(--sc-muted))` instead of hardcoded rgba.
+- Options browse-thumb background uses theme token instead of hardcoded rgba.
+- Added `prefers-reduced-motion: reduce` media query to popup.html disabling all continuous animations.
+- Context menu creation now clears stale menus via removeAll() before recreation on extension update.
+- Content script saveCustomCSS shows user-facing toast on final retry failure instead of silently giving up.
+
+### Security
+- `blockRemoteCss` setting is now enforced in all UI trust check paths — popup Quick CSS, options style saves, options theme updates, and full editor saves all pass trust options to assertCssAllowed().
+- Added regression test verifying blockRemoteCss elevates remote url/import to blocking severity.
 
 ## [1.25.0] - 2026-07-01
 
