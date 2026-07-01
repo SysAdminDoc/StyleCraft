@@ -139,7 +139,7 @@
     refs = {
       closeBtn: $('#sc-close-btn'), pickBtn: $('#sc-pick-btn'), previewBtn: $('#sc-preview-btn'),
       createBtn: $('#sc-create-btn'), undoBtn: $('#sc-undo-btn'), redoBtn: $('#sc-redo-btn'),
-      resetBtn: $('#sc-reset-btn'), hideBtn: $('#sc-hide-btn'), readBtn: $('#sc-readability-btn'), grayBtn: $('#sc-grayscale-btn'), autoDarkBtn: $('#sc-autodark-btn'), ttsBtn: $('#sc-tts-btn'),
+      resetBtn: $('#sc-reset-btn'), hideBtn: $('#sc-hide-btn'), diffBtn: $('#sc-diff-btn'), readBtn: $('#sc-readability-btn'), grayBtn: $('#sc-grayscale-btn'), autoDarkBtn: $('#sc-autodark-btn'), ttsBtn: $('#sc-tts-btn'),
       searchBtn: $('#sc-search-btn'), settingsBtn: $('#sc-settings-btn'),
       editorTheme: $('#sc-editor-theme'),
       domainInput: $('#sc-domain'), selectorInput: $('#sc-selector-input'),
@@ -285,6 +285,7 @@
     });
     refs.readBtn.addEventListener('click', toggleReadability);
     refs.grayBtn.addEventListener('click', toggleGrayscale);
+    refs.diffBtn.addEventListener('click', toggleDiffPreview);
     refs.autoDarkBtn.addEventListener('click', toggleAutoDark);
     refs.ttsBtn.addEventListener('click', toggleTTS);
 
@@ -360,12 +361,13 @@
       [refs.hideBtn, 'Hide selected element'],
       [refs.readBtn, 'Toggle readability mode'],
       [refs.grayBtn, 'Toggle grayscale mode'],
+      [refs.diffBtn, 'Toggle before/after preview'],
       [refs.autoDarkBtn, 'Toggle auto dark mode'],
       [refs.ttsBtn, 'Read page aloud'],
       [refs.createBtn, 'Create CSS rule']
     ];
     labelledControls.forEach(([el, label]) => { if (el && !el.getAttribute('aria-label')) el.setAttribute('aria-label', label); });
-    [refs.previewBtn, refs.hideBtn, refs.readBtn, refs.grayBtn, refs.autoDarkBtn, refs.ttsBtn].forEach(el => { if (el && !el.hasAttribute('aria-pressed')) el.setAttribute('aria-pressed', 'false'); });
+    [refs.previewBtn, refs.hideBtn, refs.diffBtn, refs.readBtn, refs.grayBtn, refs.autoDarkBtn, refs.ttsBtn].forEach(el => { if (el && !el.hasAttribute('aria-pressed')) el.setAttribute('aria-pressed', 'false'); });
     refs.$$('.sc-prop-input,.sc-color-input,.sc-select-input,.sc-range-input,.sc-theme-textarea').forEach(control => {
       if (!control.getAttribute('aria-label')) control.setAttribute('aria-label', labelFromPropControl(control));
     });
@@ -1451,6 +1453,19 @@
 
   function toggleGrayscale(){state.grayscale=!state.grayscale;refs.grayBtn.classList.toggle('active',state.grayscale);refs.grayBtn.setAttribute('aria-pressed',state.grayscale?'true':'false');let el=document.getElementById('sc-grayscale-style');if(state.grayscale){if(!el){el=document.createElement('style');el.id='sc-grayscale-style';document.head.appendChild(el);}el.textContent='html{filter:grayscale(100%)!important}';}else if(el)el.remove();toast(state.grayscale?'Grayscale ON':'Grayscale OFF');}
 
+  let diffActive = false;
+  function toggleDiffPreview() {
+    diffActive = !diffActive;
+    refs.diffBtn.classList.toggle('active', diffActive);
+    refs.diffBtn.setAttribute('aria-pressed', diffActive ? 'true' : 'false');
+    const ids = ['stylecraft-theme-styles', 'stylecraft-custom-styles', 'stylecraft-preview-styles'];
+    for (const id of ids) {
+      const el = document.getElementById(id);
+      if (el) el.disabled = diffActive;
+    }
+    toast(diffActive ? 'Styles hidden (before)' : 'Styles restored (after)');
+  }
+
   function toggleAutoDark() {
     state.autoDark = !state.autoDark;
     refs.autoDarkBtn.classList.toggle('active', state.autoDark);
@@ -1931,6 +1946,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 <button id="sc-hide-btn" class="sc-util-btn"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>Hide</button>
 <button id="sc-readability-btn" class="sc-util-btn"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>Read</button>
 <button id="sc-grayscale-btn" class="sc-util-btn"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10"/></svg>Gray</button>
+<button id="sc-diff-btn" class="sc-util-btn"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>B/A</button>
 <button id="sc-autodark-btn" class="sc-util-btn"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>Dark</button>
 <button id="sc-tts-btn" class="sc-util-btn"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>Speak</button>
 </div>
