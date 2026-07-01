@@ -11,6 +11,14 @@
     return String(value).replace(/[.+?^${}()|[\]\\]/g, '\\$&');
   }
 
+  function safeRegexTest(pattern, input) {
+    try {
+      const re = new RegExp(pattern);
+      if (pattern.length > 500) return false;
+      return re.test(input);
+    } catch { return false; }
+  }
+
   function wildcardRegExp(value) {
     return new RegExp('^' + escapeRegExp(value).replace(/\*/g, '.*') + '$');
   }
@@ -41,7 +49,7 @@
     const parts = splitComma(key);
     if (parts.length > 1) return parts.some(part => storedKeyMatchesPage(part, url, domain));
     if (key.startsWith('^')) {
-      try { return new RegExp(key).test(url); } catch { return false; }
+      return safeRegexTest(key, url);
     }
     if (key.includes('*')) {
       try {
@@ -68,7 +76,7 @@
       case 'url-prefix':
         return url.startsWith(value);
       case 'regexp':
-        try { return new RegExp(value).test(url); } catch { return false; }
+        return safeRegexTest(value, url);
       case 'wildcard':
         if (value.includes('://') || value.includes('/')) {
           try { return wildcardRegExp(value).test(url); } catch { return false; }
@@ -111,7 +119,7 @@
       if (type === 'url' && url === value) return true;
       if (type === 'url-prefix' && url.startsWith(value)) return true;
       if (type === 'regexp') {
-        try { if (new RegExp(value).test(url)) return true; } catch {}
+        if (safeRegexTest(value, url)) return true;
       }
     }
     return false;

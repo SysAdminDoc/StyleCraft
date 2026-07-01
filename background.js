@@ -281,14 +281,18 @@ async function getInstalledIds(domain) {
 
 async function broadcastUpdate(domain) {
   const all = await getAllData();
-  const data = all[domain];
+  const data = all[domain] || {};
   chrome.tabs.query({}, tabs => {
     for (const tab of tabs) {
       if (!tab.url || tab.url.startsWith('chrome') || tab.url.startsWith('about:') || tab.url.startsWith('edge:')) continue;
       try {
-        const d = new URL(tab.url).hostname;
-        if (domain === '*' || entryMatchesPage(domain, data, tab.url, d))
+        if (domain === '*') {
           chrome.tabs.sendMessage(tab.id, { action: 'sc-styles-updated' }).catch(() => {});
+        } else {
+          const d = new URL(tab.url).hostname;
+          if (entryMatchesPage(domain, data, tab.url, d))
+            chrome.tabs.sendMessage(tab.id, { action: 'sc-styles-updated' }).catch(() => {});
+        }
       } catch {}
     }
   });

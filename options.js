@@ -516,7 +516,7 @@
   $('themes-bulk-enable').addEventListener('click', async () => {
     if (!themesSelected.size) return;
     for (const k of themesSelected) {
-      const [d, i] = k.split('|');
+      const sep = k.indexOf('|'); const d = k.slice(0, sep); const i = k.slice(sep + 1);
       if (allData[d] && allData[d].themes && allData[d].themes[i]) allData[d].themes[i].enabled = true;
     }
     await saveAllData(allData); notifyTabs('*');
@@ -525,7 +525,7 @@
   $('themes-bulk-disable').addEventListener('click', async () => {
     if (!themesSelected.size) return;
     for (const k of themesSelected) {
-      const [d, i] = k.split('|');
+      const sep = k.indexOf('|'); const d = k.slice(0, sep); const i = k.slice(sep + 1);
       if (allData[d] && allData[d].themes && allData[d].themes[i]) allData[d].themes[i].enabled = false;
     }
     await saveAllData(allData); notifyTabs('*');
@@ -536,7 +536,7 @@
     snapshotForUndo('Delete themes');
     let count = 0;
     for (const k of themesSelected) {
-      const [d, i] = k.split('|');
+      const sep = k.indexOf('|'); const d = k.slice(0, sep); const i = k.slice(sep + 1);
       if (allData[d] && allData[d].themes && allData[d].themes[i]) { delete allData[d].themes[i]; count++; }
       if (allData[d] && !Object.keys(allData[d].themes || {}).length && !(allData[d].customCSS || '').trim()) delete allData[d];
     }

@@ -33,10 +33,17 @@
     warnings.push({ code, message, severity: severity || 'warning' });
   }
 
+  function stripCssEscapes(text) {
+    return text.replace(/\\([0-9a-fA-F]{1,6})\s?/g, (_, hex) =>
+      String.fromCodePoint(parseInt(hex, 16))
+    ).replace(/\\(.)/g, '$1');
+  }
+
   function analyzeCssTrust(css) {
     const text = String(css || '');
+    const normalized = stripCssEscapes(text);
     const warnings = [];
-    if (/url\(\s*(['"]?)\s*(?:javascript|vbscript):/i.test(text) || /@import\s+(?:url\()?\s*(['"]?)\s*(?:javascript|vbscript):/i.test(text)) {
+    if (/url\(\s*(['"]?)\s*(?:javascript|vbscript):/i.test(normalized) || /@import\s+(?:url\()?\s*(['"]?)\s*(?:javascript|vbscript):/i.test(normalized)) {
       addTrustWarning(warnings, 'blocked-scheme', 'Blocked javascript/vbscript URL in CSS.', 'block');
     }
     if (/url\(\s*(['"]?)\s*(?:https?:)?\/\//i.test(text)) {
