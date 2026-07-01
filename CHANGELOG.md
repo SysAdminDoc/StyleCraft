@@ -2,6 +2,23 @@
 
 All notable changes to StyleCraft are documented here.
 
+## [1.25.0] - 2026-07-01
+
+### Fixed
+- broadcastUpdate crash when wildcard `*` domain data is undefined
+- Theme key `|` split corruption for domains containing pipe characters
+- CSS trust analyzer bypass via CSS escape sequences (e.g. `java\73 cript:`)
+- @-moz-document brace counter misparse when CSS contains braces inside strings or comments
+- Hardcoded Catppuccin rgba colors across popup, options, and editor pages now use CSS variable tokens via `color-mix()` — all three themes render correctly
+- Duplicate `:root` block in options.html causing conflicting CSS variable definitions
+- popup.html `<meta charset>` now precedes `<link>` element per HTML spec
+- TTS truncation feedback: toast now indicates when text exceeds 10k char limit
+- Version strings in export functions now use `chrome.runtime.getManifest().version` instead of hardcoded values
+
+### Security
+- Added `safeRegexTest` with 500-char length cap to prevent ReDoS from user-supplied regexp patterns
+- Expanded prototype pollution blocklist with `toString`, `valueOf`, `hasOwnProperty`
+
 ## [1.24.0] - 2026-07-01
 
 ### Added

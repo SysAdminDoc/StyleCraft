@@ -47,7 +47,7 @@ function extensionApiMock(initialStore, activeUrl = 'https://example.com/article
       getURL(resourcePath) {
         return new URL(resourcePath, window.location.href).href;
       },
-      getManifest() { return { version: '1.24.0' }; },
+      getManifest() { return { version: '1.25.0' }; },
       sendMessage(message, callback) {
         let response = { ok: true };
         if (message?.action === 'sc-get-toggle-state') {
@@ -97,7 +97,7 @@ function contentScriptChromeMock() {
       getURL(resourcePath) {
         return new URL(resourcePath, window.location.href).href;
       },
-      getManifest() { return { version: '1.24.0' }; },
+      getManifest() { return { version: '1.25.0' }; },
       onMessage: {
         addListener(listener) {
           messageListeners.push(listener);

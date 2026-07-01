@@ -1,4 +1,4 @@
-/* StyleCraft v1.24.0 - Popup */
+/* StyleCraft v1.25.0 - Popup */
 (async function() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const url = tab?.url || '';

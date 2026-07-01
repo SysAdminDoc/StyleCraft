@@ -1,4 +1,4 @@
-/* StyleCraft v1.24.0 - shared URL and style matcher */
+/* StyleCraft v1.25.0 - shared URL and style matcher */
 (function(global) {
   if (global.StyleCraftMatcher) return;
 

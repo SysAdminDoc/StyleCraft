@@ -1,4 +1,4 @@
-/* StyleCraft v1.24.0 - Style Injector (document_start) */
+/* StyleCraft v1.25.0 - Style Injector (document_start) */
 (function() {
   if (window.__stylecraft_injected) return;
   window.__stylecraft_injected = true;

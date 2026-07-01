@@ -42,7 +42,7 @@ function extensionApiMock(initialStore) {
       getURL(resourcePath) {
         return new URL(resourcePath, window.location.href).href;
       },
-      getManifest() { return { version: '1.24.0' }; },
+      getManifest() { return { version: '1.25.0' }; },
       sendMessage(_message, callback) {
         if (callback) queueMicrotask(() => callback({ ok: true }));
         return Promise.resolve({ ok: true });
@@ -181,7 +181,7 @@ test('diagnostics export contains expected fields with redacted data', async ({ 
   const preContent = await page.locator('#diagnostics-output').textContent();
   const report = JSON.parse(preContent);
 
-  expect(report.version).toBe('1.24.0');
+  expect(report.version).toBe('1.25.0');
   expect(report.storage).toBeTruthy();
   expect(report.storage.totalCSSLines).toBeGreaterThan(0);
   expect(report.styles.domainCount).toBe(1);

@@ -59,7 +59,7 @@ function popupPermissionMock() {
       getURL(resourcePath) {
         return new URL(resourcePath, window.location.href).href;
       },
-      getManifest() { return { version: '1.24.0' }; },
+      getManifest() { return { version: '1.25.0' }; },
       sendMessage(message, callback) {
         window.__stylecraftPermission.messages.push(message?.action || '');
         let response = { ok: true };
