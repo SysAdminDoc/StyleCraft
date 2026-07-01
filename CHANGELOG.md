@@ -13,6 +13,7 @@ All notable changes to StyleCraft are documented here.
 - Element picker nth-child path fallback: when no stable class, ID, or data attribute is available, the picker generates a precise `nth-child` chain instead of a bare tag name.
 - Text-to-speech button in the side-panel editor: reads page content aloud using browser SpeechSynthesis with start/stop toggle.
 - Per-style usage analytics: local-only match counter shown per domain in the options page, throttled to avoid storage contention.
+- Per-site reading preferences: readability mode settings (theme, font, size, width) are saved per-domain and restored on future visits.
 
 ## [1.23.0] - 2026-06-30
 

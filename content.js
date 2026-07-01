@@ -1383,6 +1383,32 @@
     oled: { bg: '#000000', text: '#cccccc', link: '#7aa2f7' }
   };
   let readSettings = { theme: 'dark', fontSize: 18, lineHeight: 1.7, fontFamily: 'Georgia, serif', maxWidth: 720 };
+  const readDomain = location.hostname;
+
+  function loadPerSiteReadSettings() {
+    if (!chrome.storage || !chrome.storage.local) return;
+    try {
+      chrome.storage.local.get('stylecraft_read_prefs', (result) => {
+        if (chrome.runtime.lastError) return;
+        const prefs = (result && result.stylecraft_read_prefs) || {};
+        const sitePrefs = prefs[readDomain];
+        if (sitePrefs) Object.assign(readSettings, sitePrefs);
+      });
+    } catch {}
+  }
+  loadPerSiteReadSettings();
+
+  function savePerSiteReadSettings() {
+    if (!chrome.storage || !chrome.storage.local) return;
+    try {
+      chrome.storage.local.get('stylecraft_read_prefs', (result) => {
+        if (chrome.runtime.lastError) return;
+        const prefs = (result && result.stylecraft_read_prefs) || {};
+        prefs[readDomain] = Object.assign({}, readSettings);
+        chrome.storage.local.set({ stylecraft_read_prefs: prefs });
+      });
+    } catch {}
+  }
 
   function buildReadabilityCSS() {
     const t = readThemes[readSettings.theme] || readThemes.dark;
@@ -1409,12 +1435,16 @@
     refs.readBtn.classList.toggle('active', state.readability);
     refs.readBtn.setAttribute('aria-pressed', state.readability ? 'true' : 'false');
     applyReadability();
+    if (state.readability) savePerSiteReadSettings();
     toast(state.readability ? 'Readability ON' : 'Readability OFF');
   }
 
   function updateReadSettings(newSettings) {
     Object.assign(readSettings, newSettings);
-    if (state.readability) applyReadability();
+    if (state.readability) {
+      applyReadability();
+      savePerSiteReadSettings();
+    }
   }
 
   function toggleGrayscale(){state.grayscale=!state.grayscale;refs.grayBtn.classList.toggle('active',state.grayscale);refs.grayBtn.setAttribute('aria-pressed',state.grayscale?'true':'false');let el=document.getElementById('sc-grayscale-style');if(state.grayscale){if(!el){el=document.createElement('style');el.id='sc-grayscale-style';document.head.appendChild(el);}el.textContent='html{filter:grayscale(100%)!important}';}else if(el)el.remove();toast(state.grayscale?'Grayscale ON':'Grayscale OFF');}

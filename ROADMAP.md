@@ -14,7 +14,6 @@ Roadmap for StyleCraft, the Chrome MV3 CSS style manager with visual element pic
 - Stylus backup full-import with `@-moz-document` parsing improvements
 
 ### Readability mode
-- Per-site reading themes + custom CSS
 
 ## Nice-to-Haves
 
