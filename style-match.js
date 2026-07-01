@@ -12,10 +12,9 @@
   }
 
   function safeRegexTest(pattern, input) {
+    if (pattern.length > 500) return false;
     try {
-      const re = new RegExp(pattern);
-      if (pattern.length > 500) return false;
-      return re.test(input);
+      return new RegExp(pattern).test(input);
     } catch { return false; }
   }
 

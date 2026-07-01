@@ -2017,7 +2017,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 <div class="sc-boxmodel">
 <div class="sc-boxmodel-label"><span>Layout</span><span class="sc-bm-display" data-bm="display">-</span></div>
 <div class="sc-bm-vis-row">
-  <span style="font-size:10px;color:#7f849c;font-weight:600">Visibility</span>
+  <span style="font-size:10px;color:var(--sc-muted);font-weight:600">Visibility</span>
   <button class="sc-bm-vis-btn" data-bm="visibility" id="sc-bm-vis-btn">Hide</button>
 </div>
 <div class="sc-bm-wrap">
@@ -2081,8 +2081,8 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 </div></div>
 
 <div class="sc-prop-group collapsed"><div class="sc-group-header"><svg class="sc-group-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.93 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.04-.24-.3-.39-.65-.39-1.04 0-.83.67-1.5 1.5-1.5H16c3.31 0 6-2.69 6-6 0-5.17-4.5-9-10-9z"/></svg><span class="sc-group-title">Colors & Background</span><svg class="sc-group-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div><div class="sc-group-body">
-<div class="sc-prop-row"><span class="sc-prop-label">Color</span><input class="sc-color-input" data-prop="color" type="color" value="#cdd6f4"/><input class="sc-prop-input" data-prop="color" type="text" placeholder="#hex, rgb()"/></div>
-<div class="sc-prop-row"><span class="sc-prop-label">Background</span><input class="sc-color-input" data-prop="background-color" type="color" value="#1e1e2e"/><input class="sc-prop-input" data-prop="background-color" type="text" placeholder="#hex, rgb()"/></div>
+<div class="sc-prop-row"><span class="sc-prop-label">Color</span><input class="sc-color-input" data-prop="color" type="color" value="#000000"/><input class="sc-prop-input" data-prop="color" type="text" placeholder="#hex, rgb()"/></div>
+<div class="sc-prop-row"><span class="sc-prop-label">Background</span><input class="sc-color-input" data-prop="background-color" type="color" value="#ffffff"/><input class="sc-prop-input" data-prop="background-color" type="text" placeholder="#hex, rgb()"/></div>
 <div class="sc-prop-row"><span class="sc-prop-label">BG Image</span><input class="sc-prop-input" data-prop="background-image" type="text" placeholder="url(), gradient()"/></div>
 <div class="sc-prop-row"><span class="sc-prop-label">BG Size</span><select class="sc-select-input" data-prop="background-size"><option value="">Default</option><option value="cover">Cover</option><option value="contain">Contain</option><option value="auto">Auto</option></select></div>
 <div class="sc-range-row"><span class="sc-prop-label">Opacity</span><input class="sc-range-input" data-prop="opacity" data-unit="" data-default="1" type="range" min="0" max="1" step="0.05" value="1"/><span class="sc-range-val"></span></div>
@@ -2130,8 +2130,8 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 </div></div>
 
 <div class="sc-prop-group collapsed"><div class="sc-group-header"><svg class="sc-group-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/></svg><span class="sc-group-title">Border & Outline</span><svg class="sc-group-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div><div class="sc-group-body">
-<div class="sc-prop-row"><span class="sc-prop-label">Border</span><input class="sc-prop-input" data-prop="border" type="text" placeholder="1px solid #cba6f7"/></div>
-<div class="sc-prop-row"><span class="sc-prop-label">B. Color</span><input class="sc-color-input" data-prop="border-color" type="color" value="#585b70"/><input class="sc-prop-input" data-prop="border-color" type="text" placeholder="#hex"/></div>
+<div class="sc-prop-row"><span class="sc-prop-label">Border</span><input class="sc-prop-input" data-prop="border" type="text" placeholder="1px solid #333"/></div>
+<div class="sc-prop-row"><span class="sc-prop-label">B. Color</span><input class="sc-color-input" data-prop="border-color" type="color" value="#333333"/><input class="sc-prop-input" data-prop="border-color" type="text" placeholder="#hex"/></div>
 <div class="sc-prop-row"><span class="sc-prop-label">B. Style</span><select class="sc-select-input" data-prop="border-style"><option value="">Default</option><option value="none">None</option><option value="solid">Solid</option><option value="dashed">Dashed</option><option value="dotted">Dotted</option><option value="double">Double</option></select></div>
 <div class="sc-prop-row"><span class="sc-prop-label">Radius</span><input class="sc-prop-input" data-prop="border-radius" type="text" placeholder="8px, 50%"/></div>
 <div class="sc-range-row"><span class="sc-prop-label">Radius</span><input class="sc-range-input" data-prop="border-radius" data-unit="px" data-default="0" type="range" min="0" max="50" value="0"/><span class="sc-range-val"></span></div>

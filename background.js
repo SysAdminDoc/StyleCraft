@@ -8,15 +8,19 @@ const SC_USW = globalThis.StyleCraftUSw;
 const STYLE_INJECTOR_FILES = ['style-match.js', 'usercss.js', 'inject-styles.js'];
 const EDITOR_INJECTOR_FILES = ['content.js'];
 
-async function injectAndSend(tabId, message) {
-  const access = await injectFiles(tabId, EDITOR_INJECTOR_FILES);
-  for (let attempt = 0; attempt < 5; attempt++) {
+async function sendWithRetry(tabId, message, maxAttempts = 5) {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
       await new Promise(r => setTimeout(r, attempt === 0 ? 50 : 150));
-      await chrome.tabs.sendMessage(tabId, message);
-      break;
+      return await chrome.tabs.sendMessage(tabId, message);
     } catch { /* listener not ready yet, retry */ }
   }
+  return null;
+}
+
+async function injectAndSend(tabId, message) {
+  const access = await injectFiles(tabId, EDITOR_INJECTOR_FILES);
+  await sendWithRetry(tabId, message);
   return { ok: true, siteAccess: access };
 }
 
@@ -318,13 +322,7 @@ async function previewTheme(id, tabId) {
   const tab = await chrome.tabs.get(tabId);
   SC_DATA.assertCssAllowed(fetched.rawCSS, await getTrustOptions());
   const css = resolveUserCSS(fetched.rawCSS, tab.url);
-  for (let attempt = 0; attempt < 3; attempt++) {
-    try {
-      await new Promise(r => setTimeout(r, attempt === 0 ? 50 : 150));
-      await chrome.tabs.sendMessage(tabId, { action: 'sc-apply-preview', css });
-      break;
-    } catch { /* retry */ }
-  }
+  await sendWithRetry(tabId, { action: 'sc-apply-preview', css }, 3);
   return { ok: true, name: fetched.name };
 }
 
@@ -418,7 +416,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         if (tab) {
           await injectFiles(tab.id, EDITOR_INJECTOR_FILES);
-          return new Promise(r => setTimeout(() => chrome.tabs.sendMessage(tab.id, { action: 'sc-toggle-readability-get', readSettings: msg.readSettings }, res => { void chrome.runtime.lastError; r(res || {}); }), 100));
+          return (await sendWithRetry(tab.id, { action: 'sc-toggle-readability-get', readSettings: msg.readSettings }, 3)) || {};
         }
         return {};
       }
@@ -426,7 +424,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         if (tab) {
           await injectFiles(tab.id, EDITOR_INJECTOR_FILES);
-          return new Promise(r => setTimeout(() => chrome.tabs.sendMessage(tab.id, { action: 'sc-toggle-grayscale-get' }, res => { void chrome.runtime.lastError; r(res || {}); }), 100));
+          return (await sendWithRetry(tab.id, { action: 'sc-toggle-grayscale-get' }, 3)) || {};
         }
         return {};
       }
@@ -436,7 +434,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           const siteAccess = await getSiteAccessForTab(tab);
           if (!siteAccess.granted) return { readability: false, grayscale: false, siteAccess, needsPermission: siteAccess.needsPermission };
           await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: EDITOR_INJECTOR_FILES });
-          return new Promise(r => setTimeout(() => chrome.tabs.sendMessage(tab.id, { action: 'sc-get-toggle-state' }, res => { void chrome.runtime.lastError; r(res || {}); }), 100));
+          return (await sendWithRetry(tab.id, { action: 'sc-get-toggle-state' }, 3)) || {};
         }
         return {};
       }
