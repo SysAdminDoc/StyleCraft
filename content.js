@@ -1492,7 +1492,8 @@
     }
     const mainContent = document.querySelector('main, article, [role="main"], .content, .post, .entry-content, .article-body');
     const source = mainContent || document.body;
-    const text = source.innerText.trim().slice(0, 10000);
+    const fullText = source.innerText.trim();
+    const text = fullText.slice(0, 10000);
     if (!text) { toast('No text to read'); return; }
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.rate = 1.0;
@@ -1511,7 +1512,7 @@
     ttsSpeaking = true;
     refs.ttsBtn.classList.add('active');
     refs.ttsBtn.setAttribute('aria-pressed', 'true');
-    toast('Speaking...');
+    toast(fullText.length > 10000 ? 'Speaking (first ~10k chars)...' : 'Speaking...');
   }
 
   /* ═══════ CODE EDITOR ═══════ */

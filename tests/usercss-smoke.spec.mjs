@@ -60,6 +60,7 @@ function extensionApiMock(initialStore) {
       getURL(resourcePath) {
         return new URL(resourcePath, window.location.href).href;
       },
+      getManifest() { return { version: '1.24.0' }; },
       sendMessage(_message, callback) {
         if (callback) queueMicrotask(() => callback({ ok: true }));
         return Promise.resolve({ ok: true });

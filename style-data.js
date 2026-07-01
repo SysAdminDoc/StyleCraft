@@ -4,7 +4,7 @@
 
   const MAX_IMPORT_BYTES = 8 * 1024 * 1024;
   const APPLY_TYPES = new Set(['domain', 'url', 'url-prefix', 'regexp', 'wildcard']);
-  const BLOCKED_KEYS = new Set(['__proto__', 'prototype', 'constructor']);
+  const BLOCKED_KEYS = new Set(['__proto__', 'prototype', 'constructor', 'toString', 'valueOf', 'hasOwnProperty']);
 
   function isPlainObject(value) {
     return !!value && typeof value === 'object' && !Array.isArray(value);

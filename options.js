@@ -105,7 +105,7 @@
   function exportSingleDomain(domain) {
     const data = allData[domain];
     if (!data) { toast('No data for ' + domain); return; }
-    const exp = { domain, data, version: '1.24.0', exported: new Date().toISOString() };
+    const exp = { domain, data, version: chrome.runtime.getManifest().version, exported: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(exp, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -723,7 +723,7 @@
 
   /* ─── IMPORT/EXPORT ─── */
   $('btn-export').addEventListener('click',()=>{
-  const exp={data:allData,settings,version:'1.24.0',exported:new Date().toISOString()};
+  const exp={data:allData,settings,version:chrome.runtime.getManifest().version,exported:new Date().toISOString()};
     const blob=new Blob([JSON.stringify(exp,null,2)],{type:'application/json'});
     const url=URL.createObjectURL(blob);const a=document.createElement('a');
     a.href=url;a.download='stylecraft-export-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(url);
@@ -1177,7 +1177,7 @@
       } catch {}
       const report = {
         generated: new Date().toISOString(),
-        version: '1.24.0',
+        version: chrome.runtime.getManifest().version,
         platform: {
           userAgent: navigator.userAgent.replace(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g, '[redacted-ip]'),
           language: navigator.language

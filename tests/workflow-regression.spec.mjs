@@ -62,6 +62,7 @@ function optionsApiMock(initialStore) {
       getURL(resourcePath) {
         return new URL(resourcePath, window.location.href).href;
       },
+      getManifest() { return { version: '1.24.0' }; },
       sendMessage(message, callback) {
         let response = { ok: true };
         if (message?.action === 'sc-check-theme-update') {
@@ -135,6 +136,7 @@ function popupInstallMock() {
       getURL(resourcePath) {
         return new URL(resourcePath, window.location.href).href;
       },
+      getManifest() { return { version: '1.24.0' }; },
       sendMessage(message, callback) {
         window.__stylecraftPopupMessages.push(message?.action || '');
         let response = { ok: true };

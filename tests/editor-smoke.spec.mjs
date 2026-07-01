@@ -42,6 +42,7 @@ function extensionApiMock(initialStore) {
       getURL(resourcePath) {
         return new URL(resourcePath, window.location.href).href;
       },
+      getManifest() { return { version: '1.24.0' }; },
       sendMessage() {
         return Promise.resolve();
       },
