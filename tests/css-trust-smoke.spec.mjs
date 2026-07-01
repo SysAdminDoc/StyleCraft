@@ -36,3 +36,24 @@ test('CSS trust analyzer flags remote, high-risk, and blocked CSS', async ({ pag
     expect.arrayContaining(['blocked.test.customCSS', 'blocked.test'])
   );
 });
+
+test('CSS trust analyzer catches obfuscated javascript: via CSS escape sequences', async ({ page }) => {
+  await page.addScriptTag({ path: path.join(repoRoot, 'style-data.js') });
+
+  const result = await page.evaluate(() => {
+    const data = window.StyleCraftData;
+    return {
+      hexEscape: data.analyzeCssTrust('body { background: url(java\\73 cript:alert(1)); }'),
+      hexEscape2: data.analyzeCssTrust('body { background: url(\\6a avascript:void(0)); }'),
+      backslashEscape: data.analyzeCssTrust('body { background: url(java\\script:alert(1)); }'),
+      plainBlocked: data.analyzeCssTrust('@import url(javascript:evil)'),
+      safeNormal: data.analyzeCssTrust('body { background: url(safe.png); }')
+    };
+  });
+
+  expect(result.hexEscape.status).toBe('blocked');
+  expect(result.hexEscape2.status).toBe('blocked');
+  expect(result.backslashEscape.status).toBe('blocked');
+  expect(result.plainBlocked.status).toBe('blocked');
+  expect(result.safeNormal.status).toBe('trusted');
+});

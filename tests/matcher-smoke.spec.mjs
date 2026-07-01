@@ -127,3 +127,21 @@ test('document-start injector uses shared matcher for applies-to rules', async (
   expect(injected.custom).toContain('rgb(20, 30, 40)');
   expect(injected.custom).not.toContain('should-not-apply');
 });
+
+test('shared matcher rejects oversized regexp patterns', async ({ page }) => {
+  await page.addScriptTag({ path: path.join(repoRoot, 'style-match.js') });
+
+  const result = await page.evaluate(() => {
+    const M = window.StyleCraftMatcher;
+    const longPattern = '(a+)+$'.padEnd(600, 'x');
+    return {
+      normalRegexp: M.patternMatchesUrl({ type: 'regexp', value: '^https://test\\.com' }, 'https://test.com/page'),
+      oversized: M.patternMatchesUrl({ type: 'regexp', value: longPattern }, 'https://test.com/aaaa'),
+      caretKey: M.storedKeyMatchesPage('^https://test\\.com', 'https://test.com/x')
+    };
+  });
+
+  expect(result.normalRegexp).toBe(true);
+  expect(result.oversized).toBe(false);
+  expect(result.caretKey).toBe(true);
+});
