@@ -666,7 +666,9 @@
     if (!(await ensureSiteAccess())) return;
     const css = qCode.value;
     let trust;
-    try { trust = StyleCraftData.assertCssAllowed(css); }
+    const s = await chrome.storage.local.get('stylecraft_settings');
+    const trustOpts = { blockRemoteCss: (s.stylecraft_settings || {}).blockRemoteCss === true };
+    try { trust = StyleCraftData.assertCssAllowed(css, trustOpts); }
     catch (error) {
       qSave.textContent = error.message || 'Blocked CSS';
       setTimeout(() => { qSave.innerHTML = 'Save &amp; Apply'; }, 2000);

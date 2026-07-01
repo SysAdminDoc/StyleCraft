@@ -30,6 +30,10 @@
     await saveAllData(all);
   }
 
+  function getTrustOpts() {
+    return { blockRemoteCss: (settings || {}).blockRemoteCss === true };
+  }
+
   /* ─── Undo system ─── */
   let undoSnapshot = null;
   let undoTimer = null;
@@ -307,7 +311,7 @@
       if (sb) sb.addEventListener('click', async () => {
         const css = card.querySelector('.css-ed').value;
         let trust;
-        try { trust = StyleCraftData.assertCssAllowed(css); }
+        try { trust = StyleCraftData.assertCssAllowed(css, getTrustOpts()); }
         catch (error) { toast(error.message); return; }
         allData[domain].customCSS = css;
         allData[domain].trust = trust;
@@ -467,7 +471,7 @@
           const upd = themeUpdates[key];
           if (!upd || !upd.newCSS) return;
           let trust;
-          try { trust = StyleCraftData.assertCssAllowed(upd.newCSS); }
+          try { trust = StyleCraftData.assertCssAllowed(upd.newCSS, getTrustOpts()); }
           catch (error) { toast(error.message); return; }
           allData[domain].themes[id].rawCSS = upd.newCSS;
           allData[domain].themes[id].css = upd.newCSS;
@@ -482,7 +486,7 @@
       if (sb) sb.addEventListener('click', async () => {
         const css = card.querySelector('.theme-ed').value;
         let trust;
-        try { trust = StyleCraftData.assertCssAllowed(css); }
+        try { trust = StyleCraftData.assertCssAllowed(css, getTrustOpts()); }
         catch (error) { toast(error.message); return; }
         allData[domain].themes[id].rawCSS = css;
         allData[domain].themes[id].css = css;

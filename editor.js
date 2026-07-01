@@ -651,7 +651,9 @@
     }
     let trust;
     try {
-      trust = window.StyleCraftData ? window.StyleCraftData.assertCssAllowed(css) : null;
+      const editorSettings = await chrome.storage.local.get('stylecraft_settings');
+      const editorTrustOpts = { blockRemoteCss: ((editorSettings || {}).stylecraft_settings || {}).blockRemoteCss === true };
+      trust = window.StyleCraftData ? window.StyleCraftData.assertCssAllowed(css, editorTrustOpts) : null;
     } catch (error) {
       toast(error.message || 'Blocked CSS trust issue');
       return;
