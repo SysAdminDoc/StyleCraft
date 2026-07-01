@@ -118,7 +118,14 @@
     const src = clean(text);
     if (!src.startsWith('[')) return [];
     try {
-      const parsed = JSON.parse(src.replace(/'/g, '"'));
+      const parsed = JSON.parse(src);
+      if (Array.isArray(parsed)) return parsed.map(normalizeSelectOption);
+    } catch {}
+    try {
+      const normalized = src.replace(/'((?:[^'\\]|\\.)*)'/g, (_, inner) =>
+        '"' + inner.replace(/"/g, '\\"').replace(/\\'/g, "'") + '"'
+      );
+      const parsed = JSON.parse(normalized);
       if (Array.isArray(parsed)) return parsed.map(normalizeSelectOption);
     } catch {}
     const out = [];

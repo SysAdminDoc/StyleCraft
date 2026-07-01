@@ -10,7 +10,13 @@ const EDITOR_INJECTOR_FILES = ['content.js'];
 
 async function injectAndSend(tabId, message) {
   const access = await injectFiles(tabId, EDITOR_INJECTOR_FILES);
-  setTimeout(() => { chrome.tabs.sendMessage(tabId, message).catch(() => {}); }, 100);
+  for (let attempt = 0; attempt < 5; attempt++) {
+    try {
+      await new Promise(r => setTimeout(r, attempt === 0 ? 50 : 150));
+      await chrome.tabs.sendMessage(tabId, message);
+      break;
+    } catch { /* listener not ready yet, retry */ }
+  }
   return { ok: true, siteAccess: access };
 }
 
@@ -312,9 +318,13 @@ async function previewTheme(id, tabId) {
   const tab = await chrome.tabs.get(tabId);
   SC_DATA.assertCssAllowed(fetched.rawCSS, await getTrustOptions());
   const css = resolveUserCSS(fetched.rawCSS, tab.url);
-  setTimeout(() => {
-    chrome.tabs.sendMessage(tabId, { action: 'sc-apply-preview', css }).catch(() => {});
-  }, 50);
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      await new Promise(r => setTimeout(r, attempt === 0 ? 50 : 150));
+      await chrome.tabs.sendMessage(tabId, { action: 'sc-apply-preview', css });
+      break;
+    } catch { /* retry */ }
+  }
   return { ok: true, name: fetched.name };
 }
 
