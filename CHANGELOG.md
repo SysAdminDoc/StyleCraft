@@ -12,6 +12,7 @@ All notable changes to StyleCraft are documented here.
 - Per-style conditional triggers: checkboxes for `prefers-color-scheme: dark/light`, `prefers-reduced-motion: reduce`, and `prefers-contrast: more` that wrap injected CSS in `@media` queries.
 - Element picker nth-child path fallback: when no stable class, ID, or data attribute is available, the picker generates a precise `nth-child` chain instead of a bare tag name.
 - Text-to-speech button in the side-panel editor: reads page content aloud using browser SpeechSynthesis with start/stop toggle.
+- Per-style usage analytics: local-only match counter shown per domain in the options page, throttled to avoid storage contention.
 
 ## [1.23.0] - 2026-06-30
 

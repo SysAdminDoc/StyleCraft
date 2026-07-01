@@ -515,6 +515,7 @@ async function updateBadge(tabId, url) {
   try {
     const result = await buildCSSForUrl(url);
     let count = 0;
+    const matchedPatterns = [];
     // Count custom CSS
     if (result.customCSS && result.customCSS.trim() && result.customEnabled) count++;
     // Count enabled themes
@@ -522,6 +523,7 @@ async function updateBadge(tabId, url) {
     const all = await getAllData();
     for (const [pattern, data] of Object.entries(all)) {
       if (entryMatchesPage(pattern, data, url, domain)) {
+        matchedPatterns.push(pattern);
         for (const [, theme] of Object.entries(data.themes || {})) {
           if (theme.enabled !== false) count++;
         }
@@ -530,6 +532,7 @@ async function updateBadge(tabId, url) {
     chrome.action.setBadgeText({ text: count > 0 ? String(count) : '', tabId });
     chrome.action.setBadgeBackgroundColor({ color: '#cba6f7', tabId });
     chrome.action.setBadgeTextColor({ color: '#11111b', tabId }).catch(() => {});
+    if (count > 0) bumpMatchAnalytics(matchedPatterns, all);
   } catch { chrome.action.setBadgeText({ text: '', tabId }).catch(() => {}); }
 }
 
@@ -553,6 +556,36 @@ function refreshActiveBadge() {
   chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
     if (tab?.id && tab.url) updateBadge(tab.id, tab.url);
   });
+}
+
+let analyticsTimer = null;
+let pendingAnalytics = {};
+
+function bumpMatchAnalytics(matchedPatterns, all) {
+  for (const pattern of matchedPatterns) {
+    pendingAnalytics[pattern] = (pendingAnalytics[pattern] || 0) + 1;
+  }
+  if (!analyticsTimer) {
+    analyticsTimer = setTimeout(flushAnalytics, 10000);
+  }
+}
+
+async function flushAnalytics() {
+  analyticsTimer = null;
+  const pending = pendingAnalytics;
+  pendingAnalytics = {};
+  if (!Object.keys(pending).length) return;
+  try {
+    const d = await getStorage('stylecraft_data');
+    const all = d.stylecraft_data || {};
+    for (const [pattern, count] of Object.entries(pending)) {
+      if (!all[pattern]) continue;
+      if (!all[pattern].analytics) all[pattern].analytics = { matchCount: 0 };
+      all[pattern].analytics.matchCount = (all[pattern].analytics.matchCount || 0) + count;
+      all[pattern].analytics.lastMatchedAt = new Date().toISOString();
+    }
+    await setStorage({ stylecraft_data: all });
+  } catch {}
 }
 
 /* ═══════════════════════════════════════════════════════════
