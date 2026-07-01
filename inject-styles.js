@@ -118,8 +118,20 @@
       const bodyStart = match.index + match[0].length;
       let depth = 1, i = bodyStart;
       while (i < raw.length && depth > 0) {
-        if (raw[i] === '{') depth++;
-        else if (raw[i] === '}') depth--;
+        const ch = raw[i];
+        if (ch === '/' && raw[i + 1] === '*') {
+          i = raw.indexOf('*/', i + 2);
+          i = i < 0 ? raw.length : i + 2;
+          continue;
+        }
+        if (ch === '"' || ch === "'") {
+          i++;
+          while (i < raw.length && raw[i] !== ch) { if (raw[i] === '\\') i++; i++; }
+          i++;
+          continue;
+        }
+        if (ch === '{') depth++;
+        else if (ch === '}') depth--;
         i++;
       }
       const body = raw.substring(bodyStart, i - 1).trim();

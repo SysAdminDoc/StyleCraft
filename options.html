@@ -20,8 +20,8 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .header-actions{display:flex;gap:8px;}
 .h-btn{height:36px;padding:0 16px;background:var(--sc-accent-dim);border:1px solid var(--sc-border-h);border-radius:8px;color:var(--sc-subtext);cursor:pointer;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;transition:all 0.15s;}
 .h-btn:hover{background:var(--sc-accent-med);color:var(--sc-accent);}
-.h-btn.danger{background:rgba(243,139,168,0.06);border-color:rgba(243,139,168,0.12);color:var(--sc-red);}
-.h-btn.danger:hover{background:rgba(243,139,168,0.14);}
+.h-btn.danger{background:color-mix(in srgb,var(--sc-red) 6%,transparent);border-color:color-mix(in srgb,var(--sc-red) 12%,transparent);color:var(--sc-red);}
+.h-btn.danger:hover{background:color-mix(in srgb,var(--sc-red) 14%,transparent);}
 
 .container{max-width:960px;margin:0 auto;padding:24px 40px;}
 .tabs{display:flex;gap:4px;margin-bottom:24px;border-bottom:1px solid var(--sc-border);padding-bottom:2px;flex-wrap:wrap;}
@@ -45,7 +45,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .card-actions{display:flex;align-items:center;gap:8px;}
 .card-btn{width:30px;height:30px;border-radius:6px;background:rgba(203,166,247,0.06);border:1px solid var(--sc-border);color:var(--sc-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;}
 .card-btn:hover{background:rgba(203,166,247,0.14);color:var(--sc-accent);}
-.card-btn.danger:hover{background:rgba(243,139,168,0.14);color:var(--sc-red);}
+.card-btn.danger:hover{background:color-mix(in srgb,var(--sc-red) 14%,transparent);color:var(--sc-red);}
 .toggle{position:relative;width:40px;height:20px;flex-shrink:0;}
 .toggle input{opacity:0;width:0;height:0;}
 .toggle-sl{position:absolute;inset:0;cursor:pointer;background:var(--sc-toggle-bg);border-radius:10px;transition:all 0.2s;}
@@ -58,8 +58,8 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .editor-area{width:100%;min-height:200px;padding:12px 14px;background:var(--sc-input-bg);border:1px solid var(--sc-input-border);border-radius:8px;color:var(--sc-code-fg);font-family:'SFMono-Regular','Cascadia Code','Consolas','Liberation Mono','Menlo',monospace;font-size:12px;line-height:1.6;resize:vertical;outline:none;tab-size:2;white-space:pre;}
 .editor-area:focus{border-color:rgba(203,166,247,0.3);}
 .editor-row{display:flex;justify-content:flex-end;gap:8px;margin-top:10px;}
-.save-btn{height:32px;padding:0 18px;border-radius:6px;background:rgba(166,227,161,0.08);border:1px solid rgba(166,227,161,0.15);color:var(--sc-green);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s;}
-.save-btn:hover{background:rgba(166,227,161,0.18);}
+.save-btn{height:32px;padding:0 18px;border-radius:6px;background:color-mix(in srgb,var(--sc-green) 8%,transparent);border:1px solid color-mix(in srgb,var(--sc-green) 15%,transparent);color:var(--sc-green);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s;}
+.save-btn:hover{background:color-mix(in srgb,var(--sc-green) 18%,transparent);}
 
 .empty-state{text-align:center;padding:60px 20px;color:var(--sc-faint);}
 .empty-icon{font-size:48px;margin-bottom:12px;opacity:0.4;}
@@ -106,30 +106,30 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .bulk-label{font-size:11px;color:var(--sc-muted);font-weight:600;white-space:nowrap;}
 .bulk-btn{height:26px;padding:0 10px;border-radius:5px;background:var(--sc-accent-dim);border:1px solid var(--sc-border);color:var(--sc-subtext);font-size:10px;font-weight:700;cursor:pointer;transition:all .12s;white-space:nowrap;}
 .bulk-btn:hover{background:var(--sc-accent-med);color:var(--sc-accent);}
-.bulk-btn.danger{background:rgba(243,139,168,0.06);border-color:rgba(243,139,168,0.1);}
-.bulk-btn.danger:hover{background:rgba(243,139,168,0.14);color:var(--sc-red);}
+.bulk-btn.danger{background:color-mix(in srgb,var(--sc-red) 6%,transparent);border-color:color-mix(in srgb,var(--sc-red) 10%,transparent);}
+.bulk-btn.danger:hover{background:color-mix(in srgb,var(--sc-red) 14%,transparent);color:var(--sc-red);}
 .bulk-count{font-size:10px;color:var(--sc-accent);font-weight:700;min-width:14px;}
 .card-check{width:14px;height:14px;accent-color:var(--sc-accent);cursor:pointer;flex-shrink:0;margin-right:4px;}
 .card-header-left{display:flex;align-items:center;gap:6px;min-width:0;flex:1;}
-.update-badge{display:inline-flex;align-items:center;gap:3px;padding:1px 6px;border-radius:3px;background:rgba(249,226,175,0.12);color:var(--sc-yellow);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;}
-.update-badge.uptodate{background:rgba(166,227,161,0.08);color:var(--sc-green);}
-.card-btn.clone-btn:hover{background:rgba(137,180,250,0.14);color:var(--sc-blue);}
+.update-badge{display:inline-flex;align-items:center;gap:3px;padding:1px 6px;border-radius:3px;background:color-mix(in srgb,var(--sc-yellow) 12%,transparent);color:var(--sc-yellow);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;}
+.update-badge.uptodate{background:color-mix(in srgb,var(--sc-green) 8%,transparent);color:var(--sc-green);}
+.card-btn.clone-btn:hover{background:color-mix(in srgb,var(--sc-blue) 14%,transparent);color:var(--sc-blue);}
 .browse-card:hover{border-color:var(--sc-border-h);}
-.browse-card.installed{border-color:rgba(166,227,161,0.2);}
-.browse-warning{padding:10px 14px;margin-bottom:10px;border:1px solid rgba(249,226,175,0.12);border-radius:6px;background:rgba(249,226,175,0.06);color:var(--sc-yellow);font-size:11px;}
+.browse-card.installed{border-color:color-mix(in srgb,var(--sc-green) 20%,transparent);}
+.browse-warning{padding:10px 14px;margin-bottom:10px;border:1px solid color-mix(in srgb,var(--sc-yellow) 12%,transparent);border-radius:6px;background:color-mix(in srgb,var(--sc-yellow) 6%,transparent);color:var(--sc-yellow);font-size:11px;}
 .browse-thumb{width:120px;height:75px;border-radius:6px;object-fit:cover;flex-shrink:0;background:rgba(17,17,27,0.5);}
 .browse-info{flex:1;min-width:0;}
 .browse-name{font-size:14px;font-weight:600;color:var(--sc-text);margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .browse-author{font-size:11px;color:var(--sc-muted);margin-bottom:6px;}
 .browse-actions{display:flex;gap:6px;align-items:center;}
 .browse-btn{height:28px;padding:0 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid;transition:all 0.15s;}
-.browse-btn.install{background:rgba(166,227,161,0.06);border-color:rgba(166,227,161,0.15);color:var(--sc-green);}
-.browse-btn.install:hover{background:rgba(166,227,161,0.15);}
-.browse-btn.install.done{background:var(--sc-accent-dim);border-color:rgba(203,166,247,0.15);color:var(--sc-accent);cursor:default;}
-.browse-btn.preview{background:rgba(137,180,250,0.06);border-color:rgba(137,180,250,0.12);color:var(--sc-blue);}
-.browse-btn.preview:hover{background:rgba(137,180,250,0.15);}
-.browse-btn.uninstall{background:rgba(243,139,168,0.06);border-color:rgba(243,139,168,0.12);color:var(--sc-red);}
-.browse-btn.uninstall:hover{background:rgba(243,139,168,0.15);}
+.browse-btn.install{background:color-mix(in srgb,var(--sc-green) 6%,transparent);border-color:color-mix(in srgb,var(--sc-green) 15%,transparent);color:var(--sc-green);}
+.browse-btn.install:hover{background:color-mix(in srgb,var(--sc-green) 15%,transparent);}
+.browse-btn.install.done{background:var(--sc-accent-dim);border-color:color-mix(in srgb,var(--sc-accent) 15%,transparent);color:var(--sc-accent);cursor:default;}
+.browse-btn.preview{background:color-mix(in srgb,var(--sc-blue) 6%,transparent);border-color:color-mix(in srgb,var(--sc-blue) 12%,transparent);color:var(--sc-blue);}
+.browse-btn.preview:hover{background:color-mix(in srgb,var(--sc-blue) 15%,transparent);}
+.browse-btn.uninstall{background:color-mix(in srgb,var(--sc-red) 6%,transparent);border-color:color-mix(in srgb,var(--sc-red) 12%,transparent);color:var(--sc-red);}
+.browse-btn.uninstall:hover{background:color-mix(in srgb,var(--sc-red) 15%,transparent);}
 .browse-installs{font-size:10px;color:var(--sc-faint);margin-left:auto;}
 .restore-panel{display:none;margin:-18px 0 28px;padding:14px 16px;background:var(--sc-surface);border:1px solid var(--sc-border);border-radius:8px;}
 .restore-panel.show{display:block;}

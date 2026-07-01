@@ -251,7 +251,7 @@ body {
 .s-card {
   margin-bottom: 3px; border-radius: 6px;
   background: color-mix(in srgb, var(--sc-surface) 60%, transparent);
-  border: 1px solid rgba(203,166,247,0.06);
+  border: 1px solid var(--sc-border);
   overflow: hidden; transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
   animation: fadeSlideIn 0.3s ease-out backwards;
   backdrop-filter: blur(8px);
@@ -261,16 +261,16 @@ body {
 .s-card:nth-child(5){animation-delay:.16s} .s-card:nth-child(6){animation-delay:.2s}
 .s-card:nth-child(7){animation-delay:.24s} .s-card:nth-child(8){animation-delay:.28s}
 .s-card:hover {
-  border-color: rgba(203,166,247,0.18); transform: translateY(-1px);
+  border-color: var(--sc-border-h); transform: translateY(-1px);
   box-shadow: 0 3px 10px rgba(0,0,0,0.2), 0 0 8px color-mix(in srgb, var(--sc-accent) 6%, transparent);
 }
 .s-card.installed {
-  border-color: rgba(166,227,161,0.2);
-  box-shadow: inset 0 0 0 1px rgba(166,227,161,0.05);
+  border-color: color-mix(in srgb, var(--sc-green) 20%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sc-green) 5%, transparent);
 }
 .s-card.installed:hover {
-  border-color: rgba(166,227,161,0.35);
-  box-shadow: 0 3px 10px rgba(0,0,0,0.2), 0 0 6px rgba(166,227,161,0.08);
+  border-color: color-mix(in srgb, var(--sc-green) 35%, transparent);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.2), 0 0 6px color-mix(in srgb, var(--sc-green) 8%, transparent);
 }
 .s-thumb { display: none !important; }
 .s-body { padding: 6px 10px; display: flex; align-items: center; gap: 8px; }
@@ -290,29 +290,29 @@ body {
   transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .s-btn.preview {
-  background: rgba(137,180,250,0.06); border-color: rgba(137,180,250,0.15); color: var(--sc-blue);
+  background: color-mix(in srgb, var(--sc-blue) 6%, transparent); border-color: color-mix(in srgb, var(--sc-blue) 15%, transparent); color: var(--sc-blue);
 }
-.s-btn.preview:hover { background: rgba(137,180,250,0.15); box-shadow: 0 0 8px rgba(137,180,250,0.12); transform: translateY(-1px); }
-.s-btn.preview.active { background: rgba(137,180,250,0.2); border-color: rgba(137,180,250,0.35); color: var(--sc-blue); box-shadow: 0 0 10px rgba(137,180,250,0.15); }
+.s-btn.preview:hover { background: color-mix(in srgb, var(--sc-blue) 15%, transparent); box-shadow: 0 0 8px color-mix(in srgb, var(--sc-blue) 12%, transparent); transform: translateY(-1px); }
+.s-btn.preview.active { background: color-mix(in srgb, var(--sc-blue) 20%, transparent); border-color: color-mix(in srgb, var(--sc-blue) 35%, transparent); color: var(--sc-blue); box-shadow: 0 0 10px color-mix(in srgb, var(--sc-blue) 15%, transparent); }
 .s-btn.install {
-  background: rgba(166,227,161,0.06); border-color: rgba(166,227,161,0.15); color: var(--sc-green);
+  background: color-mix(in srgb, var(--sc-green) 6%, transparent); border-color: color-mix(in srgb, var(--sc-green) 15%, transparent); color: var(--sc-green);
 }
-.s-btn.install:hover { background: rgba(166,227,161,0.15); box-shadow: 0 0 8px rgba(166,227,161,0.12); transform: translateY(-1px); }
+.s-btn.install:hover { background: color-mix(in srgb, var(--sc-green) 15%, transparent); box-shadow: 0 0 8px color-mix(in srgb, var(--sc-green) 12%, transparent); transform: translateY(-1px); }
 .s-btn.install.done {
-  background: rgba(166,227,161,0.12); border-color: rgba(166,227,161,0.25); color: var(--sc-green);
+  background: color-mix(in srgb, var(--sc-green) 12%, transparent); border-color: color-mix(in srgb, var(--sc-green) 25%, transparent); color: var(--sc-green);
   cursor: default;
 }
 .s-btn.uninstall {
-  background: rgba(243,139,168,0.06); border-color: rgba(243,139,168,0.15); color: var(--sc-red);
+  background: color-mix(in srgb, var(--sc-red) 6%, transparent); border-color: color-mix(in srgb, var(--sc-red) 15%, transparent); color: var(--sc-red);
 }
-.s-btn.uninstall:hover { background: rgba(243,139,168,0.15); box-shadow: 0 0 8px rgba(243,139,168,0.12); transform: translateY(-1px); }
+.s-btn.uninstall:hover { background: color-mix(in srgb, var(--sc-red) 15%, transparent); box-shadow: 0 0 8px color-mix(in srgb, var(--sc-red) 12%, transparent); transform: translateY(-1px); }
 .s-btn:disabled { opacity: 0.4; cursor: wait; transform: none !important; box-shadow: none !important; }
 
 .empty-msg {
   text-align: center; padding: 24px 16px; color: var(--sc-faint); font-size: 11px;
   background: radial-gradient(ellipse at center, color-mix(in srgb, var(--sc-accent) 3%, transparent) 0%, transparent 70%);
 }
-.empty-msg.warning { color: var(--sc-yellow); padding: 10px 14px; background: rgba(249,226,175,0.06); border: 1px solid rgba(249,226,175,0.12); border-radius: 6px; margin: 8px 12px; }
+.empty-msg.warning { color: var(--sc-yellow); padding: 10px 14px; background: color-mix(in srgb, var(--sc-yellow) 6%, transparent); border: 1px solid color-mix(in srgb, var(--sc-yellow) 12%, transparent); border-radius: 6px; margin: 8px 12px; }
 .loading { text-align: center; padding: 10px; color: var(--sc-accent); font-size: 10px; display: none; }
 .loading .spinner {
   display: inline-block; width: 14px; height: 14px;
@@ -324,7 +324,7 @@ body {
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
 @keyframes fadeSlideIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
-@keyframes pulseGlow { 0%,100%{box-shadow:0 0 4px rgba(203,166,247,0.1)} 50%{box-shadow:0 0 12px rgba(203,166,247,0.25)} }
+@keyframes pulseGlow { 0%,100%{box-shadow:0 0 4px color-mix(in srgb, var(--sc-accent) 10%, transparent)} 50%{box-shadow:0 0 12px color-mix(in srgb, var(--sc-accent) 25%, transparent)} }
 @keyframes gradientShift { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
 .powered {
   text-align: center; padding: 3px 16px 5px; font-size: 8px; color: var(--sc-faint); flex-shrink: 0;
