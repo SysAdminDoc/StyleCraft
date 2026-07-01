@@ -57,3 +57,28 @@ test('CSS trust analyzer catches obfuscated javascript: via CSS escape sequences
   expect(result.plainBlocked.status).toBe('blocked');
   expect(result.safeNormal.status).toBe('trusted');
 });
+
+test('blockRemoteCss option elevates remote url/import warnings to blocks', async ({ page }) => {
+  await page.addScriptTag({ path: path.join(repoRoot, 'style-data.js') });
+
+  const result = await page.evaluate(() => {
+    const data = window.StyleCraftData;
+    const cssWithRemote = 'body { background: url("https://cdn.example.test/bg.png"); }';
+    const cssWithImport = '@import url("https://cdn.example.test/reset.css");';
+    return {
+      remoteNoBlock: data.analyzeCssTrust(cssWithRemote),
+      remoteBlocked: data.analyzeCssTrust(cssWithRemote, { blockRemoteCss: true }),
+      importNoBlock: data.analyzeCssTrust(cssWithImport),
+      importBlocked: data.analyzeCssTrust(cssWithImport, { blockRemoteCss: true }),
+      assertNoBlock: (() => { try { data.assertCssAllowed(cssWithRemote); return 'pass'; } catch { return 'blocked'; } })(),
+      assertBlocked: (() => { try { data.assertCssAllowed(cssWithRemote, { blockRemoteCss: true }); return 'pass'; } catch { return 'blocked'; } })()
+    };
+  });
+
+  expect(result.remoteNoBlock.status).toBe('review');
+  expect(result.remoteBlocked.status).toBe('blocked');
+  expect(result.importNoBlock.status).toBe('review');
+  expect(result.importBlocked.status).toBe('blocked');
+  expect(result.assertNoBlock).toBe('pass');
+  expect(result.assertBlocked).toBe('blocked');
+});

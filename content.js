@@ -1677,6 +1677,7 @@
       (res) => {
         if (chrome.runtime.lastError || !res || !res.ok) {
           if (attempt < 3) setTimeout(() => saveCustomCSS(attempt + 1), 300);
+          else toast(res?.error || 'Failed to save CSS');
         }
       }
     );
