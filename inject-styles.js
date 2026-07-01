@@ -61,18 +61,34 @@
         if (!foundCustom && data.customCSS) {
           customCSS = simpleResolve(data.customCSS, pageUrl, pageDomain, data.usercss && data.usercss.values);
           customEnabled = data.customEnabled !== false;
+          if (data.mediaConditions && data.mediaConditions.length) {
+            customCSS = wrapMediaConditions(customCSS, data.mediaConditions);
+          }
           foundCustom = true;
         }
       }
     }
 
+    function wrapMediaConditions(css, conditions) {
+      if (!css.trim() || !conditions || !conditions.length) return css;
+      const queries = conditions.map(c => c.query).filter(Boolean);
+      if (!queries.length) return css;
+      return '@media ' + queries.join(' and ') + ' {\n' + css + '\n}';
+    }
+
     const globalCSS = settings.globalCSS || '';
+    const useLayer = settings.cssLayer === true;
+
+    function wrapLayer(css) {
+      if (!useLayer || !css.trim()) return css;
+      return '@layer stylecraft {\n' + css + '\n}';
+    }
 
     const themeEl = ensureEl(THEME_ID);
-    themeEl.textContent = (globalCSS ? globalCSS + '\n' : '') + themeCSS;
+    themeEl.textContent = wrapLayer((globalCSS ? globalCSS + '\n' : '') + themeCSS);
 
     const customEl = ensureEl(CUSTOM_ID);
-    customEl.textContent = (customCSS && customEnabled) ? customCSS : '';
+    customEl.textContent = (customCSS && customEnabled) ? wrapLayer(customCSS) : '';
 
     const parent = document.head || document.documentElement;
     if (themeEl.nextSibling !== customEl) {

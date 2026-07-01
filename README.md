@@ -67,8 +67,18 @@ Chrome, Edge, Brave, Vivaldi, Opera, Arc — any Chromium-based browser supporti
 | `regexp` | `https?://.*\.github\.(com\|io)/.*` | Full regex against URL |
 | `wildcard` | `*.google.com` | Glob pattern with `*` wildcards |
 
-Configure per-style via the "Applies To" panel in the CSS editor.
+Configure per-style via the "Applies To" panel in the CSS editor. Use the built-in **Test URL** input to verify patterns match expected URLs.
 The same matcher drives early injection, popup installed-style state, badge counts, editor live preview, and background update broadcasts.
+
+### Conditional Triggers
+| Condition | Media Query | Effect |
+|-----------|------------|--------|
+| Dark mode | `prefers-color-scheme: dark` | Style only applies when system/browser is in dark mode |
+| Light mode | `prefers-color-scheme: light` | Style only applies when system/browser is in light mode |
+| Reduced motion | `prefers-reduced-motion: reduce` | Style only applies when reduced motion is preferred |
+| High contrast | `prefers-contrast: more` | Style only applies when high contrast is preferred |
+
+Enable per-style in the editor's "Applies To" panel. Injected CSS is wrapped in the corresponding `@media` query.
 
 ### Theme Management
 | Feature | Description |
@@ -171,6 +181,7 @@ All settings are accessible via the Options page (right-click extension icon > O
 | Custom CSS on Top | Custom CSS layers above themes | On |
 | Add !important | Append !important to all declarations | Off |
 | Live Preview | Apply changes in real-time | On |
+| CSS Layer Wrapping | Wrap injected styles in `@layer stylecraft` | Off |
 | UI Theme | Catppuccin / Dark / Light | Catppuccin |
 | Accent Color | Primary accent color | #cba6f7 |
 | Highlight Color | Element picker highlight color | #89b4fa |

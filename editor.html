@@ -192,7 +192,20 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .color-picker-text{width:80px;height:26px;padding:0 6px;background:var(--sc-input-bg);border:1px solid var(--sc-input-border);border-radius:4px;color:var(--sc-text);font-size:11px;font-family:'SFMono-Regular','Cascadia Code','Consolas','Liberation Mono','Menlo',monospace;outline:none;}
 
 /* Applies To Panel */
-.applies-panel{background:var(--sc-surface);border-bottom:1px solid var(--sc-border);padding:8px 14px;overflow-y:auto;max-height:180px;}
+.applies-panel{background:var(--sc-surface);border-bottom:1px solid var(--sc-border);padding:8px 14px;overflow-y:auto;max-height:220px;}
+.ap-conditions{margin-top:6px;padding-top:6px;border-top:1px solid var(--sc-border);}
+.ap-cond-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--sc-muted);margin-bottom:4px;}
+.ap-cond-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--sc-subtext);padding:2px 0;cursor:pointer;}
+.ap-cond-item input{accent-color:var(--sc-accent);cursor:pointer;}
+.ap-cond-item code{font-size:9px;color:var(--sc-muted);margin-left:auto;}
+.ap-test-row{display:flex;align-items:center;gap:6px;margin-top:6px;padding-top:6px;border-top:1px solid var(--sc-border);}
+.ap-test-input{flex:1;}
+.ap-test-btn{height:24px;padding:0 10px;border-radius:4px;background:var(--sc-accent-dim);border:1px solid var(--sc-border);color:var(--sc-subtext);font-size:10px;font-weight:700;cursor:pointer;transition:all .12s;white-space:nowrap;}
+.ap-test-btn:hover{background:var(--sc-accent-med);color:var(--sc-accent);}
+.ap-test-result{font-size:10px;font-weight:700;white-space:nowrap;}
+.ap-test-result.match{color:var(--sc-green);}
+.ap-test-result.no-match{color:var(--sc-red);}
+.ap-test-result.error{color:var(--sc-yellow);}
 
 /* Code Folding */
 .ln{display:block;padding:0 10px 0 18px;text-align:right;font-size:13px;line-height:20px;color:var(--sc-gutter-text);height:20px;position:relative;}
@@ -396,6 +409,18 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Add pattern
           </button>
+          <div class="ap-conditions" id="ap-conditions">
+            <div class="ap-cond-label">Conditional Triggers</div>
+            <label class="ap-cond-item"><input type="checkbox" id="cond-dark" aria-label="Only apply in dark mode"/> <span>Dark mode</span> <code>prefers-color-scheme: dark</code></label>
+            <label class="ap-cond-item"><input type="checkbox" id="cond-light" aria-label="Only apply in light mode"/> <span>Light mode</span> <code>prefers-color-scheme: light</code></label>
+            <label class="ap-cond-item"><input type="checkbox" id="cond-motion" aria-label="Only apply with reduced motion"/> <span>Reduced motion</span> <code>prefers-reduced-motion: reduce</code></label>
+            <label class="ap-cond-item"><input type="checkbox" id="cond-contrast" aria-label="Only apply with high contrast"/> <span>High contrast</span> <code>prefers-contrast: more</code></label>
+          </div>
+          <div class="ap-test-row" id="ap-test-row">
+            <input class="ap-input ap-test-input" id="ap-test-url" placeholder="Test URL (e.g. https://github.com/user/repo)" spellcheck="false" aria-label="Test URL against patterns"/>
+            <button class="ap-test-btn" id="ap-test-btn">Test</button>
+            <span class="ap-test-result" id="ap-test-result"></span>
+          </div>
         </div>
         <div class="ap-section ap-meta">
           <div class="ap-label">Metadata</div>

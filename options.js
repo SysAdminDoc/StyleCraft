@@ -584,6 +584,7 @@
     $('set-custom-on-top').checked = settings.customOnTop !== false;
     $('set-important').checked = settings.useImportant === true;
     $('set-live-preview').checked = settings.livePreview !== false;
+    $('set-css-layer').checked = settings.cssLayer === true;
     $('set-accent').value = settings.accentColor || '#cba6f7';
     $('set-highlight').value = settings.highlightColor || '#89b4fa';
     if (themeSelect) themeSelect.value = settings.theme || 'catppuccin';
@@ -605,6 +606,7 @@
     settings.customOnTop=$('set-custom-on-top').checked;
     settings.useImportant=$('set-important').checked;
     settings.livePreview=$('set-live-preview').checked;
+    settings.cssLayer=$('set-css-layer').checked;
     settings.accentColor=$('set-accent').value;
     settings.highlightColor=$('set-highlight').value;
     await saveSettings(settings);

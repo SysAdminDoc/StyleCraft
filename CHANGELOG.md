@@ -7,6 +7,9 @@ All notable changes to StyleCraft are documented here.
 ### Added
 - External-file import/export: export styles as `.user.css` files from the editor and options page; import `.user.css` files with full UserCSS metadata preservation.
 - Privacy-safe diagnostics export: options page generates a local diagnostic report with redacted URLs, storage metrics, backup status, and adapter state. No data is transmitted.
+- Regex URL pattern tester in the editor's Applies To panel: enter a URL to check whether it matches the current style's patterns.
+- CSS layer wrapping setting: wrap injected styles in `@layer stylecraft` for cascade control over host page `@layer` declarations.
+- Per-style conditional triggers: checkboxes for `prefers-color-scheme: dark/light`, `prefers-reduced-motion: reduce`, and `prefers-contrast: more` that wrap injected CSS in `@media` queries.
 
 ## [1.23.0] - 2026-06-30
 

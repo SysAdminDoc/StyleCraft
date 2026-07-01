@@ -10,10 +10,7 @@ Roadmap for StyleCraft, the Chrome MV3 CSS style manager with visual element pic
 - Recording mode - every edit becomes a named step for replay
 
 ### Matching & scoping
-- CSS-layer order control (user-styles above `@layer` vs below)
 - `@scope` support for proper cascading when host pages use it
-- Per-style conditional triggers (time of day, reduced-motion, dark-mode media query, prefers-contrast)
-- Regex URL matching UI with pattern tester
 
 ### Sync & library
 - Optional encrypted sync (user-provided passphrase, AES-GCM, store to their chosen endpoint)
@@ -79,18 +76,3 @@ Roadmap for StyleCraft, the Chrome MV3 CSS style manager with visual element pic
 - Option-page iframe sandbox for preview — render target page in srcdoc with injected style to preview before apply (Stylus)
 - Violentmonkey's MV3 migration approach for scripts — applicable if StyleCraft adds a user-script sibling mode
 
-## Research-Driven Additions
-
-- [ ] P2 - Add optional external-file import/export workflow
-  Why: Magic CSS and Stylus users value editing styles in their chosen editor and syncing through their own tools.
-  Evidence: Magic CSS file save/reloader features; Stylus local-filesystem request; existing raw URL install roadmap item.
-  Touches: `editor.js`, `options.js`, `manifest.json`, `README.md`, `tests/`
-  Acceptance: Users can export a style as `.user.css`, re-import it without metadata loss, and optionally refresh from a chosen local file where browser APIs permit.
-  Complexity: L
-
-- [ ] P2 - Add privacy-safe diagnostics export
-  Why: Service-worker, storage, quota, and community-style failures currently surface inconsistently, making support and recovery harder without collecting telemetry.
-  Evidence: `background.js` swallowed backup errors; `options.js` quota toast; Chrome extension security guidance; no telemetry promise in `PRIVACY.md`.
-  Touches: `background.js`, `options.js`, `popup.js`, `PRIVACY.md`, `tests/`
-  Acceptance: Options page exposes a local diagnostic log/export with redacted URLs by default, storage usage, last backup status, adapter errors, and no network transmission.
-  Complexity: M

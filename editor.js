@@ -1998,6 +1998,92 @@
     renderAppliesTo();
   }
 
+  // Pattern tester
+  const apTestUrl = document.getElementById('ap-test-url');
+  const apTestBtn = document.getElementById('ap-test-btn');
+  const apTestResult = document.getElementById('ap-test-result');
+
+  function runPatternTest() {
+    const testUrl = apTestUrl.value.trim();
+    if (!testUrl) {
+      apTestResult.textContent = '';
+      apTestResult.className = 'ap-test-result';
+      return;
+    }
+    if (!activeDomain) {
+      apTestResult.textContent = 'No domain';
+      apTestResult.className = 'ap-test-result error';
+      return;
+    }
+    try {
+      const data = allData[activeDomain] || {};
+      const matched = window.StyleCraftMatcher
+        ? window.StyleCraftMatcher.entryMatchesPage(activeDomain, data, testUrl)
+        : false;
+      if (matched) {
+        apTestResult.textContent = '✓ Match';
+        apTestResult.className = 'ap-test-result match';
+      } else {
+        apTestResult.textContent = '✗ No match';
+        apTestResult.className = 'ap-test-result no-match';
+      }
+    } catch (err) {
+      apTestResult.textContent = 'Error: ' + (err.message || String(err)).slice(0, 40);
+      apTestResult.className = 'ap-test-result error';
+    }
+  }
+
+  apTestBtn.addEventListener('click', runPatternTest);
+  apTestUrl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); runPatternTest(); }
+  });
+
+  // Conditional triggers
+  const condMap = {
+    'cond-dark': { query: '(prefers-color-scheme: dark)' },
+    'cond-light': { query: '(prefers-color-scheme: light)' },
+    'cond-motion': { query: '(prefers-reduced-motion: reduce)' },
+    'cond-contrast': { query: '(prefers-contrast: more)' }
+  };
+
+  function getConditions() {
+    if (!activeDomain || !allData[activeDomain]) return [];
+    return allData[activeDomain].mediaConditions || [];
+  }
+
+  function syncConditionsUI() {
+    const conds = getConditions();
+    for (const [id, def] of Object.entries(condMap)) {
+      const cb = document.getElementById(id);
+      if (cb) cb.checked = conds.some(c => c.query === def.query);
+    }
+  }
+
+  async function saveConditions() {
+    if (!activeDomain || !allData[activeDomain]) return;
+    const conds = [];
+    for (const [id, def] of Object.entries(condMap)) {
+      const cb = document.getElementById(id);
+      if (cb && cb.checked) conds.push({ query: def.query });
+    }
+    allData[activeDomain].mediaConditions = conds.length ? conds : undefined;
+    if (!allData[activeDomain].mediaConditions) delete allData[activeDomain].mediaConditions;
+    await saveAllData(allData);
+    notifyTabs();
+  }
+
+  for (const id of Object.keys(condMap)) {
+    const cb = document.getElementById(id);
+    if (cb) cb.addEventListener('change', saveConditions);
+  }
+
+  // Patch renderAppliesTo to also sync conditions
+  const _origRenderAppliesTo = renderAppliesTo;
+  renderAppliesTo = function() {
+    _origRenderAppliesTo();
+    syncConditionsUI();
+  };
+
   // Metadata save on blur
   metaName.addEventListener('change', async () => {
     const record = getActiveRecord();
