@@ -43,8 +43,8 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .card-domain{font-size:14px;font-weight:600;color:var(--sc-blue);font-family:'SFMono-Regular','Cascadia Code','Consolas','Liberation Mono','Menlo',monospace;}
 .card-meta{font-size:11px;color:var(--sc-muted);margin-top:2px;}
 .card-actions{display:flex;align-items:center;gap:8px;}
-.card-btn{width:30px;height:30px;border-radius:6px;background:rgba(203,166,247,0.06);border:1px solid var(--sc-border);color:var(--sc-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;}
-.card-btn:hover{background:rgba(203,166,247,0.14);color:var(--sc-accent);}
+.card-btn{width:30px;height:30px;border-radius:6px;background:var(--sc-accent-dim);border:1px solid var(--sc-border);color:var(--sc-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;}
+.card-btn:hover{background:var(--sc-accent-med);color:var(--sc-accent);}
 .card-btn.danger:hover{background:color-mix(in srgb,var(--sc-red) 14%,transparent);color:var(--sc-red);}
 .toggle{position:relative;width:40px;height:20px;flex-shrink:0;}
 .toggle input{opacity:0;width:0;height:0;}
@@ -56,7 +56,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .card.expanded .card-body{display:block;}
 
 .editor-area{width:100%;min-height:200px;padding:12px 14px;background:var(--sc-input-bg);border:1px solid var(--sc-input-border);border-radius:8px;color:var(--sc-code-fg);font-family:'SFMono-Regular','Cascadia Code','Consolas','Liberation Mono','Menlo',monospace;font-size:12px;line-height:1.6;resize:vertical;outline:none;tab-size:2;white-space:pre;}
-.editor-area:focus{border-color:rgba(203,166,247,0.3);}
+.editor-area:focus{border-color:color-mix(in srgb,var(--sc-accent) 30%,transparent);}
 .editor-row{display:flex;justify-content:flex-end;gap:8px;margin-top:10px;}
 .save-btn{height:32px;padding:0 18px;border-radius:6px;background:color-mix(in srgb,var(--sc-green) 8%,transparent);border:1px solid color-mix(in srgb,var(--sc-green) 15%,transparent);color:var(--sc-green);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s;}
 .save-btn:hover{background:color-mix(in srgb,var(--sc-green) 18%,transparent);}
@@ -67,7 +67,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 
 .search-row{margin-bottom:18px;}
 .search-input{width:100%;height:40px;padding:0 14px;background:var(--sc-input-bg);border:1px solid var(--sc-input-border);border-radius:8px;color:var(--sc-text);font-size:13px;outline:none;transition:border-color 0.15s;}
-.search-input:focus{border-color:rgba(203,166,247,0.3);}
+.search-input:focus{border-color:color-mix(in srgb,var(--sc-accent) 30%,transparent);}
 .search-input::placeholder{color:rgba(127,132,156,0.4);}
 
 .theme-domain{font-size:11px;color:var(--sc-muted);margin-bottom:2px;text-transform:uppercase;letter-spacing:0.5px;font-weight:700;}
@@ -80,16 +80,16 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .setting-label{font-size:13px;color:var(--sc-text);}
 .setting-desc{font-size:11px;color:var(--sc-muted);margin-top:2px;}
 .setting-input{width:200px;height:32px;padding:0 10px;background:var(--sc-input-bg);border:1px solid var(--sc-input-border);border-radius:6px;color:var(--sc-text);font-size:12px;font-family:'SFMono-Regular','Cascadia Code','Consolas','Liberation Mono','Menlo',monospace;outline:none;}
-.setting-input:focus{border-color:rgba(203,166,247,0.3);}
+.setting-input:focus{border-color:color-mix(in srgb,var(--sc-accent) 30%,transparent);}
 .setting-select{width:200px;height:32px;padding:0 10px;background:var(--sc-input-bg);border:1px solid var(--sc-input-border);border-radius:6px;color:var(--sc-text);font-size:12px;outline:none;appearance:none;cursor:pointer;}
 .setting-select option{background:var(--sc-overlay);color:var(--sc-text);}
 
 .shortcut-row{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;margin-bottom:6px;background:var(--sc-surface);border-radius:8px;}
 .shortcut-label{font-size:13px;color:var(--sc-text);flex:1;}
-.shortcut-key{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:var(--sc-input-bg);border:1px solid rgba(203,166,247,0.15);border-radius:5px;font-family:'SFMono-Regular','Cascadia Code','Consolas','Liberation Mono','Menlo',monospace;font-size:11px;color:var(--sc-subtext);}
+.shortcut-key{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:var(--sc-input-bg);border:1px solid var(--sc-border-h);border-radius:5px;font-family:'SFMono-Regular','Cascadia Code','Consolas','Liberation Mono','Menlo',monospace;font-size:11px;color:var(--sc-subtext);}
 .shortcut-note{font-size:10px;color:var(--sc-faint);margin-top:12px;line-height:1.5;}
 
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--sc-surface);backdrop-filter:blur(12px);border:1px solid rgba(203,166,247,0.2);color:var(--sc-accent);padding:10px 20px;border-radius:8px;font-size:12px;font-weight:600;pointer-events:none;opacity:0;transition:all 0.25s;z-index:100;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--sc-surface);backdrop-filter:blur(12px);border:1px solid var(--sc-border-h);color:var(--sc-accent);padding:10px 20px;border-radius:8px;font-size:12px;font-weight:600;pointer-events:none;opacity:0;transition:all 0.25s;z-index:100;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
 /* Browse results */
@@ -98,7 +98,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 /* Management toolbar */
 .mgmt-bar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
 .mgmt-bar select{height:30px;padding:0 8px;background:var(--sc-input-bg);border:1px solid var(--sc-input-border);border-radius:6px;color:var(--sc-text);font-size:11px;font-weight:600;outline:none;cursor:pointer;appearance:none;padding-right:20px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23585b70' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center;}
-.mgmt-bar select:focus{border-color:rgba(203,166,247,0.3);}
+.mgmt-bar select:focus{border-color:color-mix(in srgb,var(--sc-accent) 30%,transparent);}
 .mgmt-bar select option{background:var(--sc-overlay);color:var(--sc-text);}
 .mgmt-sep{width:1px;height:20px;background:var(--sc-border-h);flex-shrink:0;}
 .bulk-bar{display:flex;align-items:center;gap:6px;}

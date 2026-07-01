@@ -45,7 +45,7 @@
   function showUndoToast(msg) {
     const el = $('toast');
     el.style.pointerEvents = 'auto';
-    el.innerHTML = esc(msg) + ' <button id="undo-toast-btn" style="margin-left:10px;padding:2px 10px;border-radius:4px;background:rgba(203,166,247,0.2);border:1px solid rgba(203,166,247,0.3);color:#cba6f7;cursor:pointer;font-weight:700;font-size:11px">Undo</button>';
+    el.innerHTML = esc(msg) + ' <button id="undo-toast-btn" style="margin-left:10px;padding:2px 10px;border-radius:4px;background:var(--sc-accent-dim);border:1px solid var(--sc-border-h);color:var(--sc-accent);cursor:pointer;font-weight:700;font-size:11px">Undo</button>';
     el.classList.add('show');
     clearTimeout(el._t);
     el._t = setTimeout(() => {
