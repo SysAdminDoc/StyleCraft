@@ -309,6 +309,10 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
         <div><div class="setting-label">CSS Layer Wrapping</div><div class="setting-desc">Wrap injected styles in <code style="color:var(--sc-accent);font-size:11px">@layer stylecraft</code> for cascade control over host page layers</div></div>
         <label class="toggle"><input type="checkbox" id="set-css-layer" aria-label="CSS layer wrapping"/><span class="toggle-sl"></span></label>
       </div>
+      <div class="setting-row">
+        <div><div class="setting-label">Block Remote CSS</div><div class="setting-desc">Reject styles that fetch external resources via <code style="color:var(--sc-accent);font-size:11px">url()</code> or <code style="color:var(--sc-accent);font-size:11px">@import</code> (prevents third-party tracking)</div></div>
+        <label class="toggle"><input type="checkbox" id="set-block-remote" aria-label="Block remote CSS resources"/><span class="toggle-sl"></span></label>
+      </div>
     </div>
     <div class="setting-group">
       <div class="setting-group-title">Appearance</div>

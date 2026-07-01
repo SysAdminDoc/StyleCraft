@@ -16,6 +16,11 @@ async function injectAndSend(tabId, message) {
 
 const getStorage = (k) => new Promise(r => chrome.storage.local.get(k, r));
 const setStorage = (d) => new Promise(r => chrome.storage.local.set(d, r));
+async function getTrustOptions() {
+  const d = await getStorage('stylecraft_settings');
+  const s = d.stylecraft_settings || {};
+  return { blockRemoteCss: s.blockRemoteCss === true };
+}
 function extractDomain(url) { return SC_MATCH.extractDomain(url); }
 
 function sitePatternFromUrl(url) {
@@ -241,7 +246,8 @@ async function fetchUSwCSS(id) {
 async function installTheme(id, name, domain) {
   const fetched = await fetchUSwCSS(id);
   if (!fetched.rawCSS.trim()) throw new Error('Empty CSS');
-  const trust = SC_DATA.assertCssAllowed(fetched.rawCSS);
+  const trustOpts = await getTrustOptions();
+  const trust = SC_DATA.assertCssAllowed(fetched.rawCSS, trustOpts);
   const parsed = SC_USERCSS.parse(fetched.rawCSS);
   const usercss = parsed.hasMeta || parsed.variables.length || parsed.appliesTo.length ? {
     meta: parsed.meta,
@@ -304,7 +310,7 @@ async function previewTheme(id, tabId) {
   await injectFiles(tabId, STYLE_INJECTOR_FILES);
   const fetched = await fetchUSwCSS(id);
   const tab = await chrome.tabs.get(tabId);
-  SC_DATA.assertCssAllowed(fetched.rawCSS);
+  SC_DATA.assertCssAllowed(fetched.rawCSS, await getTrustOptions());
   const css = resolveUserCSS(fetched.rawCSS, tab.url);
   setTimeout(() => {
     chrome.tabs.sendMessage(tabId, { action: 'sc-apply-preview', css }).catch(() => {});
@@ -343,7 +349,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       case 'sc-get-styles': return await buildCSSForUrl(msg.url || sender.tab?.url || '');
 
       case 'sc-save-custom': {
-        const trust = SC_DATA.assertCssAllowed(msg.css || '');
+        const trust = SC_DATA.assertCssAllowed(msg.css || '', await getTrustOptions());
         const dd = await getDomainData(msg.domain);
         dd.customCSS = msg.css;
         dd.trust = trust;
@@ -443,7 +449,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       case 'sc-get-installed': return { installed: await getInstalledIds(msg.domain) };
       case 'sc-check-theme-update': {
         const fetched = await fetchUSwCSS(msg.id);
-        const trust = SC_DATA.analyzeCssTrust(fetched.rawCSS || '');
+        const trust = SC_DATA.analyzeCssTrust(fetched.rawCSS || '', await getTrustOptions());
         return { css: fetched.rawCSS || '', trust };
       }
 

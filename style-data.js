@@ -39,18 +39,19 @@
     ).replace(/\\(.)/g, '$1');
   }
 
-  function analyzeCssTrust(css) {
+  function analyzeCssTrust(css, options) {
     const text = String(css || '');
     const normalized = stripCssEscapes(text);
+    const blockRemote = options && options.blockRemoteCss === true;
     const warnings = [];
     if (/url\(\s*(['"]?)\s*(?:javascript|vbscript):/i.test(normalized) || /@import\s+(?:url\()?\s*(['"]?)\s*(?:javascript|vbscript):/i.test(normalized)) {
       addTrustWarning(warnings, 'blocked-scheme', 'Blocked javascript/vbscript URL in CSS.', 'block');
     }
     if (/url\(\s*(['"]?)\s*(?:https?:)?\/\//i.test(text)) {
-      addTrustWarning(warnings, 'remote-url', 'Remote url() fetch can disclose visited pages to a third party.');
+      addTrustWarning(warnings, 'remote-url', 'Remote url() fetch can disclose visited pages to a third party.', blockRemote ? 'block' : 'warning');
     }
     if (/@import\s+(?:url\()?\s*(['"]?)\s*(?:https?:)?\/\//i.test(text)) {
-      addTrustWarning(warnings, 'remote-import', 'Remote @import fetch can load third-party CSS.');
+      addTrustWarning(warnings, 'remote-import', 'Remote @import fetch can load third-party CSS.', blockRemote ? 'block' : 'warning');
     }
     if (/(?:input\s*\[[^\]]*type\s*=\s*['"]?password|textarea|select)\b/i.test(text)) {
       addTrustWarning(warnings, 'sensitive-selector', 'Selector targets sensitive form controls.');
@@ -70,8 +71,8 @@
     return (trust && trust.warnings && trust.warnings[0] && trust.warnings[0].message) || 'CSS trust check failed.';
   }
 
-  function assertCssAllowed(css) {
-    const trust = analyzeCssTrust(css);
+  function assertCssAllowed(css, options) {
+    const trust = analyzeCssTrust(css, options);
     if (trust.status === 'blocked') throw new Error('Blocked CSS: ' + trustSummary(trust));
     return trust;
   }
