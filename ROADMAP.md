@@ -1,5 +1,5 @@
 # StyleCraft Roadmap
 
-Roadmap for StyleCraft, the Chrome MV3 CSS style manager with visual element picker, full CSS editor, USw integration, and Stylus import.
+Actionable work only. Historical and completed roadmap material is archived in CHANGELOG.md; blocked work is kept in Roadmap_Blocked.md.
 
-All planned features and audit findings have been implemented. See `Roadmap_Blocked.md` for items that require external dependencies or architectural changes.
+No actionable roadmap items remain.

@@ -335,3 +335,18 @@ All notable changes to StyleCraft are documented here.
 - Context menu: "Style this element" and "Hide this element"
 - Keyboard shortcut support via chrome.commands
 - Readability mode and grayscale mode
+
+## Roadmap archive — 2026-08-10 — ROADMAP.md
+
+<details>
+<summary>Original roadmap snapshot</summary>
+
+```markdown
+# StyleCraft Roadmap
+
+Roadmap for StyleCraft, the Chrome MV3 CSS style manager with visual element picker, full CSS editor, USw integration, and Stylus import.
+
+All planned features and audit findings have been implemented. See `Roadmap_Blocked.md` for items that require external dependencies or architectural changes.
+```
+
+</details>
